@@ -5,11 +5,19 @@
 ## 构想
 
 
-随着`Unity.Sentis`的发布，我们可以在Runtime使用一些神经网络模型，起做就包括自然语言处理中的文本向量嵌入模型（Text Embedding Model）。
+随着`Unity.Sentis`的发布，我们可以在Runtime使用一些神经网络模型，其中就包括自然语言处理的文本向量嵌入模型（Text Embedding Model）。
 
 虽然和AI聊天已经不是新鲜事了，但在游戏中，如何设计一个能不偏离开发者想法，但又比较灵活的对话倒是一个难点。
 
 我认为文本向量嵌入有助于这个问题得以解决，例如用户输入对话后，可以通过模型将对话文本向量化，再通过<b>余弦相似度</b>从数据库中计算得到合适的对话内容。
+
+因此，我们可以在使用大语言模型生成足够多的文本后，在游戏中基于向量数据库来搜索文本，这样就不需要依赖Web API了。
+
+详情可见：
+- 在Unity中制作一个ChatBox https://www.akikurisu.com/blog/posts/create-chatbox-in-unity-2024-03-19/
+- 在Unity中使用NLP自然语言处理技术 https://www.akikurisu.com/blog/posts/use-nlp-in-unity-2024-04-03/
+
+## 原理
 
 余弦相似度公式: 
 
