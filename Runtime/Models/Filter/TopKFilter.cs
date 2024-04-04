@@ -42,6 +42,8 @@ namespace Kurisu.UniChat
             inputScores = ops.Clip(inputScores, outputScores, outputThreshold);
             //TopK indices
             var topKTensors = ops.TopK(inputScores, topK, 1, true, true);
+            topKTensors[0].MakeReadable();
+            topKTensors[1].MakeReadable();
             for (int i = 0; i < topKNum; ++i)
             {
                 scores[i] = (topKTensors[0] as TensorFloat)[i];
