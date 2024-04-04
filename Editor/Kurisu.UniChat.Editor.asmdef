@@ -1,0 +1,18 @@
+{
+    "name": "Kurisu.UniChat.Editor",
+    "rootNamespace": "Kurisu.UniChat.Editor",
+    "references": [
+        "GUID:b2879b934d4e9c94bab967ace5085611"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
