@@ -35,7 +35,7 @@ namespace Kurisu.UniChat
             //Output similarity
             TensorFloat outputScores = ops.CosineSimilarity(inputTensors[1], tensors[1]);
             //Clipping
-            inputScores = ops.Clip(inputScores, outputScores, outputThreshold);
+            inputScores = ops.ThresholdClipping(inputScores, outputScores, outputThreshold);
             //Final indices
             TensorInt scoreIndex = ops.ArgMax(inputScores, 1, true);
             scoreIndex.MakeReadable();

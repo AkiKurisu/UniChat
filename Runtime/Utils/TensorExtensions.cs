@@ -94,7 +94,7 @@ namespace Kurisu.UniChat
         /// <param name="clip"></param>
         /// <param name="threshold"></param>
         /// <returns></returns>
-        public static TensorFloat Clip(this Ops ops, TensorFloat input, TensorFloat clip, float threshold)
+        public static TensorFloat ThresholdClipping(this Ops ops, TensorFloat input, TensorFloat clip, float threshold)
         {
             var thresholdTensor = TensorFloat.Zeros(clip.shape);
             for (int i = 0; i < clip.shape[1]; ++i)

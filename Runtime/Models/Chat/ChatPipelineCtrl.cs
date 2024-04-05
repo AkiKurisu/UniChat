@@ -5,6 +5,7 @@ using Kurisu.NGDS.NLP;
 using Newtonsoft.Json;
 using Unity.Sentis;
 using UnityEngine;
+using UnityEngine.Pool;
 namespace Kurisu.UniChat
 {
     public class ChatModelFile
@@ -98,10 +99,18 @@ namespace Kurisu.UniChat
         }
         public async UniTask<GenerateContext> RunPipeline()
         {
-            var inputs = Splitter.Split(generator.GetHistoryContext());
-            var context = new GenerateContext(inputs);
-            await pipeline.Run(context);
-            return context;
+            var pool = ListPool<string>.Get();
+            Splitter.Split(generator.GetHistoryContext(), pool);
+            var context = new GenerateContext(pool);
+            try
+            {
+                await pipeline.Run(context);
+                return context;
+            }
+            finally
+            {
+                ListPool<string>.Release(pool);
+            }
         }
         public void SaveModel()
         {

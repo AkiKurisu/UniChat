@@ -40,13 +40,60 @@ $$
 5. 如使用生成器，则由生成器根据上下文生成回答并导入数据库中
 6. 显示回答
 
-## Demo下载
+## 嵌入模型
 
-见Release页面
+嵌入模型默认使用`BAAI/bge-small-zh-v1.5`，占用显存内存最少，仅支持中文，你可以自行从`HuggingFaceHub`下载同类模型并转为Onnx格式。
 
-## Demo介绍
+## 语音组件
+
+如果你有语音合成方案，可以使用`AudioFileAssist`将语音保存在Model目录下,你也可以参考[VITSClient](./Runtime/Models/Audio/VITSClient.cs)
+
+```C#
+private async UniTask OnBotAnswerAsync(string text, IEmbeddingEntry entry)
+{
+    AudioClip[] audios = null;
+    string[] segments;
+    if (entry == null || !audioFileAssist.Contains(entry.Hash))
+    {
+        if (vitsEnabled)
+        {
+            text = await translator.Translate(text, default);
+            //根据标点符号切片
+            segments = Regex.Split(text, @"(?<=[。！？! ?])").Select(x => x.Trim()).Where(x => !string.IsNullOrEmpty(x)).ToArray();
+            audios = await UniTask.WhenAll(segments.Select(x => vits.SendRequestAsync(x, 0, default)));
+            //暂存到Model路径下
+            if (entry != null) audioFileAssist.Save(entry.Hash, audios, segments);
+        }
+        else
+        {
+            segments = Regex.Split(text, @"(?<=[。！？! ?])").Select(x => x.Trim()).Where(x => !string.IsNullOrEmpty(x)).ToArray();
+        }
+    }
+    else
+    {
+        (audios, segments) = await audioFileAssist.Load(entry.Hash);
+    }
+    //根据语音切片播放
+    await PlaySegment(segments, audios);
+}
+```
+
+## 行为组件
+
+TODO
+
+## 极简Demo下载
+
+见[Release](https://github.com/AkiKurisu/UniChat/releases)页面
+
 
 基于UniChat在Unity中制作了一个类似`ChatBox`的应用。
+
+## 高级Demo下载
+
+![Demo Pro](Images/demo-pro.png)
+
+<center>TODO：包含了行为和语音组件</center>
 
 ### 插件引用
 基本所有的AI对话应用都是聊天界面，我使用了一些插件用来在Unity里快速实现这些界面。
