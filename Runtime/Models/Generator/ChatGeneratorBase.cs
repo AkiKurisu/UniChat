@@ -15,10 +15,11 @@ namespace Kurisu.UniChat
         string ILLMInput.OutputCharacter => BotName;
         public string UserName { get => characters[0]; set => characters[0] = value; }
         private readonly string[] characters = new string[1] { "User" };
-        public IEnumerable<string> InputCharacters => characters;
+        IEnumerable<string> ILLMInput.InputCharacters => characters;
         public readonly List<DialogueParam> history = new();
         IEnumerable<DialogueParam> ILLMInput.History => history;
         public string Context { get; set; }
+        private readonly ChatFormatter formatter = new();
         public void AppendUserDialogue(string content)
         {
             history.Add(new DialogueParam(UserName, content));
@@ -26,6 +27,52 @@ namespace Kurisu.UniChat
         public void AppendBotDialogue(string content)
         {
             history.Add(new DialogueParam(BotName, content));
+        }
+        public bool TryGetLastBotDialogue(out DialogueParam dialogueParam)
+        {
+            for (int i = history.Count - 1; i >= 0; --i)
+            {
+                if (history[i].character == characters[1])
+                {
+                    dialogueParam = history[i];
+                    return true;
+                }
+            }
+            dialogueParam = null;
+            return false;
+        }
+        public bool TryGetLastUserDialogue(out DialogueParam dialogueParam)
+        {
+            for (int i = history.Count - 1; i >= 0; --i)
+            {
+                if (history[i].character == UserName)
+                {
+                    dialogueParam = history[i];
+                    return true;
+                }
+            }
+            dialogueParam = null;
+            return false;
+        }
+        public IEnumerable<string> GetUserContents()
+        {
+            foreach (var param in history)
+            {
+                if (param.character == UserName)
+                {
+                    yield return param.content;
+                }
+            }
+        }
+        public IEnumerable<string> GetBotContents()
+        {
+            foreach (var param in history)
+            {
+                if (param.character == BotName)
+                {
+                    yield return param.content;
+                }
+            }
         }
         public void ClearHistory()
         {
@@ -35,14 +82,13 @@ namespace Kurisu.UniChat
         {
             for (int i = history.Count - 1; i >= 0; --i)
             {
-                if (history[i].character == characters[0])
+                if (history[i].character == UserName)
                 {
                     history.RemoveAt(i);
                     return;
                 }
             }
         }
-        private readonly ChatFormatter formatter = new();
         public abstract UniTask<bool> Generate(GenerateContext context, CancellationToken ct);
         public string GetHistoryContext()
         {

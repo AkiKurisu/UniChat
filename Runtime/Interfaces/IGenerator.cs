@@ -41,7 +41,27 @@ namespace Kurisu.UniChat
     }
     public interface IGenerator
     {
+        /// <summary>
+        /// User contents
+        /// </summary>
+        /// <returns></returns>
+        IEnumerable<string> GetUserContents();
+        /// <summary>
+        /// Bot contents
+        /// </summary>
+        /// <returns></returns>
+        IEnumerable<string> GetBotContents();
+        /// <summary>
+        /// Get constructed history context
+        /// </summary>
+        /// <returns></returns>
         string GetHistoryContext();
+        /// <summary>
+        /// Call context generation
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         UniTask<bool> Generate(GenerateContext context, CancellationToken ct);
     }
 }

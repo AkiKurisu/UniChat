@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Kurisu.NGDS.NLP;
@@ -18,14 +19,21 @@ namespace Kurisu.UniChat
             private static readonly int[] reduceAxis = new int[1] { 0 };
             private readonly TensorFloat[] inputTensors;
             private readonly List<string> inputs = new();
-            public ContextConverter(IEncoder encoder)
+            private readonly IGenerator generator;
+            public ContextConverter(IEncoder encoder, IGenerator generator)
             {
                 this.encoder = encoder;
+                this.generator = generator;
                 inputTensors = new TensorFloat[2];
             }
             public TensorFloat[] Convert(Ops ops, IReadOnlyList<string> inputs)
             {
-                inputTensors[1] = encoder.Encode(ops, inputs[^1]);
+                //Exclude last bot response 
+                var lastResponse = generator.GetBotContents().LastOrDefault();
+                if (lastResponse != null)
+                    inputTensors[1] = encoder.Encode(ops, lastResponse);
+                else
+                    inputTensors[1] = encoder.Encode(ops, inputs[^1]);
                 var contextTensor = encoder.Encode(ops, inputs);
                 TensorFloat contextTensorExpanded = contextTensor.ShallowReshape(inputTensors[1].shape.Unsqueeze(0)) as TensorFloat;
                 inputTensors[0] = ops.ReduceMean(contextTensorExpanded, new ReadOnlySpan<int>(reduceAxis), false);

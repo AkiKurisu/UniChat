@@ -26,8 +26,8 @@ namespace Kurisu.UniChat
             {
                 for (int j = 0; j < dim; ++j)
                 {
-                    inputTextEmbeddings[i * dim + j] = embeddings[2 * i * dim + j];
-                    outputTextEmbeddings[i * dim + j] = embeddings[(2 * i + 1) * dim + j];
+                    inputTextEmbeddings[i, j] = embeddings[2 * i * dim + j];
+                    outputTextEmbeddings[i, j] = embeddings[(2 * i + 1) * dim + j];
                 }
             }
             return new TensorFloat[2] { inputTextEmbeddings, outputTextEmbeddings };

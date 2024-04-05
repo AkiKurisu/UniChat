@@ -78,7 +78,7 @@ namespace Kurisu.UniChat
             pipeline?.Dispose();
             pipeline = new TPipeline()
                             .SetBackend(BackendType.GPUCompute)
-                            .SetInputConvertor(new ChatPipeline.ContextConverter(Encoder))
+                            .SetInputConvertor(new ChatPipeline.ContextConverter(Encoder, generator))
                             .SetOutputConvertor(new MultiEncoderConverter(Encoder))
                             .SetGenerator(generator)
                             .SetSource(Table)

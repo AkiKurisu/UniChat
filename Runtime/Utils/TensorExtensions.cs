@@ -38,6 +38,20 @@ namespace Kurisu.UniChat
             sb.Append(')');
             return sb.ToString();
         }
+        public static string ToString(this TensorInt tensor, int d1)
+        {
+            tensor.MakeReadable();
+            StringBuilder sb = new();
+            sb.Append('(');
+            for (int i = 0; i < tensor.shape[1]; ++i)
+            {
+                if (i != 0)
+                    sb.Append(", ");
+                sb.Append(tensor[d1, i]);
+            }
+            sb.Append(')');
+            return sb.ToString();
+        }
         /// <summary>
         /// Return tensor[d1,0..shape[1]] as array
         /// </summary>
@@ -97,9 +111,12 @@ namespace Kurisu.UniChat
         public static TensorFloat ThresholdClipping(this Ops ops, TensorFloat input, TensorFloat clip, float threshold)
         {
             var thresholdTensor = TensorFloat.Zeros(clip.shape);
-            for (int i = 0; i < clip.shape[1]; ++i)
+            for (int i = 0; i < clip.shape[0]; ++i)
             {
-                thresholdTensor[i] = threshold;
+                for (int j = 0; j < clip.shape[1]; ++j)
+                {
+                    thresholdTensor[i, j] = threshold;
+                }
             }
             var maskTensor = TensorFloat.Zeros(clip.shape);
             var outputs = ops.Where(ops.GreaterOrEqual(clip, thresholdTensor), maskTensor, input);
