@@ -7,21 +7,23 @@ namespace Kurisu.UniChat
     /// <summary>
     /// Use llm to generate contents
     /// </summary>
-    public class LLMGenerator : ChatGeneratorBase
+    public class LLMGenerator : IGenerator
     {
         private readonly ILLMDriver driver;
+        private readonly ChatHistoryContext chatHistoryContext;
         public async Task<ILLMOutput> Generate(CancellationToken ct)
         {
-            var response = await driver.ProcessLLM(this, ct);
+            var response = await driver.ProcessLLM(chatHistoryContext, ct);
             return response;
         }
-        public LLMGenerator(ILLMDriver driver) : base()
+        public LLMGenerator(ILLMDriver driver, ChatHistoryContext chatHistoryContext) : base()
         {
+            this.chatHistoryContext = chatHistoryContext;
             this.driver = driver;
         }
-        public sealed override async UniTask<bool> Generate(GenerateContext context, CancellationToken ct)
+        public async UniTask<bool> Generate(GenerateContext context, CancellationToken ct)
         {
-            driver.SetSystemPrompt(Context);
+            driver.SetSystemPrompt(chatHistoryContext.Context);
             var llmData = await Generate(ct);
             context.generatedContent = llmData.Response;
             return llmData.Status;

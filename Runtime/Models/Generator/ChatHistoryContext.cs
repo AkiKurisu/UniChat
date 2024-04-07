@@ -1,15 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using Cysharp.Threading.Tasks;
 using Kurisu.NGDS;
 using Kurisu.NGDS.AI;
 namespace Kurisu.UniChat
 {
-    /// <summary>
-    /// Chatbot style generator that shares data structures with NGDS.AI
-    /// </summary>
-    public abstract class ChatGeneratorBase : IGenerator, IChatHistoryQuery, ILLMInput
+    public class ChatHistoryContext : IChatHistoryQuery, ILLMInput
     {
         public string BotName { get; set; } = "Bot";
         public string UserName { get; set; } = "User";
@@ -117,7 +112,6 @@ namespace Kurisu.UniChat
                 }
             }
         }
-        public abstract UniTask<bool> Generate(GenerateContext context, CancellationToken ct);
         public string GetHistoryContext()
         {
             return formatter.Format(this);

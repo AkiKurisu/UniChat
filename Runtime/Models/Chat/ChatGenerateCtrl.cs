@@ -17,25 +17,16 @@ namespace Kurisu.UniChat
         public string UserName { get; set; } = string.Empty;
         public string BotName { get; set; } = string.Empty;
         public event Action<GenerateContext> OnGetContext;
-        private readonly Dictionary<int, ChatGeneratorBase> generatorMap = new();
+        public ChatHistoryContext History { get; } = new();
+        private readonly Dictionary<int, IGenerator> generatorMap = new();
         private UniTaskCompletionSource<bool> waitSource;
         private GenerateContext generateContext;
-        public ChatGeneratorBase Generator { get; private set; }
+        public IGenerator Generator { get; private set; }
         private readonly AITurboSetting aiTurboSetting;
         public ChatGenerateCtrl(AITurboSetting aiTurboSetting)
         {
             this.aiTurboSetting = aiTurboSetting;
             Generator = generatorMap[-1] = new InputGenerator(OnCallGeneration);
-        }
-        public void HotSwapGenerator(int generatorId)
-        {
-            var last = Generator;
-            SwapGenerator(generatorId);
-            Generator.ClearHistory();
-            Generator.history.AddRange(last.history);
-            Generator.Context = Context;
-            Generator.BotName = BotName;
-            Generator.UserName = UserName;
         }
         public void SwapGenerator(int generatorId)
         {
@@ -55,16 +46,16 @@ namespace Kurisu.UniChat
                 SwitchLLMGenerator(llmType);
             }
         }
-        private ChatGeneratorBase SwitchLLMGenerator(LLMType llmType)
+        private IGenerator SwitchLLMGenerator(LLMType llmType)
         {
             int id = (int)llmType;
             if (!generatorMap.TryGetValue(id, out var generator))
             {
-                generator = generatorMap[id] = new LLMGenerator(LLMFactory.Create(llmType, aiTurboSetting));
+                generator = generatorMap[id] = new LLMGenerator(LLMFactory.Create(llmType, aiTurboSetting), History);
             }
             return Generator = generator;
         }
-        private ChatGeneratorBase SwitchInputGenerator()
+        private IGenerator SwitchInputGenerator()
         {
             return Generator = generatorMap[-1];
         }
@@ -90,7 +81,7 @@ namespace Kurisu.UniChat
         public void SaveSession(string filePath)
         {
             Debug.Log($"Chat session was saved to {filePath}");
-            File.WriteAllText(filePath, JsonConvert.SerializeObject(Generator.SaveSession(), Formatting.Indented));
+            File.WriteAllText(filePath, JsonConvert.SerializeObject(History.SaveSession(), Formatting.Indented));
         }
         public bool LoadSession(string filePath)
         {
@@ -99,7 +90,7 @@ namespace Kurisu.UniChat
                 return false;
             }
             var session = JsonConvert.DeserializeObject<ChatSession>(File.ReadAllText(filePath));
-            Generator.LoadSession(session); ;
+            History.LoadSession(session); ;
             return true;
         }
     }

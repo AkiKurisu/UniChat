@@ -36,14 +36,15 @@ namespace Kurisu.UniChat
     where TPipeline : ChatPipeline, new()
     where KTable : ISerializable, IEmbeddingTable, new()
     {
-        public ChaCardFile ChaFile { get; }
+        public ChaCardFile ChaFile { get; protected set; }
         public TextEncoder Encoder { get; protected set; }
         public ChatDataBase DataBase { get; protected set; }
         public KTable Table { get; protected set; }
         public ChatModelFile ChatFile { get; protected set; }
         public ISplitter Splitter { get; protected set; }
-        public ChatGeneratorBase Generator { get; protected set; }
-        protected TPipeline pipeline;
+        public IChatHistoryQuery HistoryQuery { get; protected set; }
+        public IGenerator Generator { get; protected set; }
+        public TPipeline Pipeline { get; protected set; }
         public ChatPipelineCtrl(ChatModelFile chatFile)
         {
             ChatFile = chatFile;
@@ -76,17 +77,17 @@ namespace Kurisu.UniChat
                 );
             Splitter = new SlidingWindowSplitter(256);
         }
-        public virtual void InitializePipeline(ChatGeneratorBase generator, PipelineConfig config)
+        public virtual void InitializePipeline(IGenerator generator, IChatHistoryQuery historyQuery, PipelineConfig config)
         {
             Generator = generator;
             Debug.Log($"Initialize pipeline, use generator: {generator.GetType().Name}");
-            pipeline?.Dispose();
-            pipeline = new TPipeline()
+            Pipeline?.Dispose();
+            Pipeline = new TPipeline()
                             .SetBackend(BackendType.GPUCompute)
-                            .SetInputConvertor(new ChatPipeline.ContextConverter(Encoder, generator))
+                            .SetInputConvertor(new ChatPipeline.ContextConverter(Encoder, historyQuery))
                             .SetOutputConvertor(new MultiEncoderConverter(Encoder))
                             .SetGenerator(generator)
-                            .SetHistoryQuery(generator)
+                            .SetHistoryQuery(historyQuery)
                             .SetSource(Table)
                             .SetEmbedding(DataBase)
                             .SetPersister(config.canWrite ? new TextEmbeddingTable.PersistHandler() : null)
@@ -95,8 +96,8 @@ namespace Kurisu.UniChat
         }
         public void ReleasePipeline()
         {
-            pipeline?.Dispose();
-            pipeline = null;
+            Pipeline?.Dispose();
+            Pipeline = null;
         }
         public void Dispose()
         {
@@ -107,11 +108,11 @@ namespace Kurisu.UniChat
         public async UniTask<GenerateContext> RunPipeline()
         {
             var pool = ListPool<string>.Get();
-            Splitter.Split(Generator.GetHistoryContext(), pool);
+            Splitter.Split(HistoryQuery.GetHistoryContext(), pool);
             var context = new GenerateContext(pool);
             try
             {
-                await pipeline.Run(context);
+                await Pipeline.Run(context);
                 return context;
             }
             finally
