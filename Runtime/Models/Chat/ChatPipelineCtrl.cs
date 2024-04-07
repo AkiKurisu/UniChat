@@ -80,6 +80,7 @@ namespace Kurisu.UniChat
         public virtual void InitializePipeline(IGenerator generator, IChatHistoryQuery historyQuery, PipelineConfig config)
         {
             Generator = generator;
+            HistoryQuery = historyQuery;
             Debug.Log($"Initialize pipeline, use generator: {generator.GetType().Name}");
             Pipeline?.Dispose();
             Pipeline = new TPipeline()

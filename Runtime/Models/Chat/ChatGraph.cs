@@ -79,38 +79,38 @@ namespace Kurisu.UniChat
         {
             embeddings.DisposeSafe();
         }
-    }
-    [Serializable]
-    public struct Edge
-    {
-        public Port input;
-        public Port output;
-        public readonly void Save(BinaryWriter bw)
+        [Serializable]
+        public struct Edge
         {
-            input.Save(bw);
-            output.Save(bw);
+            public Port input;
+            public Port output;
+            public readonly void Save(BinaryWriter bw)
+            {
+                input.Save(bw);
+                output.Save(bw);
+            }
+            public void Load(BinaryReader br)
+            {
+                input.Load(br);
+                output.Load(br);
+            }
         }
-        public void Load(BinaryReader br)
+        [Serializable]
+        public struct Port
         {
-            input.Load(br);
-            output.Load(br);
-        }
-    }
-    [Serializable]
-    public struct Port
-    {
-        public uint uniqueId;
-        public Port(uint uniqueId)
-        {
-            this.uniqueId = uniqueId;
-        }
-        public readonly void Save(BinaryWriter bw)
-        {
-            bw.Write(uniqueId);
-        }
-        public void Load(BinaryReader br)
-        {
-            uniqueId = br.ReadUInt32();
+            public uint uniqueId;
+            public Port(uint uniqueId)
+            {
+                this.uniqueId = uniqueId;
+            }
+            public readonly void Save(BinaryWriter bw)
+            {
+                bw.Write(uniqueId);
+            }
+            public void Load(BinaryReader br)
+            {
+                uniqueId = br.ReadUInt32();
+            }
         }
     }
 }
