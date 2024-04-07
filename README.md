@@ -47,6 +47,7 @@ $$
 public void CreatePipelineCtrl()
 {
     ChatPipelineCtrl<ChatPipeline, TextEmbeddingTable> PipelineCtrl = new(new ChatModelFile() { fileName = $"ChatModel_{Guid.NewGuid().ToString()[0..6]}" });
+    //Load from filePath
     PipelineCtrl= new(JsonConvert.DeserializeObject<ChatModelFile>(File.ReadAllText(filePath)))
 }
 ```
@@ -59,12 +60,12 @@ public bool RunPipeline()
     if ((context.flag & (1 << 1)) != 0)
     {
         string output = context.CastStringValue();
-        PipelineCtrl.Generator.AppendBotMessage(output, context.outputEntry.Hash);
+        PipelineCtrl.HistoryQuery.AppendBotMessage(output, context.outputEntry.Hash);
         return true;
     }
     else
     {
-        PipelineCtrl.Generator.RemoveLastInput();
+        PipelineCtrl.HistoryQuery.RemoveLastInput();
         return false;
     }
 }
@@ -128,7 +129,6 @@ TODO
 ## 极简Demo下载
 
 ![聊天界面](Images/chat-view.png)
-<center>极简Demo</center>
 
 见[Release](https://github.com/AkiKurisu/UniChat/releases)页面
 
@@ -139,7 +139,7 @@ TODO
 
 ![Demo Pro](Images/demo-pro.png)
 
-<center>TODO：包含了行为和语音组件</center>
+TODO：包含了行为和语音组件
 
 ## Demo插件引用
 
@@ -159,7 +159,6 @@ UniWindowController 用于拖拽文件、打开文件浏览器的插件。
 Demo中使用了`TavernAI`的角色数据结构，并且我们可以将角色的性格、示例对话、聊天情景写入图片中。
 
 ![设置界面](Images/setting-view.png)
-<center>设置界面</center>
 
 如果使用`TavernAI`角色卡，则会覆盖上方的提示词。
 
@@ -168,5 +167,4 @@ Demo中使用了`TavernAI`的角色数据结构，并且我们可以将角色的
 提供一个界面用来设置上面`Filter`所需的两个参数用以过滤和判别是否启用生成器
 
 ![设置阈值](Images/threshold.png)
-<center>设置阈值</center>
 
