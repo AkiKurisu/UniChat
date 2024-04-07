@@ -42,7 +42,7 @@ namespace Kurisu.UniChat
         public KTable Table { get; protected set; }
         public ChatModelFile ChatFile { get; protected set; }
         public ISplitter Splitter { get; protected set; }
-        public IGenerator Generator { get; protected set; }
+        public ChatGeneratorBase Generator { get; protected set; }
         protected TPipeline pipeline;
         public ChatPipelineCtrl(ChatModelFile chatFile)
         {
@@ -76,7 +76,7 @@ namespace Kurisu.UniChat
                 );
             Splitter = new SlidingWindowSplitter(256);
         }
-        public virtual void InitializePipeline(IGenerator generator, PipelineConfig config)
+        public virtual void InitializePipeline(ChatGeneratorBase generator, PipelineConfig config)
         {
             Generator = generator;
             Debug.Log($"Initialize pipeline, use generator: {generator.GetType().Name}");
@@ -86,6 +86,7 @@ namespace Kurisu.UniChat
                             .SetInputConvertor(new ChatPipeline.ContextConverter(Encoder, generator))
                             .SetOutputConvertor(new MultiEncoderConverter(Encoder))
                             .SetGenerator(generator)
+                            .SetHistoryQuery(generator)
                             .SetSource(Table)
                             .SetEmbedding(DataBase)
                             .SetPersister(config.canWrite ? new TextEmbeddingTable.PersistHandler() : null)

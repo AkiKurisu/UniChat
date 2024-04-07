@@ -9,7 +9,7 @@ namespace Kurisu.UniChat
     /// <summary>
     /// Chatbot style generator that shares data structures with NGDS.AI
     /// </summary>
-    public abstract class ChatGeneratorBase : IGenerator, ILLMInput
+    public abstract class ChatGeneratorBase : IGenerator, IChatHistoryQuery, ILLMInput
     {
         public string BotName { get; set; } = "Bot";
         public string UserName { get; set; } = "User";

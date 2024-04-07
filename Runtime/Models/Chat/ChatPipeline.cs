@@ -19,17 +19,17 @@ namespace Kurisu.UniChat
             private readonly IEncoder encoder;
             private static readonly int[] reduceAxis = new int[1] { 1 };
             private readonly TensorFloat[] inputTensors;
-            private readonly IGenerator generator;
-            public ContextConverter(IEncoder encoder, IGenerator generator)
+            private readonly IChatHistoryQuery historyQuery;
+            public ContextConverter(IEncoder encoder, IChatHistoryQuery historyQuery)
             {
                 this.encoder = encoder;
-                this.generator = generator;
+                this.historyQuery = historyQuery;
                 inputTensors = new TensorFloat[2];
             }
             public TensorFloat[] Convert(Ops ops, IReadOnlyList<string> inputs)
             {
                 //Exclude last bot response 
-                var lastResponse = generator.GetBotMessages().LastOrDefault()?.Content;
+                var lastResponse = historyQuery.GetBotMessages().LastOrDefault()?.Content;
                 if (lastResponse != null)
                     inputTensors[1] = encoder.Encode(ops, lastResponse);
                 else
@@ -47,6 +47,7 @@ namespace Kurisu.UniChat
         protected IGenerator Generator { get; set; }
         protected IFilter Filter { get; set; }
         protected IEmbeddingTable SourceTable { get; set; }
+        protected IChatHistoryQuery HistoryQuery { get; set; }
         protected IPersistEmbeddingValue<string> StringPersister { get; set; }
         protected ChatDataBase DataBase { get; set; }
         #endregion
@@ -60,6 +61,7 @@ namespace Kurisu.UniChat
         private void AssertPipeline()
         {
             Assert.IsNotNull(ops);
+            Assert.IsNotNull(HistoryQuery);
             Assert.IsNotNull(InputConverter);
             Assert.IsNotNull(OutputConverter);
             Assert.IsNotNull(Filter);
@@ -95,7 +97,7 @@ namespace Kurisu.UniChat
             TensorFloat mask = TensorFloat.Zeros(new TensorShape(1, DataBase.Count));//transpose
             for (int i = 0; i < DataBase.Count; ++i)
             {
-                mask[0, i] = Generator.TryGetBotMessage(DataBase.GetOutput(i), out _) ? 0 : 1;
+                mask[0, i] = HistoryQuery.TryGetBotMessage(DataBase.GetOutput(i), out _) ? 0 : 1;
             }
             return ops.Mul(clippingScores, mask);
         }
@@ -206,6 +208,11 @@ namespace Kurisu.UniChat
         public ChatPipeline SetTemperature(float temperature)
         {
             Temperature = temperature;
+            return this;
+        }
+        public ChatPipeline SetHistoryQuery(IChatHistoryQuery historyQuery)
+        {
+            HistoryQuery = historyQuery;
             return this;
         }
         #endregion
