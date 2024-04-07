@@ -12,65 +12,93 @@ namespace Kurisu.UniChat
     public abstract class ChatGeneratorBase : IGenerator, ILLMInput
     {
         public string BotName { get; set; } = "Bot";
-        string ILLMInput.OutputCharacter => BotName;
-        public string UserName { get => characters[0]; set => characters[0] = value; }
-        private readonly string[] characters = new string[1] { "User" };
-        IEnumerable<string> ILLMInput.InputCharacters => characters;
-        public readonly List<DialogueParam> history = new();
-        IEnumerable<DialogueParam> ILLMInput.History => history;
+        public string UserName { get; set; } = "User";
         public string Context { get; set; }
         private readonly ChatFormatter formatter = new();
-        public void AppendUserDialogue(string content)
+        public readonly List<ChatMessage> history = new();
+        #region LLM Input Adapt
+        string ILLMInput.OutputCharacter => BotName;
+        IEnumerable<string> ILLMInput.InputCharacters
         {
-            history.Add(new DialogueParam(UserName, content));
+            get
+            {
+                yield return UserName;
+            }
         }
-        public void AppendBotDialogue(string content)
+        IEnumerable<IMessage> ILLMInput.History => history;
+        #endregion
+        /// <summary>
+        /// Append user input message to update history context
+        /// </summary>
+        /// <param name="content"></param>
+        public void AppendUserMessage(string content)
         {
-            history.Add(new DialogueParam(BotName, content));
+            history.Add(new()
+            {
+                character = UserName,
+                characterId = ChatMessage.User,
+                content = content,
+                id = 0
+            });
         }
-        public bool TryGetLastBotDialogue(out DialogueParam dialogueParam)
+        /// <summary>
+        /// Append bot answered message to update history context
+        /// </summary>
+        /// <param name="content"></param>
+        /// <param name="hash"></param>
+        public void AppendBotMessage(string content, uint hash)
+        {
+            history.Add(new()
+            {
+                character = BotName,
+                characterId = ChatMessage.Bot,
+                content = content,
+                id = hash
+            });
+        }
+        public bool TryGetLastBotMessage(out ChatMessage message)
         {
             for (int i = history.Count - 1; i >= 0; --i)
             {
-                if (history[i].character == characters[1])
+                if (history[i].characterId == ChatMessage.Bot)
                 {
-                    dialogueParam = history[i];
+                    message = history[i];
                     return true;
                 }
             }
-            dialogueParam = null;
+            message = null;
             return false;
         }
-        public bool TryGetLastUserDialogue(out DialogueParam dialogueParam)
+        public bool TryGetLastUserDialogue(out ChatMessage message)
         {
             for (int i = history.Count - 1; i >= 0; --i)
             {
-                if (history[i].character == UserName)
+                if (history[i].characterId == ChatMessage.User)
                 {
-                    dialogueParam = history[i];
+                    message = history[i];
                     return true;
                 }
             }
-            dialogueParam = null;
+            message = null;
             return false;
         }
-        public IEnumerable<string> GetUserContents()
+        public IEnumerable<ChatMessage> GetUserMessages()
         {
-            foreach (var param in history)
+            foreach (var message in history)
             {
-                if (param.character == UserName)
+                if (message.characterId == ChatMessage.User)
                 {
-                    yield return param.content;
+                    yield return message;
                 }
             }
         }
-        public IEnumerable<string> GetBotContents()
+        public IEnumerable<ChatMessage> GetBotMessages()
         {
-            foreach (var param in history)
+            foreach (var message in history)
             {
-                if (param.character == BotName)
+                if (message.characterId == ChatMessage.Bot)
                 {
-                    yield return param.content;
+                    yield return message;
                 }
             }
         }
@@ -82,7 +110,7 @@ namespace Kurisu.UniChat
         {
             for (int i = history.Count - 1; i >= 0; --i)
             {
-                if (history[i].character == UserName)
+                if (history[i].characterId == ChatMessage.User)
                 {
                     history.RemoveAt(i);
                     return;
@@ -103,21 +131,25 @@ namespace Kurisu.UniChat
                 context = Context,
                 name1 = UserName,
                 name2 = BotName,
-                history = new() { internalData = new string[length][] }
+                history = new() { contents = new string[length][], ids = new uint[length][] }
             };
             for (int i = 0; i < length; ++i)
             {
                 var array = new string[2];
+                var ids = new uint[2];
                 array[0] = history[2 * i].content;
+                ids[0] = history[2 * i].id;
                 if (2 * i + 1 < historyCount)
                 {
                     array[1] = history[2 * i + 1].content;
+                    ids[1] = history[2 * i + 1].id;
                 }
                 else
                 {
                     array[1] = string.Empty;
                 }
-                session.history.internalData[i] = array;
+                session.history.contents[i] = array;
+                session.history.ids[i] = ids;
             }
             return session;
         }
@@ -126,12 +158,39 @@ namespace Kurisu.UniChat
             Context = session.context;
             UserName = session.name1;
             BotName = session.name2;
-            foreach (var array in session.history.internalData)
+            for (int i = 0; i < session.history.contents.Length; ++i)
             {
-                history.Add(new DialogueParam(session.name1, array[0]));
-                if (!string.IsNullOrEmpty(array[1]))
-                    history.Add(new DialogueParam(session.name2, array[1]));
+                var contents = session.history.contents[i];
+                var ids = session.history.ids[i];
+                history.Add(new()
+                {
+                    character = session.name1,
+                    characterId = (byte)(session.name1 == UserName ? 0 : 1),
+                    content = contents[0],
+                    id = ids[0]
+                });
+                if (!string.IsNullOrEmpty(contents[1]))
+                    history.Add(new()
+                    {
+                        character = session.name2,
+                        characterId = (byte)(session.name2 == UserName ? 0 : 1),
+                        content = contents[1],
+                        id = ids[1]
+                    });
             }
+        }
+
+        public bool TryGetBotMessage(uint hash, out ChatMessage message)
+        {
+            foreach (var botMg in GetBotMessages())
+            {
+                if (botMg.id == hash)
+                {
+                    message = botMg; return true;
+                }
+            }
+            message = null;
+            return false;
         }
     }
 }

@@ -75,17 +75,24 @@ namespace Kurisu.UniChat
             }
             return false;
         }
-        public async UniTask<(AudioClip[], string[])> Load(uint sourceHash)
+        public string[] GetSegments(uint sourceHash)
         {
-            var matchFiles = files.Where(x => x.Contains(sourceHash.ToString()[..6])).ToArray();
-            var requests = matchFiles
-                                .Select(f => UnityWebRequestMultimedia.GetAudioClip(Path.Combine(folderPath, $"{f}.wav"), AudioType.WAV))
-                                .ToArray();
+            return files.Where(x => x.Contains(sourceHash.ToString()[..6])).Select(x => segments[files.IndexOf(x)]).ToArray();
+        }
+        public IEnumerable<(string filePath, string segment)> GetPathAndSegments(uint sourceHash)
+        {
+            return files.Where(x => x.Contains(sourceHash.ToString()[..6]))
+                        .Select(x => (Path.Combine(folderPath, $"{x}.wav"), segments[files.IndexOf(x)]));
+        }
+        public async UniTask<(AudioClip[] clips, string[] segments)> Load(uint sourceHash)
+        {
+            var pairs = GetPathAndSegments(sourceHash);
+            var requests = pairs.Select(x => UnityWebRequestMultimedia.GetAudioClip(x.filePath, AudioType.WAV)).ToArray();
+            var texts = pairs.Select(x => x.segment).ToArray();
             try
             {
                 await UniTask.WhenAll(requests.Select(x => x.SendWebRequest().ToUniTask()));
                 var clips = requests.Select(x => DownloadHandlerAudioClip.GetContent(x)).ToArray();
-                var texts = matchFiles.Select(x => segments[files.IndexOf(x)]).ToArray();
                 return (clips, texts);
             }
             catch (UnityWebRequestException e)

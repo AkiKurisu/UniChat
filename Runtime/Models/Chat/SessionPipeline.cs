@@ -79,7 +79,7 @@ namespace Kurisu.UniChat
             {
                 AssertPipeline();
                 //Preprocessing
-                var pairs = (from x in session.history.internalData where !string.IsNullOrEmpty(x[1]) select x).ToArray();
+                var pairs = (from x in session.history.contents where !string.IsNullOrEmpty(x[1]) select x).ToArray();
                 var inputs = (from x in pairs select x[0]).ToArray();
                 var outputs = (from x in pairs select x[1]).ToArray();
                 var inputTextEmbeddings = Encoder.Encode(ops, inputs);

@@ -11,7 +11,7 @@
 
 我认为文本向量嵌入有助于这个问题得以解决，例如用户输入对话后，可以通过模型将对话文本向量化，再通过<b>余弦相似度</b>从数据库中计算得到合适的对话内容。
 
-因此，我们可以在使用大语言模型生成足够多的文本后，在游戏中基于向量数据库来搜索文本，这样就不需要依赖Web API了。
+因此，我们可以在使用大语言模型生成足够多的文本后，在游戏中<b>离线时</b>基于向量数据库来搜索文本，这样就不需要依赖Web API了。
 
 详情可见：
 - 在Unity中制作一个ChatBox https://www.akikurisu.com/blog/posts/create-chatbox-in-unity-2024-03-19/
@@ -40,6 +40,46 @@ $$
 5. 如使用生成器，则由生成器根据上下文生成回答并导入数据库中
 6. 显示回答
 
+## 使用
+
+创建或加载
+```C#
+public void CreatePipelineCtrl()
+{
+    ChatPipelineCtrl<ChatPipeline, TextEmbeddingTable> PipelineCtrl = new(new ChatModelFile() { fileName = $"ChatModel_{Guid.NewGuid().ToString()[0..6]}" });
+    PipelineCtrl= new(JsonConvert.DeserializeObject<ChatModelFile>(File.ReadAllText(filePath)))
+}
+```
+
+运行管线
+```C#
+public bool RunPipeline()
+{
+    var context = await PipelineCtrl.RunPipeline();
+    if ((context.flag & (1 << 1)) != 0)
+    {
+        string output = context.CastStringValue();
+        PipelineCtrl.Generator.AppendBotMessage(output, context.outputEntry.Hash);
+        return true;
+    }
+    else
+    {
+        PipelineCtrl.Generator.RemoveLastInput();
+        return false;
+    }
+}
+```
+
+保存数据
+```C#
+pubic void Save()
+{
+    //PC保存至 {ApplicationPath}//UserData//{ModelName}
+    //Android保存至 {Application.persistentDataPath}//UserData//{ModelName}
+    PipelineCtrl.SaveModel();
+}
+```
+
 ## 嵌入模型
 
 嵌入模型默认使用`BAAI/bge-small-zh-v1.5`，占用显存内存最少，仅支持中文，你可以自行从`HuggingFaceHub`下载同类模型并转为Onnx格式。
@@ -49,14 +89,17 @@ $$
 如果你有语音合成方案，可以使用`AudioFileAssist`将语音保存在Model目录下,你也可以参考[VITSClient](./Runtime/Models/Audio/VITSClient.cs)
 
 ```C#
-private async UniTask OnBotAnswerAsync(string text, IEmbeddingEntry entry)
+private async UniTask OnBotAnswerAsync(GenerateContext context)
 {
+    string text = context.CastStringValue();
+    IEmbeddingEntry entry = context.outputEntry;
     AudioClip[] audios = null;
     string[] segments;
     if (entry == null || !audioFileAssist.Contains(entry.Hash))
     {
         if (vitsEnabled)
         {
+            //如果语音和字幕语言不同的话可增加翻译步骤
             text = await translator.Translate(text, default);
             //根据标点符号切片
             segments = Regex.Split(text, @"(?<=[。！？! ?])").Select(x => x.Trim()).Where(x => !string.IsNullOrEmpty(x)).ToArray();
@@ -84,6 +127,9 @@ TODO
 
 ## 极简Demo下载
 
+![聊天界面](Images/chat-view.png)
+<center>极简Demo</center>
+
 见[Release](https://github.com/AkiKurisu/UniChat/releases)页面
 
 
@@ -95,8 +141,7 @@ TODO
 
 <center>TODO：包含了行为和语音组件</center>
 
-### 插件引用
-基本所有的AI对话应用都是聊天界面，我使用了一些插件用来在Unity里快速实现这些界面。
+## Demo插件引用
 
 CleanFlatUI 一个简洁包括动画效果的UI套件。
 >https://assetstore.unity.com/packages/2d/gui/icons/super-clean-ui-flat-pack-244547
@@ -107,15 +152,16 @@ SuperScrollView 一个高性能的滚动界面套件。
 UniWindowController 用于拖拽文件、打开文件浏览器的插件。
 >https://github.com/kirurobo/UniWindowController
 
+## Demo功能说明
 
 ### 个性化：角色卡
 
-这里使用`TavernAI`的角色数据结构，并且我们可以将角色的性格、示例对话、聊天情景写入图片中。
+Demo中使用了`TavernAI`的角色数据结构，并且我们可以将角色的性格、示例对话、聊天情景写入图片中。
 
 ![设置界面](Images/setting-view.png)
 <center>设置界面</center>
 
-如果使用`TavernAI`角色卡，则会覆盖上面的提示词。
+如果使用`TavernAI`角色卡，则会覆盖上方的提示词。
 
 ### 设置阈值
 
@@ -123,11 +169,4 @@ UniWindowController 用于拖拽文件、打开文件浏览器的插件。
 
 ![设置阈值](Images/threshold.png)
 <center>设置阈值</center>
-
-### 聊天界面
-
-聊天界面就是输入框+按钮+滚动界面
-
-![聊天界面](Images/chat-view.png)
-<center>聊天界面</center>
 

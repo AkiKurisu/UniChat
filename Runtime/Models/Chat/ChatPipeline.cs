@@ -8,6 +8,7 @@ using Kurisu.NGDS.NLP;
 using Unity.Collections;
 using Unity.Sentis;
 using UnityEngine.Assertions;
+using UnityEngine.Pool;
 using Debug = UnityEngine.Debug;
 namespace Kurisu.UniChat
 {
@@ -16,9 +17,8 @@ namespace Kurisu.UniChat
         public class ContextConverter : ITensorConverter
         {
             private readonly IEncoder encoder;
-            private static readonly int[] reduceAxis = new int[1] { 0 };
+            private static readonly int[] reduceAxis = new int[1] { 1 };
             private readonly TensorFloat[] inputTensors;
-            private readonly List<string> inputs = new();
             private readonly IGenerator generator;
             public ContextConverter(IEncoder encoder, IGenerator generator)
             {
@@ -29,22 +29,15 @@ namespace Kurisu.UniChat
             public TensorFloat[] Convert(Ops ops, IReadOnlyList<string> inputs)
             {
                 //Exclude last bot response 
-                var lastResponse = generator.GetBotContents().LastOrDefault();
+                var lastResponse = generator.GetBotMessages().LastOrDefault()?.Content;
                 if (lastResponse != null)
                     inputTensors[1] = encoder.Encode(ops, lastResponse);
                 else
                     inputTensors[1] = encoder.Encode(ops, inputs[^1]);
                 var contextTensor = encoder.Encode(ops, inputs);
-                TensorFloat contextTensorExpanded = contextTensor.ShallowReshape(inputTensors[1].shape.Unsqueeze(0)) as TensorFloat;
-                inputTensors[0] = ops.ReduceMean(contextTensorExpanded, new ReadOnlySpan<int>(reduceAxis), false);
+                TensorFloat contextTensorExpanded = contextTensor.ShallowReshape(contextTensor.shape.Unsqueeze(0)) as TensorFloat;
+                inputTensors[0] = ops.ReduceMean(contextTensorExpanded, new(reduceAxis), false);
                 return inputTensors;
-            }
-
-            public TensorFloat[] Convert(Ops ops, string input)
-            {
-                inputs.Clear();
-                inputs.Add(input);
-                return Convert(ops, inputs);
             }
         }
         private readonly SemaphoreSlim semaphore = new(1, 1);
@@ -60,6 +53,10 @@ namespace Kurisu.UniChat
         private CancellationTokenSource ct;
         private readonly ITensorAllocator allocator = new TensorCachingAllocator();
         protected Ops ops;
+        /// <summary>
+        /// Output threshold to clip answers above this value, useful for multi-turn chat
+        /// </summary>
+        public float Temperature { get; set; } = 0.85f;
         private void AssertPipeline()
         {
             Assert.IsNotNull(ops);
@@ -68,6 +65,39 @@ namespace Kurisu.UniChat
             Assert.IsNotNull(Filter);
             Assert.IsNotNull(SourceTable);
             Assert.IsNotNull(DataBase);
+        }
+        public TensorFloat ThresholdClipping(TensorFloat input, TensorFloat clip, float threshold)
+        {
+            var thresholdTensor = TensorFloat.Zeros(clip.shape);
+            for (int i = 0; i < clip.shape[0]; ++i)
+            {
+                for (int j = 0; j < clip.shape[1]; ++j)
+                {
+                    thresholdTensor[i, j] = threshold;
+                }
+            }
+            var maskTensor = TensorFloat.Zeros(clip.shape);
+            var outputs = ops.Where(ops.GreaterOrEqual(clip, thresholdTensor), maskTensor, input);
+            thresholdTensor.Dispose();
+            maskTensor.Dispose();
+            return outputs;
+        }
+        protected virtual TensorFloat ScoreDataBase(TensorFloat[] inputTensors)
+        {
+            TensorFloat[] comparedTensors = DataBase.AllocateTensors();
+            //Input similarity
+            TensorFloat inputScores = ops.CosineSimilarity(inputTensors[0], comparedTensors[0]);
+            //Output similarity
+            TensorFloat outputScores = ops.CosineSimilarity(inputTensors[1], comparedTensors[1]);
+            //Clipping
+            TensorFloat clippingScores = ThresholdClipping(inputScores, outputScores, Temperature);
+            //Mask
+            TensorFloat mask = TensorFloat.Zeros(new TensorShape(1, DataBase.Count));//transpose
+            for (int i = 0; i < DataBase.Count; ++i)
+            {
+                mask[0, i] = Generator.TryGetBotMessage(DataBase.GetOutput(i), out _) ? 0 : 1;
+            }
+            return ops.Mul(clippingScores, mask);
         }
         /// <summary>
         /// Run chat pipeline
@@ -88,7 +118,7 @@ namespace Kurisu.UniChat
             {
                 AssertPipeline();
                 TensorFloat[] inputTensors = InputConverter.Convert(ops, context.input);
-                if (Filter.Filter(ops, inputTensors, DataBase, ref ids, ref scores))
+                if (DataBase.Count > 0 && Filter.Filter(ops, ScoreDataBase(inputTensors), ref ids, ref scores))
                 {
                     context.flag |= 1 << 0;
                     context.flag |= 1 << 1;
@@ -173,6 +203,11 @@ namespace Kurisu.UniChat
             StringPersister = stringPersister;
             return this;
         }
+        public ChatPipeline SetTemperature(float temperature)
+        {
+            Temperature = temperature;
+            return this;
+        }
         #endregion
         protected virtual void SelectorPostProcessing(TensorFloat[] inputTensors, ref NativeArray<int> ids, ref NativeArray<float> scores, GenerateContext context)
         {
@@ -192,9 +227,14 @@ namespace Kurisu.UniChat
         }
         private bool Persist(TensorFloat[] inputTensors, string persistStringValue, out IEmbeddingEntry entry)
         {
-            var outputTensors = OutputConverter.Convert(ops, persistStringValue);
+            var pool = ListPool<string>.Get();
+            pool.Add(persistStringValue);
+            var outputTensors = OutputConverter.Convert(ops, pool);
+            ListPool<string>.Release(pool);
+
             inputTensors.MakeReadable();
             outputTensors.MakeReadable();
+
             //Calculate hash
             uint inputHash = XXHash.CalculateHash(inputTensors[0]);
             uint outputHash = XXHash.CalculateHash(outputTensors[0]);
@@ -206,15 +246,13 @@ namespace Kurisu.UniChat
             {
                 values = outputTensors[0].ToReadOnlyArray(),
             };
+
             //Persist value
             if (!StringPersister.Persist(outputHash, persistStringValue, outputEmb, out entry)) return false;
             //Update embedding table
             if (!SourceTable.AddEntry(entry)) return false;
             //Update embedding db
             DataBase.AddEmbedding(inputHash, inputEmb, outputHash, outputEmb);
-            //Dispose
-            inputTensors.Dispose();
-            outputTensors.Dispose();
             return true;
         }
     }

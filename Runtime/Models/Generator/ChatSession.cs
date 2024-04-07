@@ -23,6 +23,7 @@ namespace Kurisu.UniChat
     public class ChatHistoryData
     {
         [JsonProperty("internal")]
-        public string[][] internalData;
+        public string[][] contents;
+        public uint[][] ids;
     }
 }

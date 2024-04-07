@@ -100,29 +100,5 @@ namespace Kurisu.UniChat
         {
             return ops.MatMul2D(InputSequence, ComparisonSequences, false, true);
         }
-        /// <summary>
-        /// Clip tensors by threshold
-        /// </summary>
-        /// <param name="ops"></param>
-        /// <param name="input"></param>
-        /// <param name="clip"></param>
-        /// <param name="threshold"></param>
-        /// <returns></returns>
-        public static TensorFloat ThresholdClipping(this Ops ops, TensorFloat input, TensorFloat clip, float threshold)
-        {
-            var thresholdTensor = TensorFloat.Zeros(clip.shape);
-            for (int i = 0; i < clip.shape[0]; ++i)
-            {
-                for (int j = 0; j < clip.shape[1]; ++j)
-                {
-                    thresholdTensor[i, j] = threshold;
-                }
-            }
-            var maskTensor = TensorFloat.Zeros(clip.shape);
-            var outputs = ops.Where(ops.GreaterOrEqual(clip, thresholdTensor), maskTensor, input);
-            thresholdTensor.Dispose();
-            maskTensor.Dispose();
-            return outputs;
-        }
     }
 }

@@ -1,39 +1,15 @@
-using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 namespace Kurisu.UniChat.Editor
 {
-    public class TextEmbeddingEditorTable : ScriptableObject
+    public class TextTableEditorWindow : EditorWindow
     {
-        public List<TextEmbeddingEditorEntry> tableEntries = new();
-        private TextEmbeddingTable internalTable;
-        private string path;
-        public void Initialize(TextEmbeddingTable internalTable, string path)
-        {
-            this.path = path;
-            this.internalTable = internalTable;
-            tableEntries.Clear();
-            tableEntries.AddRange(internalTable.tableEntries.Select(x => new TextEmbeddingEditorEntry(x)));
-        }
-        public void Update()
-        {
-            tableEntries.ForEach(x => x.Update());
-            internalTable.tableEntries = tableEntries.Select(x => x.internalEntry).ToList();
-            internalTable.Save(path);
-        }
-
-        public void Remove(uint uintValue)
-        {
-            tableEntries.RemoveAll(x => x.uniqueId == uintValue);
-        }
-    }
-    public class TextEmbeddingEditorWindow : EditorWindow
-    {
-        private TextEmbeddingTable dialogueTable;
+        private TextEmbeddingTable sourceTable;
         private SerializedObject tableObject;
-        private TextEmbeddingEditorTable dialogueEditorTable;
+        private TextEditorTable editorTable;
         public delegate Vector2 BeginVerticalScrollViewFunc(Vector2 scrollPosition, bool alwaysShowVertical, GUIStyle verticalScrollbar, GUIStyle background, params GUILayoutOption[] options);
         private static BeginVerticalScrollViewFunc s_func;
         private Vector2 m_ScrollPosition;
@@ -50,15 +26,35 @@ namespace Kurisu.UniChat.Editor
                 return s_func;
             }
         }
-        [MenuItem("Tools/UniChat/Text Embedding Editor")]
+        private static GUIStyle FixedWidthButtonStyle => new(GUI.skin.button) { fixedWidth = 80 };
+        [MenuItem("Tools/UniChat/Text Table Editor")]
         private static void ShowEditorWindow()
         {
-            GetWindow<TextEmbeddingEditorWindow>("Text Embedding Editor");
+            GetWindow<TextTableEditorWindow>("Text Table Editor");
         }
         private void OnEnable()
         {
-            dialogueEditorTable = CreateInstance<TextEmbeddingEditorTable>();
-            tableObject = new(dialogueEditorTable);
+            editorTable = CreateInstance<TextEditorTable>();
+            tableObject = new(editorTable);
+        }
+        private void DrawAudioInfos(uint id, int size, IEnumerator enumerator)
+        {
+            if (size == 0) return;
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.BeginVertical(GUILayout.Width(EditorGUIUtility.currentViewWidth - 100));
+            while (enumerator.MoveNext())
+            {
+                var property = enumerator.Current as SerializedProperty;
+                EditorGUILayout.PropertyField(property);
+            }
+            EditorGUILayout.EndVertical();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Clear", FixedWidthButtonStyle))
+            {
+                editorTable.Delate(id);
+            }
+            EditorGUILayout.EndHorizontal();
+
         }
         private void OnGUI()
         {
@@ -68,11 +64,13 @@ namespace Kurisu.UniChat.Editor
             {
                 var property = enumerator.Current as SerializedProperty;
                 var canEdit = property.FindPropertyRelative("isEdit");
+                var audioInfos = property.FindPropertyRelative("audioInfos");
+                uint id = property.FindPropertyRelative("uniqueId").uintValue;
                 EditorGUILayout.BeginHorizontal();
                 GUI.enabled = canEdit.boolValue;
                 EditorGUILayout.PropertyField(property);
                 GUI.enabled = true;
-                if (GUILayout.Button(canEdit.boolValue ? "Complete" : "Edit", new GUIStyle(GUI.skin.button) { fixedWidth = 80 }))
+                if (GUILayout.Button(canEdit.boolValue ? "Complete" : "Edit", FixedWidthButtonStyle))
                 {
                     canEdit.boolValue = !canEdit.boolValue;
                     if (!canEdit.boolValue)
@@ -81,12 +79,14 @@ namespace Kurisu.UniChat.Editor
                         tableObject.Update();
                     }
                 }
-                if (GUILayout.Button("Delate", new GUIStyle(GUI.skin.button) { fixedWidth = 80 }))
+                if (GUILayout.Button("Delate", FixedWidthButtonStyle))
                 {
-                    dialogueEditorTable.Remove(property.FindPropertyRelative("uniqueId").uintValue);
+                    editorTable.Remove(id);
                     tableObject.Update();
+                    GUIUtility.ExitGUI();
                 }
                 EditorGUILayout.EndHorizontal();
+                DrawAudioInfos(id, audioInfos.arraySize, audioInfos.GetEnumerator());
             }
             EditorGUILayout.EndScrollView();
             GUILayout.FlexibleSpace();
@@ -95,14 +95,14 @@ namespace Kurisu.UniChat.Editor
             {
                 string path = EditorUtility.OpenFilePanel("Choose table file", PathUtil.UserDataPath, "bin");
                 if (string.IsNullOrEmpty(path)) return;
-                dialogueTable = new(path);
-                dialogueEditorTable.Initialize(dialogueTable, path);
+                sourceTable = new(path);
+                editorTable.Initialize(sourceTable, path);
                 tableObject.Update();
             }
-            GUI.enabled = dialogueTable != null;
+            GUI.enabled = sourceTable != null;
             if (GUILayout.Button("Update"))
             {
-                dialogueEditorTable.Update();
+                editorTable.Update();
             }
             GUI.enabled = true;
             EditorGUILayout.EndHorizontal();

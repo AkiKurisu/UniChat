@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Kurisu.NGDS.NLP;
 using Unity.Sentis;
-using UnityEngine.Pool;
 namespace Kurisu.UniChat
 {
     public class MultiEncoderConverter : ITensorConverter
@@ -20,19 +19,6 @@ namespace Kurisu.UniChat
                 inputTensors[i] = encoders[i].Encode(ops, input);
             }
             return inputTensors;
-        }
-        public TensorFloat[] Convert(Ops ops, string input)
-        {
-            var pool = ListPool<string>.Get();
-            pool.Add(input);
-            try
-            {
-                return Convert(ops, pool);
-            }
-            finally
-            {
-                ListPool<string>.Release(pool);
-            }
         }
     }
 }

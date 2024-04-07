@@ -1,30 +1,21 @@
 using UnityEngine;
 using UnityEditor;
-using System;
-using static Kurisu.UniChat.TextEmbeddingTable;
 namespace Kurisu.UniChat.Editor
 {
-    [Serializable]
-    public class TextEmbeddingEditorEntry
+    [CustomPropertyDrawer(typeof(TextEditorTable.AudioInfo))]
+    public class TextEditorTableAudioInfoDrawer : PropertyDrawer
     {
-        public uint uniqueId;
-        [TextArea]
-        public string stringValue;
-        public bool isEdit;
-        public readonly TextEmbeddingEntry internalEntry;
-        public TextEmbeddingEditorEntry(TextEmbeddingEntry internalEntry)
+        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            this.internalEntry = internalEntry;
-            uniqueId = internalEntry.uniqueId;
-            stringValue = internalEntry.stringValue;
-        }
-        public void Update()
-        {
-            internalEntry.stringValue = stringValue;
+            EditorGUI.BeginProperty(position, label, property);
+            SerializedProperty infoTextProperty = property.FindPropertyRelative("infoText");
+            SerializedProperty fileNameProperty = property.FindPropertyRelative("fileName");
+            EditorGUI.LabelField(position, $"{fileNameProperty.stringValue}  {infoTextProperty.stringValue}");
+            EditorGUI.EndProperty();
         }
     }
-    [CustomPropertyDrawer(typeof(TextEmbeddingEditorEntry))]
-    public class TextEmbeddingEditorEntryDrawer : PropertyDrawer
+    [CustomPropertyDrawer(typeof(TextEditorTable.Entry))]
+    public class TextEditorTableEntryDrawer : PropertyDrawer
     {
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
@@ -42,7 +33,7 @@ namespace Kurisu.UniChat.Editor
             SerializedProperty stringValueProp = property.FindPropertyRelative("stringValue");
             EditorGUI.BeginProperty(position, label, property);
             Rect uniqueIdRect = new(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
-            EditorGUI.LabelField(uniqueIdRect, uniqueIdProp.uintValue.ToString());
+            EditorGUI.LabelField(uniqueIdRect, $"ID {uniqueIdProp.uintValue}");
             Rect textRect = new(position.x, position.y + EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing, position.width, position.height - EditorGUIUtility.singleLineHeight - EditorGUIUtility.standardVerticalSpacing);
             stringValueProp.stringValue = EditorGUI.TextArea(textRect, stringValueProp.stringValue, new GUIStyle(GUI.skin.textArea) { wordWrap = true });
             EditorGUI.EndProperty();

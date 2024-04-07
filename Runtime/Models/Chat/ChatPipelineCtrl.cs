@@ -5,13 +5,20 @@ using Kurisu.NGDS.NLP;
 using Newtonsoft.Json;
 using Unity.Sentis;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.Pool;
 namespace Kurisu.UniChat
 {
     public class ChatModelFile
     {
         public string fileName = "ChatModel";
+        /// <summary>
+        /// Dim according to your embedding model
+        /// </summary>
         public int embeddingDim = 512;
+        /// <summary>
+        /// Embedding model to use, should exist in models folder
+        /// </summary>
         public string embeddingModelName = "bge-small-zh-v1.5";
         public string characterCardPath = "";
         public string tableFileName = "table.bin";
@@ -35,8 +42,8 @@ namespace Kurisu.UniChat
         public KTable Table { get; protected set; }
         public ChatModelFile ChatFile { get; protected set; }
         public ISplitter Splitter { get; protected set; }
+        public IGenerator Generator { get; protected set; }
         protected TPipeline pipeline;
-        protected IGenerator generator;
         public ChatPipelineCtrl(ChatModelFile chatFile)
         {
             ChatFile = chatFile;
@@ -60,20 +67,18 @@ namespace Kurisu.UniChat
             {
                 Table.Load(tablePath);
             }
-            if (!string.IsNullOrEmpty(ChatFile.embeddingModelName))
-            {
-                var embeddingModelFolder = Path.Combine(PathUtil.ModelPath, ChatFile.embeddingModelName);
-                Encoder = new TextEncoder(
-                        ModelLoader.Load(Path.Combine(embeddingModelFolder, "model.sentis")),
-                        new BertTokenizer(File.ReadAllText(Path.Combine(embeddingModelFolder, "tokenizer.json"))),
-                        BackendType.GPUCompute
-                    );
-            }
+            var embeddingModelFolder = Path.Combine(PathUtil.ModelPath, ChatFile.embeddingModelName);
+            Assert.IsTrue(Directory.Exists(embeddingModelFolder));
+            Encoder = new TextEncoder(
+                    ModelLoader.Load(Path.Combine(embeddingModelFolder, "model.sentis")),
+                    new BertTokenizer(File.ReadAllText(Path.Combine(embeddingModelFolder, "tokenizer.json"))),
+                    BackendType.GPUCompute
+                );
             Splitter = new SlidingWindowSplitter(256);
         }
         public virtual void InitializePipeline(IGenerator generator, PipelineConfig config)
         {
-            this.generator = generator;
+            Generator = generator;
             Debug.Log($"Initialize pipeline, use generator: {generator.GetType().Name}");
             pipeline?.Dispose();
             pipeline = new TPipeline()
@@ -84,7 +89,8 @@ namespace Kurisu.UniChat
                             .SetSource(Table)
                             .SetEmbedding(DataBase)
                             .SetPersister(config.canWrite ? new TextEmbeddingTable.PersistHandler() : null)
-                            .SetFilter(new TopSimilarityFilter(config.inputThreshold, config.outputThreshold)) as TPipeline;
+                            .SetTemperature(config.outputThreshold)
+                            .SetFilter(new TopSimilarityFilter(config.inputThreshold)) as TPipeline;
         }
         public void ReleasePipeline()
         {
@@ -94,13 +100,13 @@ namespace Kurisu.UniChat
         public void Dispose()
         {
             ReleasePipeline();
-            Encoder?.Dispose();
+            Encoder.Dispose();
             DataBase.Dispose();
         }
         public async UniTask<GenerateContext> RunPipeline()
         {
             var pool = ListPool<string>.Get();
-            Splitter.Split(generator.GetHistoryContext(), pool);
+            Splitter.Split(Generator.GetHistoryContext(), pool);
             var context = new GenerateContext(pool);
             try
             {
