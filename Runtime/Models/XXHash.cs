@@ -30,8 +30,26 @@ namespace Kurisu.UniChat
         }
         public static uint CalculateHash(string input)
         {
-            using var bytes = new FixedString4096Bytes(input).AsFixedList().ToNativeArray(Allocator.Temp);
-            return CalculateHash(bytes);
+            var bytes = new FixedString4096Bytes(input).AsFixedList().ToNativeArray(Allocator.Temp);
+            //Must aligned to *4
+            int remainder = bytes.Length % 4;
+            if (remainder != 0)
+            {
+                var slice1 = new NativeSlice<byte>(bytes);
+                NativeArray<byte> newArray = new(bytes.Length + 4 - remainder, Allocator.Temp);
+                var slice2 = new NativeSlice<byte>(newArray, 0, bytes.Length);
+                slice2.CopyFrom(slice1);
+                bytes.Dispose();
+                bytes = newArray;
+            }
+            try
+            {
+                return CalculateHash(bytes);
+            }
+            finally
+            {
+                bytes.Dispose();
+            }
         }
         [BurstCompile]
         public static uint CalculateHash(NativeArray<byte> data)
