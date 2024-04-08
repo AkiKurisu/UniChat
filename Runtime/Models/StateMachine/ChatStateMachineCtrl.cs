@@ -39,9 +39,19 @@ namespace Kurisu.UniChat.StateMachine
         /// <param name="input"></param>
         public void Execute(string input)
         {
-            for (int i = 0; i < stateMachines.Length; ++i)
+            var pool = ListPool<string>.Get();
+            pool.Add(input);
+            try
             {
-                Execute(i, input);
+                TensorFloat inputTensor = encoder.Encode_Mean_Pooling(ops, pool, true);
+                for (int i = 0; i < stateMachines.Length; ++i)
+                {
+                    stateMachines[i].Execute(ops, inputTensor);
+                }
+            }
+            finally
+            {
+                ListPool<string>.Release(pool);
             }
         }
         /// <summary>
