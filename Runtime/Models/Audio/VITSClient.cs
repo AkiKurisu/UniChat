@@ -13,7 +13,7 @@ namespace Kurisu.UniChat
         public ITranslator Translator { get; set; }
         private readonly string api;
         private readonly string lang;
-        public VITSClient(string address = "127.0.0.1", string api = "vits", string port = "23456", string lang = "auto")
+        public VITSClient(string address = "127.0.0.1", string port = "23456", string api = "vits", string lang = "auto")
         {
             this.address = address;
             this.api = api;

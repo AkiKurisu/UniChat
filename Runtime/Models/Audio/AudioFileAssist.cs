@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -87,7 +88,10 @@ namespace Kurisu.UniChat
         public async UniTask<(AudioClip[] clips, string[] segments)> Load(uint sourceHash)
         {
             var pairs = GetPathAndSegments(sourceHash);
-            var requests = pairs.Select(x => UnityWebRequestMultimedia.GetAudioClip(x.filePath, AudioType.WAV)).ToArray();
+            var requests = pairs.Select(x => UnityWebRequestMultimedia.GetAudioClip(
+                                            new Uri(x.filePath),
+                                            AudioType.WAV
+                                        )).ToArray();
             var texts = pairs.Select(x => x.segment).ToArray();
             try
             {

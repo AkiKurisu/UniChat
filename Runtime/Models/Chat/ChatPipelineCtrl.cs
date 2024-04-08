@@ -81,7 +81,6 @@ namespace Kurisu.UniChat
         {
             Generator = generator;
             HistoryQuery = historyQuery;
-            Debug.Log($"Initialize pipeline, use generator: {generator.GetType().Name}");
             Pipeline?.Dispose();
             Pipeline = new TPipeline()
                             .SetBackend(BackendType.GPUCompute)
