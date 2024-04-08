@@ -147,7 +147,6 @@ namespace Kurisu.UniChat.StateMachine
         public void AddState(string stateName)
         {
             AddState(new ChatState() { name = stateName, uniqueId = XXHash.CalculateHash(stateName) });
-            Debug.Log(XXHash.CalculateHash(stateName));
         }
         public void AddState(ChatState state)
         {
