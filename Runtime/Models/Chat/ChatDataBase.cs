@@ -1,3 +1,4 @@
+using Unity.Collections;
 using Unity.Sentis;
 namespace Kurisu.UniChat
 {
@@ -44,10 +45,8 @@ namespace Kurisu.UniChat
         }
         public void SetEmbedding(int index, Embedding embedding)
         {
-            for (int i = 0; i < dim; ++i)
-            {
-                embeddings[index * dim + i] = embedding.values[i];
-            }
+            var slice = new NativeSlice<float>(embeddings.AsArray(), index * dim, dim);
+            slice.CopyFrom(embedding.values);
         }
         public uint GetOutput(int index)
         {

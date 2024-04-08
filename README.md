@@ -124,7 +124,34 @@ private async UniTask OnBotAnswerAsync(GenerateContext context)
 
 ## 行为组件
 
-TODO
+采用有限状态机形式
+
+```C#
+ public void BuildStateMachine()
+{
+    chatStateMachine = new ChatStateMachine(dim: 512);
+    chatStateMachineCtrl = new ChatStateMachineCtrl(TextEncoder: encoder, hostObject: gameObject, layer: 1);
+    chatStateMachine.AddState("Stand");
+    chatStateMachine.AddState("Sit");
+    chatStateMachine.states[0].AddBehavior<StandBehavior>();
+    chatStateMachine.states[0].AddTransition(new LazyStateReference("Sit"));
+    chatStateMachine.states[0].transitions[0].AddCondition(ChatConditionMode.Greater, 0.6f, "我坐下了");
+    chatStateMachine.states[0].transitions[0].AddCondition(ChatConditionMode.Greater, 0.6f, "我想在椅子上休息一会");
+    chatStateMachine.states[1].AddBehavior<SitBehavior>();
+    chatStateMachine.states[1].AddTransition(new LazyStateReference("Stand"));
+    chatStateMachine.states[1].transitions[0].AddCondition(ChatConditionMode.Greater, 0.6f, "我休息完了");
+    chatStateMachineCtrl.SetStateMachine(0, chatStateMachine);
+}
+```
+
+运行状态机
+
+```C#
+private void OnBotAnswer(GenerateContext context)
+{
+    chatStateMachineCtrl.Execute(context.CastStringValue());
+}
+```
 
 ## 极简Demo下载
 
