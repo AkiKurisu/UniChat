@@ -259,7 +259,7 @@ namespace Kurisu.UniChat
             //Update embedding table
             if (!SourceTable.AddEntry(entry)) return false;
             //Update embedding db
-            DataBase.AddEmbedding(inputHash, inputEmb, outputHash, outputEmb);
+            DataBase.AddEdge(inputHash, inputEmb, outputHash, outputEmb);
             return true;
         }
     }

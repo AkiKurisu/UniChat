@@ -5,29 +5,48 @@ using Kurisu.NGDS.NLP;
 using Newtonsoft.Json;
 using Unity.Sentis;
 using UnityEngine;
-using UnityEngine.Assertions;
 using UnityEngine.Pool;
 namespace Kurisu.UniChat
 {
     public class ChatModelFile
     {
+        /// <summary>
+        /// Override directory loading path
+        /// </summary>
+        [JsonIgnore]
+        public string directoryOverridePath;
         public string fileName = "ChatModel";
         /// <summary>
         /// Dim according to your embedding model
         /// </summary>
         public int embeddingDim = 512;
         /// <summary>
-        /// Embedding model to use, should exist in models folder
+        /// Embedding model to use
         /// </summary>
         public string embeddingModelName = "bge-small-zh-v1.5";
-        public string characterCardPath = "";
-        public string tableFileName = "table.bin";
-        public string graphFileName = "graph.bin";
+        /// <summary>
+        /// Embedding model provider, default load from UserData/models
+        /// </summary>
+        public string modelProvider = ModelProviderFactory.UserDataProvider;
+        public const string tableFileName = "table.bin";
+        public const string graphFileName = "graph.bin";
+        public const string configFileName = "model.cfg";
         [JsonIgnore]
-        public string FileFolder => Path.Combine(PathUtil.UserDataPath, fileName);
+        public string DirectoryPath => directoryOverridePath ?? Path.Combine(PathUtil.UserDataPath, fileName);
+        [JsonIgnore]
+        public string GraphPath => Path.Combine(DirectoryPath, graphFileName);
+        [JsonIgnore]
+        public string TablePath => Path.Combine(DirectoryPath, tableFileName);
+        [JsonIgnore]
+        public string ConfigPath => Path.Combine(DirectoryPath, configFileName);
+        [JsonIgnore]
+        public string ModelPath => $"{embeddingModelName}/model.sentis";
+        [JsonIgnore]
+        public string TokenizerPath => $"{embeddingModelName}/tokenizer.json";
     }
     public class PipelineConfig
     {
+        public BackendType backendType;
         public bool canWrite;
         public float inputThreshold;
         public float outputThreshold;
@@ -36,7 +55,6 @@ namespace Kurisu.UniChat
     where TPipeline : ChatPipeline, new()
     where KTable : ISerializable, IEmbeddingTable, new()
     {
-        public ChaCardFile ChaFile { get; protected set; }
         public TextEncoder Encoder { get; protected set; }
         public ChatDataBase DataBase { get; protected set; }
         public KTable Table { get; protected set; }
@@ -48,42 +66,37 @@ namespace Kurisu.UniChat
         public ChatPipelineCtrl(ChatModelFile chatFile)
         {
             ChatFile = chatFile;
-            ChaFile = new();
-            if (!string.IsNullOrEmpty(ChatFile.characterCardPath))
+            var graphPath = ChatFile.GraphPath;
+            if (File.Exists(graphPath))
             {
-                ChaFile.LoadCard(ChatFile.characterCardPath);
-            }
-            var networkPath = Path.Combine(ChatFile.FileFolder, ChatFile.graphFileName);
-            if (File.Exists(networkPath))
-            {
-                DataBase = new(networkPath);
+                DataBase = new(graphPath);
             }
             else
             {
                 DataBase = new(ChatFile.embeddingDim);
             }
-            var tablePath = Path.Combine(ChatFile.FileFolder, ChatFile.tableFileName);
+            var tablePath = ChatFile.TablePath;
             Table = new();
             if (File.Exists(tablePath))
             {
                 Table.Load(tablePath);
             }
-            var embeddingModelFolder = Path.Combine(PathUtil.ModelPath, ChatFile.embeddingModelName);
-            Assert.IsTrue(Directory.Exists(embeddingModelFolder));
-            Encoder = new TextEncoder(
-                    ModelLoader.Load(Path.Combine(embeddingModelFolder, "model.sentis")),
-                    new BertTokenizer(File.ReadAllText(Path.Combine(embeddingModelFolder, "tokenizer.json"))),
-                    BackendType.GPUCompute
-                );
             Splitter = new SlidingWindowSplitter(256);
         }
-        public virtual void InitializePipeline(IGenerator generator, IChatHistoryQuery historyQuery, PipelineConfig config)
+        public virtual async UniTask InitializePipeline(IGenerator generator, IChatHistoryQuery historyQuery, PipelineConfig config)
         {
             Generator = generator;
             HistoryQuery = historyQuery;
+            Encoder?.Dispose();
             Pipeline?.Dispose();
+            ModelProvider provider = ModelProviderFactory.Instance.Create(ChatFile.modelProvider);
+            Encoder = new TextEncoder(
+                await provider.LoadModel(ChatFile.ModelPath),
+                new BertTokenizer(await provider.LoadTokenizer(ChatFile.TokenizerPath)),
+                config.backendType
+            );
             Pipeline = new TPipeline()
-                            .SetBackend(BackendType.GPUCompute)
+                            .SetBackend(config.backendType)
                             .SetInputConvertor(new ChatPipeline.ContextConverter(Encoder, historyQuery))
                             .SetOutputConvertor(new MultiEncoderConverter(Encoder))
                             .SetGenerator(generator)
@@ -122,23 +135,13 @@ namespace Kurisu.UniChat
         }
         public void SaveModel()
         {
-            if (!Directory.Exists(ChatFile.FileFolder))
+            if (!Directory.Exists(ChatFile.DirectoryPath))
             {
-                Directory.CreateDirectory(ChatFile.FileFolder);
+                Directory.CreateDirectory(ChatFile.DirectoryPath);
             }
-            File.WriteAllText(Path.Combine(ChatFile.FileFolder, "model.cfg"), JsonConvert.SerializeObject(ChatFile, Formatting.Indented));
-            Table.Save(Path.Combine(ChatFile.FileFolder, ChatFile.tableFileName));
-            DataBase.Save(Path.Combine(ChatFile.FileFolder, ChatFile.graphFileName));
-        }
-
-        public bool SaveCard(string path, bool savePng)
-        {
-            if (ChaFile.SaveCard(path, savePng))
-            {
-                ChatFile.characterCardPath = path;
-                return true;
-            }
-            return false;
+            File.WriteAllText(ChatFile.ConfigPath, JsonConvert.SerializeObject(ChatFile, Formatting.Indented));
+            Table.Save(ChatFile.TablePath);
+            DataBase.Save(ChatFile.GraphPath);
         }
     }
 }

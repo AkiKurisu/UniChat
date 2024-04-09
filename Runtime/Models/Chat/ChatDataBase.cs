@@ -7,7 +7,7 @@ namespace Kurisu.UniChat
         public int Count => edges.Count;
         public ChatDataBase(int dim = 512) : base(dim) { }
         public ChatDataBase(string filePath) : base(filePath) { }
-        public bool AddEmbedding(uint inputHash, Embedding inputEmbedding, uint outputHash, Embedding outputEmbedding)
+        public bool AddEdge(uint inputHash, Embedding inputEmbedding, uint outputHash, Embedding outputEmbedding)
         {
             AddEmbedding(inputEmbedding);
             AddEmbedding(outputEmbedding);
@@ -47,6 +47,11 @@ namespace Kurisu.UniChat
         {
             var slice = new NativeSlice<float>(embeddings.AsArray(), index * dim, dim);
             slice.CopyFrom(embedding.values);
+        }
+        public void RemoveEdge(int index)
+        {
+            edges.RemoveRange(index, 2);
+            embeddings.RemoveRange(index * dim, 2 * dim);
         }
         public uint GetOutput(int index)
         {

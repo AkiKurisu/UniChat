@@ -110,7 +110,7 @@ namespace Kurisu.UniChat
                     {
                         //Add to source table
                         if (SourceTable.AddEntry(entry))
-                            DataBase.AddEmbedding(inputHash, inputEmb, outputHash, outputEmb);
+                            DataBase.AddEdge(inputHash, inputEmb, outputHash, outputEmb);
                     }
                 }
             }
