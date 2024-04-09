@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Kurisu.NGDS.AI;
 using Newtonsoft.Json;
-using UnityEngine;
 using System.IO;
 namespace Kurisu.UniChat
 {
@@ -13,9 +12,9 @@ namespace Kurisu.UniChat
         public const int ChatGPTGeneratorId = 1;
         public const int OobaboogaGeneratorId = 2;
         public const int KoboldCPPGeneratorId = 3;
-        public string Context { get; set; } = string.Empty;
-        public string UserName { get; set; } = string.Empty;
-        public string BotName { get; set; } = string.Empty;
+        public string Context { get => History.Context; set => History.Context = value; }
+        public string UserName { get => History.UserName; set => History.UserName = value; }
+        public string BotName { get => History.BotName; set => History.BotName = value; }
         public event Action<GenerateContext> OnGetContext;
         public ChatHistoryContext History { get; } = new();
         private readonly Dictionary<int, IGenerator> generatorMap = new();
@@ -28,7 +27,7 @@ namespace Kurisu.UniChat
             this.aiTurboSetting = aiTurboSetting;
             Generator = generatorMap[-1] = new InputGenerator(OnCallGeneration);
         }
-        public void SwapGenerator(int generatorId)
+        public void SwapGenerator(int generatorId, bool forceNewGenerator)
         {
             if (generatorId == InputGeneratorId)
             {
@@ -43,13 +42,13 @@ namespace Kurisu.UniChat
                     KoboldCPPGeneratorId => LLMType.KoboldCPP,
                     _ => throw new ArgumentOutOfRangeException()
                 };
-                SwitchLLMGenerator(llmType);
+                SwitchLLMGenerator(llmType, forceNewGenerator);
             }
         }
-        private IGenerator SwitchLLMGenerator(LLMType llmType)
+        private IGenerator SwitchLLMGenerator(LLMType llmType, bool forceNewGenerator)
         {
             int id = (int)llmType;
-            if (!generatorMap.TryGetValue(id, out var generator))
+            if (forceNewGenerator || !generatorMap.TryGetValue(id, out var generator))
             {
                 generator = generatorMap[id] = new LLMGenerator(LLMFactory.Create(llmType, aiTurboSetting), History);
             }
@@ -62,7 +61,6 @@ namespace Kurisu.UniChat
         public UniTaskCompletionSource<bool> OnCallGeneration(GenerateContext generateContext)
         {
             this.generateContext = generateContext;
-            Debug.Log("Call generator");
             OnGetContext?.Invoke(generateContext);
             waitSource = new UniTaskCompletionSource<bool>();
             return waitSource;
@@ -80,7 +78,6 @@ namespace Kurisu.UniChat
         }
         public void SaveSession(string filePath)
         {
-            Debug.Log($"Chat session was saved to {filePath}");
             File.WriteAllText(filePath, JsonConvert.SerializeObject(History.SaveSession(), Formatting.Indented));
         }
         public bool LoadSession(string filePath)
