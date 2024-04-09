@@ -85,6 +85,20 @@ pubic void Save()
 
 嵌入模型默认使用`BAAI/bge-small-zh-v1.5`，占用显存内存最少，仅支持中文，你可以自行从`HuggingFaceHub`下载同类模型并转为Onnx格式。
 
+加载方式可以选择`UserDataProvider`,`StreamingAssetsProvider`和`ResourcesProvider`，如安装`Unity.Addressables`可选`AddressableProvider`。
+
+`UserDataProvider`文件路径如下:
+
+![UserData](Images/userdata_provider.png)
+
+`ResourcesProvider`则将models文件夹中的文件放入Resources文件夹即可。
+
+`StreamingAssetsProvider`则将models文件夹中的文件放入StreamingAssets文件夹即可。
+
+`AddressablesProvider`的Address如下:
+
+![Addressables](Images/addressable-provider.png)
+
 ## 语音组件
 
 如果你有语音合成方案，可以使用`AudioFileAssist`将语音保存在Model目录下,你也可以参考[VITSClient](./Runtime/Models/Audio/VITSClient.cs)
