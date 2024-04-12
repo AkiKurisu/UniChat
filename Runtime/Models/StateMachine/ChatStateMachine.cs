@@ -1,4 +1,5 @@
 using System;
+using Cysharp.Threading.Tasks;
 using Unity.Collections;
 using Unity.Sentis;
 using UnityEngine;
@@ -9,7 +10,7 @@ namespace Kurisu.UniChat.StateMachine
     {
         public ChatState[] states = new ChatState[0];
         public ChatState CurrentState { get; private set; }
-        private readonly int dim;
+        public readonly int dim;
         public event Action<uint, uint> OnStateChanged;
         public ChatStateMachine(int dim)
         {
@@ -23,11 +24,12 @@ namespace Kurisu.UniChat.StateMachine
             }
             return null;
         }
-        public void Execute(Ops ops, TensorFloat inputTensor)
+        public async UniTask Execute(Ops ops, TensorFloat inputTensor)
         {
             if (TryGetNextState(ops, inputTensor, out uint id))
             {
                 TransitionState(id);
+                await CurrentState.UpdateState();
             }
             //Check state has direct transitions
             const int stackCount = 10;
@@ -37,6 +39,7 @@ namespace Kurisu.UniChat.StateMachine
             {
                 count++;
                 TransitionState(id);
+                await CurrentState.UpdateState();
             }
         }
         public bool TryGetNextState(Ops ops, TensorFloat inputTensor, out uint id)

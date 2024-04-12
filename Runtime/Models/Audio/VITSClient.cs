@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Kurisu.NGDS;
@@ -5,6 +6,9 @@ using UnityEngine;
 using UnityEngine.Networking;
 namespace Kurisu.UniChat
 {
+    /// <summary>
+    /// Sample client if use vits-simple-api
+    /// </summary>
     public class VITSClient
     {
         private const string APIBase = "http://{0}:{1}/voice/{2}?text={3}&id={4}&lang={5}";
@@ -24,18 +28,18 @@ namespace Kurisu.UniChat
         {
             return string.Format(APIBase, address, port, api, message, characterID, lang);
         }
-        public async UniTask<bool> TryRequest(string dummyInput = "你好")
+        public async UniTask<bool> TryRequest(string dummyInput = "你好", int timeoutSeconds = 15)
         {
             using UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip(GetURL(dummyInput, 0), AudioType.WAV);
             try
             {
-                await www.SendWebRequest().ToUniTask(default);
+                await www.SendWebRequest().ToUniTask().Timeout(new TimeSpan(timeoutSeconds * TimeSpan.TicksPerSecond));
+                return true;
             }
-            catch (UnityWebRequestException)
+            catch
             {
                 return false;
             }
-            return true;
         }
         public async UniTask<AudioClip> SendRequestAsync(string message, int characterID, CancellationToken ct)
         {

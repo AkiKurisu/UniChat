@@ -90,5 +90,10 @@ namespace Kurisu.UniChat
             History.LoadSession(session); ;
             return true;
         }
+        public bool LoadSession(ChatSession chatSession)
+        {
+            History.LoadSession(chatSession);
+            return true;
+        }
     }
 }

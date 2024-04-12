@@ -4,7 +4,6 @@ using Cysharp.Threading.Tasks;
 using Kurisu.NGDS.NLP;
 using Newtonsoft.Json;
 using Unity.Sentis;
-using UnityEngine;
 using UnityEngine.Pool;
 namespace Kurisu.UniChat
 {

@@ -1,7 +1,9 @@
 using System;
+using Cysharp.Threading.Tasks;
 using Kurisu.NGDS.NLP;
 using Unity.Collections;
 using Unity.Sentis;
+using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Pool;
 using UObject = UnityEngine.Object;
@@ -51,11 +53,11 @@ namespace Kurisu.UniChat.StateMachine
                 behaviors[i].OnStateEnter();
             }
         }
-        public void UpdateState()
+        public async UniTask UpdateState()
         {
             for (int i = 0; i < behaviors.Length; ++i)
             {
-                behaviors[i].OnStateUpdate();
+                await behaviors[i].OnStateUpdate();
             }
         }
         public void ExistState()
@@ -112,6 +114,10 @@ namespace Kurisu.UniChat.StateMachine
         {
             uniqueId = XXHash.CalculateHash(stateName);
         }
+        public LazyStateReference(uint uniqueId)
+        {
+            this.uniqueId = uniqueId;
+        }
         public readonly bool IsNull() => uniqueId == default;
         public static implicit operator uint(LazyStateReference lazyStateReference)
         {
@@ -128,6 +134,10 @@ namespace Kurisu.UniChat.StateMachine
         public ChatStateTransition(LazyStateReference lazyDestination)
         {
             this.lazyDestination = lazyDestination;
+        }
+        public ChatStateTransition(string destinationStateName)
+        {
+            lazyDestination = new(destinationStateName);
         }
         public void AddCondition(ChatConditionMode mode, float threshold, string parameter)
         {
@@ -176,18 +186,28 @@ namespace Kurisu.UniChat.StateMachine
         Equals = 5,
         NotEqual = 6,
     }
+    [Serializable]
     public class ChatCondition
     {
-        public ChatConditionMode mode;
-        public float threshold;
+        [Tooltip("Text to compare")]
         public string parameter;
+        [Tooltip("Text comparison mode")]
+        public ChatConditionMode mode;
+        [Tooltip("Comparison threshold")]
+        public float threshold;
     }
-    public class ChatStateMachineBehavior
+    [Serializable]
+    public abstract class ChatStateMachineBehavior
     {
         public virtual void OnStateMachineEnter(UObject hostObject) { }
         public virtual void OnStateMachineExit(UObject hostObject) { }
         public virtual void OnStateEnter() { }
-        public virtual void OnStateUpdate() { }
+        public virtual UniTask OnStateUpdate() { return UniTask.CompletedTask; }
         public virtual void OnStateExit() { }
+    }
+    [Serializable]
+    public class InvalidStateMachineBehavior : ChatStateMachineBehavior
+    {
+        public string missingType;
     }
 }

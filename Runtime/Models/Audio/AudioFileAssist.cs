@@ -35,7 +35,7 @@ namespace Kurisu.UniChat
         {
             for (int i = 0; i < audioClips.Length; ++i)
             {
-                string fileName = $"{sourceHash.ToString()[..6]}{i:D2}";
+                string fileName = $"{sourceHash}-{i:D2}";
                 files.Add(fileName);
                 WavUtil.Save(Path.Combine(folderPath, $"{fileName}.wav"), audioClips[i]);
             }
@@ -72,18 +72,28 @@ namespace Kurisu.UniChat
         {
             foreach (var file in files)
             {
-                if (file.Contains(sourceHash.ToString()[..6])) return true;
+                if (file.Contains(sourceHash.ToString())) return true;
             }
             return false;
         }
         public string[] GetSegments(uint sourceHash)
         {
-            return files.Where(x => x.Contains(sourceHash.ToString()[..6])).Select(x => segments[files.IndexOf(x)]).ToArray();
+            return files.Where(x => x.Contains(sourceHash.ToString())).Select(x => segments[files.IndexOf(x)]).ToArray();
         }
         public IEnumerable<(string filePath, string segment)> GetPathAndSegments(uint sourceHash)
         {
-            return files.Where(x => x.Contains(sourceHash.ToString()[..6]))
+            return files.Where(x => x.Contains(sourceHash.ToString()))
                         .Select(x => (Path.Combine(folderPath, $"{x}.wav"), segments[files.IndexOf(x)]));
+        }
+        public void Delate(uint sourceHash)
+        {
+            for (int i = segments.Count - 1; i >= 0; i--)
+            {
+                if (!files[i].Contains(sourceHash.ToString())) continue;
+                if (File.Exists(files[i])) File.Delete(files[i]);
+                segments.RemoveAt(i);
+                files.RemoveAt(i);
+            }
         }
         public async UniTask<(AudioClip[] clips, string[] segments)> Load(uint sourceHash)
         {

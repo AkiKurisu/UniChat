@@ -1,5 +1,8 @@
 using System;
+using System.IO;
+using Cysharp.Threading.Tasks;
 using Kurisu.NGDS.NLP;
+using Newtonsoft.Json;
 using Unity.Sentis;
 using UnityEngine.Pool;
 using UObject = UnityEngine.Object;
@@ -34,10 +37,23 @@ namespace Kurisu.UniChat.StateMachine
             EncodeTransitions(layer);
         }
         /// <summary>
+        /// Set stateMachines from graph
+        /// </summary>
+        /// <param name="graph"></param>
+        public void SetGraph(ChatStateMachineGraph graph)
+        {
+            var sms = graph.Deserialize();
+            Array.Resize(ref stateMachines, sms.Length);
+            for (int i = 0; i < sms.Length; ++i)
+            {
+                SetStateMachine(i, sms[i]);
+            }
+        }
+        /// <summary>
         /// Execute all layers
         /// </summary>
         /// <param name="input"></param>
-        public void Execute(string input)
+        public async UniTask Execute(string input)
         {
             var pool = ListPool<string>.Get();
             pool.Add(input);
@@ -46,7 +62,7 @@ namespace Kurisu.UniChat.StateMachine
                 TensorFloat inputTensor = encoder.Encode_Mean_Pooling(ops, pool, true);
                 for (int i = 0; i < stateMachines.Length; ++i)
                 {
-                    stateMachines[i].Execute(ops, inputTensor);
+                    await stateMachines[i].Execute(ops, inputTensor);
                 }
             }
             finally
@@ -58,13 +74,13 @@ namespace Kurisu.UniChat.StateMachine
         /// Execute layer's stateMachine
         /// </summary>
         /// <param name="input"></param>
-        public void Execute(int layer, string input)
+        public async UniTask Execute(int layer, string input)
         {
             var pool = ListPool<string>.Get();
             pool.Add(input);
             try
             {
-                stateMachines[layer].Execute(ops, encoder.Encode_Mean_Pooling(ops, pool, true));
+                await stateMachines[layer].Execute(ops, encoder.Encode_Mean_Pooling(ops, pool, true));
             }
             finally
             {
@@ -84,6 +100,46 @@ namespace Kurisu.UniChat.StateMachine
                     if (!transition.lazyDestination.IsNull()) transition.destination = stateMachines[layer].GetState(transition.lazyDestination);
                 }
             }
+        }
+        /// <summary>
+        /// Save stateMachine to graph bytes
+        /// </summary>
+        /// <param name="path"></param>
+        public void Save(string path)
+        {
+            using var stream = new FileStream(path, FileMode.Create, FileAccess.Write);
+            Save(stream);
+        }
+        public void Save(Stream stream)
+        {
+            using var bw = new BinaryWriter(stream);
+            Save(bw);
+        }
+        public void Save(BinaryWriter bw)
+        {
+            var graph = new ChatStateMachineGraph();
+            graph.Serialize(stateMachines);
+            bw.Write(JsonConvert.SerializeObject(graph));
+        }
+        /// <summary>
+        /// Load stateMachines from graph bytes
+        /// </summary>
+        /// <param name="path"></param>
+        public void Load(string path)
+        {
+            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read);
+            Load(stream);
+        }
+        public void Load(Stream stream)
+        {
+            using var br = new BinaryReader(stream);
+            Load(br);
+        }
+        public void Load(BinaryReader br)
+        {
+            string json = br.ReadString();
+            var graph = JsonConvert.DeserializeObject<ChatStateMachineGraph>(json);
+            SetGraph(graph);
         }
         public void Dispose()
         {

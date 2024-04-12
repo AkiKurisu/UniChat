@@ -1,9 +1,10 @@
 using System.Collections;
 using System.Linq;
 using System.Reflection;
+using Cysharp.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
-namespace Kurisu.UniChat.Editor
+namespace Kurisu.UniChat.Editor.TextTable
 {
     public class TextTableEditorWindow : EditorWindow
     {
@@ -48,11 +49,15 @@ namespace Kurisu.UniChat.Editor
                 EditorGUILayout.PropertyField(property);
             }
             EditorGUILayout.EndVertical();
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Clear", FixedWidthButtonStyle))
+            EditorGUILayout.BeginVertical();
+            for (int i = 0; i < size; ++i)
             {
-                editorTable.Delate(id);
+                if (GUILayout.Button("Play", FixedWidthButtonStyle))
+                {
+                    editorTable.PlayAudio(id, i).Forget();
+                }
             }
+            EditorGUILayout.EndVertical();
             EditorGUILayout.EndHorizontal();
 
         }
@@ -87,6 +92,7 @@ namespace Kurisu.UniChat.Editor
                 }
                 EditorGUILayout.EndHorizontal();
                 DrawAudioInfos(id, audioInfos.arraySize, audioInfos.GetEnumerator());
+                GUILayout.Space(20);
             }
             EditorGUILayout.EndScrollView();
             GUILayout.FlexibleSpace();
