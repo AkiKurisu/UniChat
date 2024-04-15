@@ -6,6 +6,8 @@
 
 A Unity Chat Bot pipeline for on-line and off-line operation.
 
+<img src="Images/Icon.png" width="256"/>
+
 </div>
 
   - [Introduction](#introduction)

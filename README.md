@@ -6,6 +6,8 @@
 
 一个在线和离线时的Unity Chat Bot管线。
 
+<img src="Images/Icon.png" width="256"/>
+
 </div>
 
   - [简介](#简介)
