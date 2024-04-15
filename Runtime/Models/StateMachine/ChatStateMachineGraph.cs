@@ -36,7 +36,8 @@ namespace Kurisu.UniChat.StateMachine
                     behaviorType = typeof(InvalidStateMachineBehavior);
                     string missingType = serializedType;
                     serializedType = SerializedType.ToString(behaviorType);
-                    return new InvalidStateMachineBehavior() { missingType = missingType };
+                    Debug.LogWarning($"Missing type {missingType} when deserialize {nameof(ChatStateMachineBehavior)}");
+                    return new InvalidStateMachineBehavior() { missingType = missingType, serializedData = jsonData };
                 }
                 return JsonConvert.DeserializeObject(jsonData, behaviorType) as ChatStateMachineBehavior;
             }

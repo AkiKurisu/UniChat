@@ -1,54 +1,73 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Cysharp.Threading.Tasks;
-using Kurisu.NGDS.NLP;
+using Kurisu.UniChat.LLMs;
+using Kurisu.UniChat.Memory;
+using Kurisu.UniChat.NLP;
 using Newtonsoft.Json;
 using Unity.Sentis;
+using UnityEngine.Assertions;
 using UnityEngine.Pool;
 namespace Kurisu.UniChat
 {
-    public class ChatModelFile
-    {
-        /// <summary>
-        /// Override directory loading path
-        /// </summary>
-        [JsonIgnore]
-        public string directoryOverridePath;
-        public string fileName = "ChatModel";
-        /// <summary>
-        /// Dim according to your embedding model
-        /// </summary>
-        public int embeddingDim = 512;
-        /// <summary>
-        /// Embedding model to use
-        /// </summary>
-        public string embeddingModelName = "bge-small-zh-v1.5";
-        /// <summary>
-        /// Embedding model provider, default load from UserData/models
-        /// </summary>
-        public string modelProvider = ModelProviderFactory.UserDataProvider;
-        public const string tableFileName = "table.bin";
-        public const string graphFileName = "graph.bin";
-        public const string configFileName = "model.cfg";
-        [JsonIgnore]
-        public string DirectoryPath => directoryOverridePath ?? Path.Combine(PathUtil.UserDataPath, fileName);
-        [JsonIgnore]
-        public string GraphPath => Path.Combine(DirectoryPath, graphFileName);
-        [JsonIgnore]
-        public string TablePath => Path.Combine(DirectoryPath, tableFileName);
-        [JsonIgnore]
-        public string ConfigPath => Path.Combine(DirectoryPath, configFileName);
-        [JsonIgnore]
-        public string ModelPath => $"{embeddingModelName}/model.sentis";
-        [JsonIgnore]
-        public string TokenizerPath => $"{embeddingModelName}/tokenizer.json";
-    }
     public class PipelineConfig
     {
-        public BackendType backendType;
-        public bool canWrite;
-        public float inputThreshold;
-        public float outputThreshold;
+        /// <summary>
+        /// Run pipeline on which backend
+        /// </summary>
+        public BackendType backendType = BackendType.GPUCompute;
+        /// <summary>
+        /// Log pipeline status
+        /// </summary>
+        public bool verbose = false;
+        /// <summary>
+        /// Whether write data to source table and dataBase
+        /// </summary>
+        public bool canWrite = true;
+        /// <summary>
+        /// Pipeline input score threshold
+        /// </summary>
+        public float inputThreshold = 0.85f;
+        /// <summary>
+        /// Pipeline output score threshold
+        /// </summary>
+        public float outputThreshold = 0.85f;
+        public static PipelineConfig Default = new()
+        {
+            backendType = BackendType.GPUCompute,
+            canWrite = true,
+            verbose = false,
+            inputThreshold = 0.85f,
+            outputThreshold = 0.85f
+        };
+    }
+    public class InputGenerationRequest
+    {
+        public GenerateContext generateContext;
+        public UniTaskCompletionSource<bool> waitSource;
+        public InputGenerationRequest(GenerateContext generateContext)
+        {
+            this.generateContext = generateContext;
+            waitSource = new();
+        }
+        public void SetResult(string generatedContent)
+        {
+            generateContext.generatedContent = generatedContent;
+            waitSource?.TrySetResult(true);
+            waitSource = null;
+        }
+        public void Cancel()
+        {
+            waitSource?.TrySetResult(false);
+            waitSource = null;
+        }
+    }
+    public static class ChatGeneratorIds
+    {
+        public const int Input = 0;
+        public const int ChatGPT = 1;
+        public const int Oobabooga = 2;
     }
     public class ChatPipelineCtrl<TPipeline, KTable> : IDisposable
     where TPipeline : ChatPipeline, new()
@@ -59,10 +78,17 @@ namespace Kurisu.UniChat
         public KTable Table { get; protected set; }
         public ChatModelFile ChatFile { get; protected set; }
         public ISplitter Splitter { get; protected set; }
-        public IChatHistoryQuery HistoryQuery { get; protected set; }
         public IGenerator Generator { get; protected set; }
         public TPipeline Pipeline { get; protected set; }
-        public ChatPipelineCtrl(ChatModelFile chatFile)
+        public ChatHistory History { get; } = new();
+        public ChatMemory Memory { get; protected set; }
+        public ILLMSettings LLMSettings { get; protected set; }
+        public string Context { get => Memory.Context; set => Memory.Context = value; }
+        public string UserName { get => Memory.UserName; set => Memory.UserName = value; }
+        public string BotName { get => Memory.BotName; set => Memory.BotName = value; }
+        public event Action<InputGenerationRequest> OnCallGeneration;
+        private readonly Dictionary<int, IGenerator> generatorMap = new();
+        public ChatPipelineCtrl(ChatModelFile chatFile, ILLMSettings llmSettings)
         {
             ChatFile = chatFile;
             var graphPath = ChatFile.GraphPath;
@@ -80,12 +106,70 @@ namespace Kurisu.UniChat
             {
                 Table.Load(tablePath);
             }
-            Splitter = new SlidingWindowSplitter(256);
+            LLMSettings = llmSettings;
+            Splitter = CreateSplitter(chatFile.splitter, chatFile.splitterPattern);
+            Generator = generatorMap[-1] = new InputGenerator(OnInputGeneration);
+            Assert.IsNotNull(Splitter);
+            Memory = CreateMemory(chatFile.memory, chatFile.memoryPattern);
+            Assert.IsNotNull(Memory);
+            Memory.ChatHistory = History;
         }
-        public virtual async UniTask InitializePipeline(IGenerator generator, IChatHistoryQuery historyQuery, PipelineConfig config)
+        public static ISplitter CreateSplitter(string splitter, string pattern)
         {
-            Generator = generator;
-            HistoryQuery = historyQuery;
+            Type splitterType = splitter switch
+            {
+                nameof(SlidingWindowSplitter) => typeof(SlidingWindowSplitter),
+                nameof(RegexSplitter) => typeof(RegexSplitter),
+                nameof(RecursiveCharacterTextSplitter) => typeof(RecursiveCharacterTextSplitter),
+                _ => throw new ArgumentOutOfRangeException(nameof(splitterType)),
+            };
+            if (!string.IsNullOrEmpty(pattern))
+                return JsonConvert.DeserializeObject(pattern, splitterType) as ISplitter;
+            else
+                return Activator.CreateInstance(splitterType) as ISplitter;
+        }
+        public static ChatMemory CreateMemory(string memory, string pattern)
+        {
+            Type memoryType = memory switch
+            {
+                nameof(ChatBufferMemory) => typeof(ChatBufferMemory),
+                nameof(ChatWindowBufferMemory) => typeof(ChatWindowBufferMemory),
+                _ => throw new ArgumentOutOfRangeException(nameof(memoryType)),
+            };
+            if (!string.IsNullOrEmpty(pattern))
+                return JsonConvert.DeserializeObject(pattern, memoryType) as ChatMemory;
+            else
+                return Activator.CreateInstance(memoryType) as ChatMemory;
+        }
+        /// <summary>
+        /// Set and save splitter
+        /// </summary>
+        /// <param name="splitter"></param>
+        public void SetSplitter(ISplitter splitter)
+        {
+            Splitter = splitter;
+            ChatFile.splitter = splitter.GetType().Name;
+            ChatFile.splitterPattern = JsonConvert.SerializeObject(splitter);
+        }
+        /// <summary>
+        /// Save and set memory
+        /// </summary>
+        /// <param name="memory"></param>
+        public void SetMemory(ChatMemory memory)
+        {
+            Memory = memory;
+            Memory.ChatHistory = History;
+            ChatFile.memory = memory.GetType().Name;
+            ChatFile.memoryPattern = JsonConvert.SerializeObject(memory);
+        }
+        /// <summary>
+        /// Initialize pipeline if change properties
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public virtual async UniTask InitializePipeline(PipelineConfig config = null)
+        {
+            config ??= PipelineConfig.Default;
             Encoder?.Dispose();
             Pipeline?.Dispose();
             ModelProvider provider = ModelProviderFactory.Instance.Create(ChatFile.modelProvider);
@@ -96,14 +180,15 @@ namespace Kurisu.UniChat
             );
             Pipeline = new TPipeline()
                             .SetBackend(config.backendType)
-                            .SetInputConvertor(new ChatPipeline.ContextConverter(Encoder, historyQuery))
+                            .SetInputConvertor(new ChatPipeline.ContextConverter(Encoder, Memory))
                             .SetOutputConvertor(new MultiEncoderConverter(Encoder))
-                            .SetGenerator(generator)
-                            .SetHistoryQuery(historyQuery)
+                            .SetGenerator(Generator)
+                            .SetMemory(Memory)
                             .SetSource(Table)
                             .SetEmbedding(DataBase)
                             .SetPersister(config.canWrite ? new TextEmbeddingTable.PersistHandler() : null)
                             .SetTemperature(config.outputThreshold)
+                            .SetVerbose(config.verbose)
                             .SetFilter(new TopSimilarityFilter(config.inputThreshold)) as TPipeline;
         }
         public void ReleasePipeline()
@@ -114,13 +199,13 @@ namespace Kurisu.UniChat
         public void Dispose()
         {
             ReleasePipeline();
-            Encoder.Dispose();
-            DataBase.Dispose();
+            Encoder?.Dispose();
+            DataBase?.Dispose();
         }
         public async UniTask<GenerateContext> RunPipeline()
         {
             var pool = ListPool<string>.Get();
-            Splitter.Split(HistoryQuery.GetHistoryContext(), pool);
+            Splitter.Split(Memory.GetHistoryContext(), pool);
             var context = new GenerateContext(pool);
             try
             {
@@ -132,6 +217,42 @@ namespace Kurisu.UniChat
                 ListPool<string>.Release(pool);
             }
         }
+        public void SwitchGenerator(int generatorId, bool forceNewGenerator)
+        {
+            if (generatorId == ChatGeneratorIds.Input)
+            {
+                SwitchInputGenerator();
+            }
+            else
+            {
+                var llmType = generatorId switch
+                {
+                    ChatGeneratorIds.ChatGPT => LLMType.ChatGPT,
+                    ChatGeneratorIds.Oobabooga => LLMType.Oobabooga,
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+                SwitchLLMGenerator(llmType, forceNewGenerator);
+            }
+        }
+        private IGenerator SwitchLLMGenerator(LLMType llmType, bool forceNewGenerator)
+        {
+            int id = (int)llmType;
+            if (forceNewGenerator || !generatorMap.TryGetValue(id, out var generator))
+            {
+                generator = generatorMap[id] = new LLMGenerator(LLMFactory.Create(llmType, LLMSettings), Memory);
+            }
+            return Generator = generator;
+        }
+        private IGenerator SwitchInputGenerator()
+        {
+            return Generator = generatorMap[-1];
+        }
+        private UniTaskCompletionSource<bool> OnInputGeneration(GenerateContext generateContext)
+        {
+            var request = new InputGenerationRequest(generateContext);
+            OnCallGeneration?.Invoke(request);
+            return request.waitSource;
+        }
         public void SaveModel()
         {
             if (!Directory.Exists(ChatFile.DirectoryPath))
@@ -141,6 +262,34 @@ namespace Kurisu.UniChat
             File.WriteAllText(ChatFile.ConfigPath, JsonConvert.SerializeObject(ChatFile, Formatting.Indented));
             Table.Save(ChatFile.TablePath);
             DataBase.Save(ChatFile.GraphPath);
+        }
+        public void SaveSession(string filePath)
+        {
+            File.WriteAllText(filePath, JsonConvert.SerializeObject(History.SaveSession(), Formatting.Indented));
+        }
+        public bool LoadSession(string filePath)
+        {
+            if (!File.Exists(filePath))
+            {
+                return false;
+            }
+            var session = JsonConvert.DeserializeObject<ChatSession>(File.ReadAllText(filePath));
+            History.LoadSession(session); ;
+            return true;
+        }
+        public bool LoadSession(ChatSession chatSession)
+        {
+            History.LoadSession(chatSession);
+            return true;
+        }
+    }
+    /// <summary>
+    /// Default pipeline ctrl for <see cref="TextEmbeddingTable"/>
+    /// </summary>
+    public class ChatPipelineCtrl : ChatPipelineCtrl<ChatPipeline, TextEmbeddingTable>
+    {
+        public ChatPipelineCtrl(ChatModelFile chatFile, ILLMSettings llmSettings) : base(chatFile, llmSettings)
+        {
         }
     }
 }

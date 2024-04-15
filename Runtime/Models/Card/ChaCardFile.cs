@@ -1,12 +1,11 @@
 ﻿using System.IO;
-using Kurisu.NGDS.AI;
 using Newtonsoft.Json;
 namespace Kurisu.UniChat
 {
     public class ChaCardFile
     {
         public byte[] pngData;
-        public TavernAICharacterCard tavernAIData;
+        public TavernAICard tavernAIData;
         public ChaCardFile()
         {
             tavernAIData = new();
@@ -44,7 +43,7 @@ namespace Kurisu.UniChat
         }
         public bool LoadCharacterJson(string path)
         {
-            tavernAIData = JsonConvert.DeserializeObject<TavernAICharacterCard>(File.ReadAllText(path));
+            tavernAIData = JsonConvert.DeserializeObject<TavernAICard>(File.ReadAllText(path));
             return true;
         }
         public virtual bool LoadCard(BinaryReader br, bool noLoadPNG = false)
@@ -70,7 +69,7 @@ namespace Kurisu.UniChat
                 return false;
             }
             var json = br.ReadString();
-            tavernAIData = JsonConvert.DeserializeObject<TavernAICharacterCard>(json);
+            tavernAIData = JsonConvert.DeserializeObject<TavernAICard>(json);
             return true;
         }
         public bool SaveCard(string path, bool savePng)

@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Kurisu.NGDS.NLP;
 using Unity.Collections;
 using Unity.Sentis;
 using UnityEngine.Assertions;
@@ -19,17 +18,17 @@ namespace Kurisu.UniChat
             private readonly IEncoder encoder;
             private static readonly int[] reduceAxis = new int[1] { 1 };
             private readonly TensorFloat[] inputTensors;
-            private readonly IChatHistoryQuery historyQuery;
-            public ContextConverter(IEncoder encoder, IChatHistoryQuery historyQuery)
+            private readonly IChatMemory memory;
+            public ContextConverter(IEncoder encoder, IChatMemory memory)
             {
                 this.encoder = encoder;
-                this.historyQuery = historyQuery;
+                this.memory = memory;
                 inputTensors = new TensorFloat[2];
             }
             public TensorFloat[] Convert(Ops ops, IReadOnlyList<string> inputs)
             {
                 //Exclude last bot response 
-                var lastResponse = historyQuery.GetBotMessages().LastOrDefault()?.Content;
+                var lastResponse = memory.GetMessages(MessageRole.Bot).LastOrDefault()?.Content;
                 if (lastResponse != null)
                     inputTensors[1] = encoder.Encode(ops, lastResponse);
                 else
@@ -41,27 +40,29 @@ namespace Kurisu.UniChat
             }
         }
         private readonly SemaphoreSlim semaphore = new(1, 1);
-        #region  Properties
-        protected ITensorConverter InputConverter { get; set; }
-        protected ITensorConverter OutputConverter { get; set; }
-        protected IGenerator Generator { get; set; }
-        protected IFilter Filter { get; set; }
-        protected IEmbeddingTable SourceTable { get; set; }
-        protected IChatHistoryQuery HistoryQuery { get; set; }
-        protected IPersistEmbeddingValue<string> StringPersister { get; set; }
-        protected ChatDataBase DataBase { get; set; }
-        #endregion
-        private CancellationTokenSource ct;
-        private readonly ITensorAllocator allocator = new TensorCachingAllocator();
-        protected Ops ops;
+        #region Public Properties
+        public bool Verbose { get; set; }
+        public ITensorConverter InputConverter { get; set; }
+        public ITensorConverter OutputConverter { get; set; }
+        public IGenerator Generator { get; set; }
+        public IFilter Filter { get; set; }
+        public IEmbeddingTable SourceTable { get; set; }
+        public IChatMemory Memory { get; set; }
+        public IPersistEmbeddingValue<string> StringPersister { get; set; }
+        public ChatDataBase DataBase { get; set; }
         /// <summary>
         /// Output threshold to clip answers above this value, useful for multi-turn chat
         /// </summary>
         public float Temperature { get; set; } = 0.85f;
+        #endregion
+        private CancellationTokenSource ct;
+        private readonly ITensorAllocator allocator = new TensorCachingAllocator();
+        protected Ops ops;
+
         private void AssertPipeline()
         {
             Assert.IsNotNull(ops);
-            Assert.IsNotNull(HistoryQuery);
+            Assert.IsNotNull(Memory);
             Assert.IsNotNull(InputConverter);
             Assert.IsNotNull(OutputConverter);
             Assert.IsNotNull(Filter);
@@ -97,7 +98,7 @@ namespace Kurisu.UniChat
             TensorFloat mask = TensorFloat.Zeros(new TensorShape(1, DataBase.Count));//transpose
             for (int i = 0; i < DataBase.Count; ++i)
             {
-                mask[0, i] = HistoryQuery.TryGetBotMessage(DataBase.GetOutput(i), out _) ? 0 : 1;
+                mask[0, i] = Memory.TryGetMessage(MessageRole.Bot, DataBase.GetOutput(i), out _) ? 0 : 1;
             }
             return ops.Mul(clippingScores, mask);
         }
@@ -111,7 +112,7 @@ namespace Kurisu.UniChat
             await semaphore.WaitAsync();
             ct?.Dispose();
             ct = new();
-            Debug.Log("Pipeline start...");
+            if (Verbose) Debug.Log("Pipeline start...");
             var stopWatch = new Stopwatch();
             stopWatch.Start();
             NativeArray<int> ids = default;
@@ -119,9 +120,11 @@ namespace Kurisu.UniChat
             try
             {
                 AssertPipeline();
+                if (Verbose) Debug.Log($"Pipeline convert inputs, batch size {context.input.Count}, inputs content: {string.Concat(context.input)}");
                 TensorFloat[] inputTensors = InputConverter.Convert(ops, context.input);
                 if (DataBase.Count > 0 && Filter.Filter(ops, ScoreDataBase(inputTensors), ref ids, ref scores))
                 {
+                    if (Verbose) Debug.Log($"Pipeline call selector");
                     context.flag |= 1 << 0;
                     context.flag |= 1 << 1;
                     SelectorPostProcessing(inputTensors, ref ids, ref scores, context);
@@ -131,8 +134,10 @@ namespace Kurisu.UniChat
                     context.flag |= 0 << 0;
                     if (Generator != null)
                     {
+                        if (Verbose) Debug.Log($"Pipeline call generator");
                         if (await Generator.Generate(context, ct.Token))
                         {
+                            if (Verbose) Debug.Log($"Generate content: {context.generatedContent}");
                             context.flag |= 1 << 1;
                             GeneratorPostProcessing(inputTensors, context);
                         }
@@ -152,7 +157,7 @@ namespace Kurisu.UniChat
             finally
             {
                 stopWatch.Stop();
-                Debug.Log($"Pipeline end, time used: {stopWatch.ElapsedMilliseconds}.");
+                if (Verbose) Debug.Log($"Pipeline end, time used: {stopWatch.ElapsedMilliseconds}.");
                 semaphore.Release();
                 ids.DisposeSafe();
                 scores.DisposeSafe();
@@ -210,9 +215,14 @@ namespace Kurisu.UniChat
             Temperature = temperature;
             return this;
         }
-        public ChatPipeline SetHistoryQuery(IChatHistoryQuery historyQuery)
+        public ChatPipeline SetVerbose(bool verbose)
         {
-            HistoryQuery = historyQuery;
+            Verbose = verbose;
+            return this;
+        }
+        public ChatPipeline SetMemory(IChatMemory memory)
+        {
+            Memory = memory;
             return this;
         }
         #endregion

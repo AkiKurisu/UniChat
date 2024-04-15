@@ -1,6 +1,6 @@
 using System;
 using Cysharp.Threading.Tasks;
-using Kurisu.NGDS.NLP;
+using Kurisu.UniChat.NLP;
 using Unity.Collections;
 using Unity.Sentis;
 using UnityEngine;
@@ -209,5 +209,6 @@ namespace Kurisu.UniChat.StateMachine
     public class InvalidStateMachineBehavior : ChatStateMachineBehavior
     {
         public string missingType;
+        public string serializedData;
     }
 }

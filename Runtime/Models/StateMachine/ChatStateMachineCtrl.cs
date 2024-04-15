@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using Cysharp.Threading.Tasks;
-using Kurisu.NGDS.NLP;
+using Kurisu.UniChat.NLP;
 using Newtonsoft.Json;
 using Unity.Sentis;
 using UnityEngine.Pool;

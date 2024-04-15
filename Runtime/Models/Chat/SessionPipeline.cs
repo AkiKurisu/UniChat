@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Kurisu.NGDS.NLP;
+using Kurisu.UniChat.NLP;
 using Unity.Sentis;
 using UnityEngine.Assertions;
 using Debug = UnityEngine.Debug;

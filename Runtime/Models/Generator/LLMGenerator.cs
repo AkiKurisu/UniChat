@@ -1,7 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
-using Kurisu.NGDS;
+using Kurisu.UniChat.Memory;
 namespace Kurisu.UniChat
 {
     /// <summary>
@@ -9,22 +9,21 @@ namespace Kurisu.UniChat
     /// </summary>
     public class LLMGenerator : IGenerator
     {
-        private readonly ILLMDriver driver;
-        private readonly ChatHistoryContext chatHistoryContext;
-        public async Task<ILLMOutput> Generate(CancellationToken ct)
+        private readonly ILargeLanguageModel llm;
+        private readonly ChatMemory memory;
+        public async Task<ILLMResponse> InternalCall(CancellationToken ct)
         {
-            var response = await driver.ProcessLLM(chatHistoryContext, ct);
+            var response = await llm.GenerateAsync(memory, ct);
             return response;
         }
-        public LLMGenerator(ILLMDriver driver, ChatHistoryContext chatHistoryContext) : base()
+        public LLMGenerator(ILargeLanguageModel llm, ChatMemory memory) : base()
         {
-            this.chatHistoryContext = chatHistoryContext;
-            this.driver = driver;
+            this.memory = memory;
+            this.llm = llm;
         }
         public async UniTask<bool> Generate(GenerateContext context, CancellationToken ct)
         {
-            driver.SetSystemPrompt(chatHistoryContext.Context);
-            var llmData = await Generate(ct);
+            var llmData = await InternalCall(ct);
             context.generatedContent = llmData.Response;
             return llmData.Status;
         }

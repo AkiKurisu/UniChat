@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Kurisu.NGDS;
 namespace Kurisu.UniChat
 {
     public class GenerateContext
@@ -40,13 +39,24 @@ namespace Kurisu.UniChat
     }
     public class ChatMessage : IMessage
     {
-        public const byte User = 0;
-        public const byte Bot = 1;
-        public byte characterId;
         public string character;
-        public string content;
         public uint id;
-        public string Character => character;
-        public string Content => content;
+        public MessageRole Role { get; set; }
+        public string Content { get; set; }
+    }
+    public static class ChatMessageExtensions
+    {
+        public static bool TryGetMessage(this IChatMemory historyQuery, MessageRole messageRole, uint hash, out ChatMessage message)
+        {
+            foreach (var botMg in historyQuery.GetMessages(messageRole))
+            {
+                if (botMg.id == hash)
+                {
+                    message = botMg; return true;
+                }
+            }
+            message = null;
+            return false;
+        }
     }
 }

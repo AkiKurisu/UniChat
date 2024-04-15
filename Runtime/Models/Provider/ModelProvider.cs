@@ -14,23 +14,23 @@ namespace Kurisu.UniChat
     {
         public abstract UniTask<Model> LoadModel(string path);
         public abstract UniTask<string> LoadTokenizer(string path);
-    }
-    public class ModelProviderFactory
-    {
         public const string UserDataProvider = "UserDataProvider";
         public const string StreamingAssetsProvider = "StreamingAssetsProvider";
         public const string ResourcesProvider = "ResourcesProvider";
         public const string AddressableProvider = "AddressableProvider";
+    }
+    public class ModelProviderFactory
+    {
         public readonly Dictionary<string, Func<ModelProvider>> providerMap = new();
         private static ModelProviderFactory instance;
         public static ModelProviderFactory Instance => instance ??= new();
         public ModelProviderFactory()
         {
-            providerMap.Add(UserDataProvider, () => new FileModelProvider());
-            providerMap.Add(StreamingAssetsProvider, () => new FileModelProvider() { FromStreamingAssets = true });
-            providerMap.Add(ResourcesProvider, () => new ResourcesModelProvider());
+            providerMap.Add(ModelProvider.UserDataProvider, () => new FileModelProvider());
+            providerMap.Add(ModelProvider.StreamingAssetsProvider, () => new FileModelProvider() { FromStreamingAssets = true });
+            providerMap.Add(ModelProvider.ResourcesProvider, () => new ResourcesModelProvider());
 #if ADDRESSABLES_INSTALL
-            providerMap.Add(AddressableProvider, () => new AddressableModelProvider());
+            providerMap.Add(ModelProvider.AddressableProvider, () => new AddressableModelProvider());
 #endif
         }
         public ModelProvider Create(string providerType)

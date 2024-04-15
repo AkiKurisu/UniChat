@@ -42,12 +42,12 @@ namespace Kurisu.UniChat.Editor.TextTable
         public List<Entry> tableEntries = new();
         private TextEmbeddingTable internalTable;
         private string path;
-        private AudioFileAssist audioFileAssist;
+        private AudioCache audioFileAssist;
         public void Initialize(TextEmbeddingTable internalTable, string path)
         {
             this.path = path;
             this.internalTable = internalTable;
-            audioFileAssist = AudioFileAssist.CreateAssist(Path.GetDirectoryName(path));
+            audioFileAssist = AudioCache.CreateCache(Path.GetDirectoryName(path));
             tableEntries.Clear();
             tableEntries.AddRange(internalTable.tableEntries.Select(x => new Entry(x)
             {

@@ -47,22 +47,30 @@ namespace Kurisu.UniChat.StateMachine.Editor
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Load"))
             {
-                path = EditorUtility.OpenFilePanel("Select fsm bytes file", PathUtil.UserDataPath, "bytes");
+                path = EditorUtility.OpenFilePanel("Select fsm bytes file", Application.dataPath, "bytes");
                 if (string.IsNullOrEmpty(path)) return;
                 fileName = Path.GetFileNameWithoutExtension(path);
                 graphCtrl.Load(path);
                 targetObject.Update();
+                Debug.Log($"Load fsm from {path}");
             }
             if (GUILayout.Button("New"))
             {
                 graphCtrl.Reset();
                 targetObject.Update();
             }
+            if (GUILayout.Button("Overwrite"))
+            {
+                graphCtrl.Save(path);
+                Debug.Log($"Save to {path}");
+            }
             if (GUILayout.Button("Save"))
             {
-                path = EditorUtility.OpenFolderPanel("Select folder", PathUtil.UserDataPath, "");
-                if (string.IsNullOrEmpty(path)) return;
-                graphCtrl.Save(Path.Combine(path, $"{fileName}.bytes"));
+                var folder = EditorUtility.OpenFolderPanel("Select folder", Application.dataPath, "");
+                if (string.IsNullOrEmpty(folder)) return;
+                string newPath = Path.Combine(folder, $"{fileName}.bytes");
+                graphCtrl.Save(newPath);
+                Debug.Log($"Save to {newPath}");
             }
             EditorGUILayout.EndHorizontal();
         }

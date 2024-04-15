@@ -1,0 +1,35 @@
+using Kurisu.UniChat.Chains;
+using Kurisu.UniChat.LLMs;
+using UnityEngine;
+namespace Kurisu.UniChat.Example
+{
+    public class LLM_VITS_Chain_Example : MonoBehaviour
+    {
+        public LLMSettingsAsset settingsAsset;
+        public AudioSource audioSource;
+        public async void Start()
+        {
+            var chatPrompt = @"
+                You are an AI assistant that greets the world.
+                User: 你好!
+                Assistant:";
+            var translatePrompt = @"
+                You are an translator to translate chinese to japanese.
+                User: {chatResponse}
+                Translation:";
+            var llm = LLMFactory.Create(LLMType.ChatGPT, settingsAsset);
+            //Create chain
+            var chain =
+                Chain.Set(chatPrompt, outputKey: "prompt")
+                | Chain.LLM(llm, inputKey: "prompt", outputKey: "chatResponse")
+                | Chain.Template(translatePrompt, outputKey: "prompt")
+                | Chain.LLM(llm, inputKey: "prompt", outputKey: "ttsInput")
+                | Chain.TTS(new VITSClient(lang: "ja"), inputKey: "ttsInput", outputKey: "audioClip");
+            //Run chain
+            (string result, AudioClip audioClip) = await chain.Run<string, AudioClip>("chatResponse", "audioClip");
+            Debug.Log(result);
+            audioSource.clip = audioClip;
+            audioSource.Play();
+        }
+    }
+}
