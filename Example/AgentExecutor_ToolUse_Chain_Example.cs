@@ -19,11 +19,10 @@ namespace Kurisu.UniChat.Example
                 Chain.Set(userCommand)
                 | Chain.ReActAgentExecutor(llm)
                     .UseTool(new AgentLambdaTool(
-                        "Select dance video and play",
+                        "Play random dance video",
                         @"A wrapper to select dance video and play it. Input should be 'None'.",
                         (e) =>
                         {
-                            Debug.Log("Dance tool is called.");
                             return UniTask.FromResult("Dance video 'Queencard' is playing now.");
                         }))
                     .UseTool(new AgentLambdaTool(

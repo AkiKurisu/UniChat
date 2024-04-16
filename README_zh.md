@@ -2,57 +2,54 @@
 
 # UniChat
 
-[中文](README_ZH.md) | [English](README.md)
+[中文](README_zh.md) | [English](README.md)
 
-A Unity Chat Bot pipeline for on-line and off-line operation.
+一个在线和离线时的Unity Chat Bot管线。
 
 <img src="Images/Icon.png" width="256"/>
 
 </div>
 
-
-  - [Introduction](#introduction)
-  - [Core pipeline](#core-pipeline)
-    - [Quick use](#quick-use)
-    - [Embedding model](#embedding-model)
-  - [Chain](#chain)
-    - [Combined with the core pipeline](#combined-with-the-core-pipeline)
-  - [Middleware](#middleware)
-    - [Text to Speech](#text-to-speech)
-    - [Sub-classifier](#sub-classifier)
-  - [Game Components](#game-components)
-    - [Chat StateMachine](#chat-statemachine)
-    - [Tool usage](#tool-usage)
+  - [简介](#简介)
+  - [核心管线](#核心管线)
+    - [快速使用](#快速使用)
+    - [嵌入模型](#嵌入模型)
+  - [链](#链)
+    - [与核心管线组合](#与核心管线组合)
+  - [中间件](#中间件)
+    - [文本转语音](#文本转语音)
+    - [子分类器](#子分类器)
+  - [游戏组件](#游戏组件)
+    - [对话状态机](#对话状态机)
+    - [工具使用](#工具使用)
   - [Demo](#demo)
-    - [Minimalist Demo Download](#minimalist-demo-download)
-    - [Advanced Demo download](#advanced-demo-download)
-    - [Demo function description](#demo-function-description)
-      - [Personalization: role cards](#personalization-role-cards)
-  - [Quote](#quote)
+    - [极简Demo下载](#极简demo下载)
+    - [高级Demo下载](#高级demo下载)
+    - [Demo功能说明](#demo功能说明)
+      - [个性化：角色卡](#个性化角色卡)
+  - [引用](#引用)
 
 
 
+## 简介
 
-## Introduction
+随着`Unity.Sentis`的发布，我们可以在Runtime使用一些神经网络模型，其中就包括自然语言处理的文本向量嵌入模型(Text Embedding Model)。
 
-With `Unity.Sentis` the release of, we can use some neural network models in Runtime, including the text vector embedding model (Text Embedding Model) for natural language processing.
+虽然和AI聊天已经不是新鲜事了，但在游戏中，如何设计一个能不偏离开发者想法，但又比较灵活的对话倒是一个难点。
 
-Although chatting with AI is nothing new, in games, how to design a conversation that does not deviate from the developer's ideas but is more flexible is a difficult point.
+`UniChat`基于`Unity.Sentis`和文本向量嵌入技术使得<b>离线模式下</b>能基于向量数据库来搜索文本内容。
 
-`UniChat` is based on `Unity.Sentis` and text vector embedding technology, which enables <b>offline mode</b> to search text content based on vector databases.
+当然，如果你使用在线模式，`UniChat`也包含了一个基于[LangChain](https://github.com/langchain-ai/langchain)的链式工具包以快速在游戏中嵌入LLM和Agent。
 
-Of course, if you use the online mode, `UniChat` also includes a chain toolkit based on [LangChain](https://github.com/langchain-ai/langchain) to quickly embed LLM and Agent in the game.
-
-The following is the flow chart of UniChat, and the functions that can be used offline are shown in `Local Inference` the box:
+以下是UniChat的流程图，在`Local Inference`框中的为可以离线使用的功能：
 
 ![流程图](Images/UniChat.png)
 
-## Core pipeline
+## 核心管线
 
-### Quick use
+### 快速使用
 
-1. Create or load
-
+1. 创建或加载
 ```C#
 public void CreatePipelineCtrl()
 {
@@ -63,66 +60,63 @@ public void CreatePipelineCtrl()
 }
 ```
 
-2. Run the pipeline
-
+2. 运行管线
 ```C#
 public bool RunPipeline()
 {
     var context = await PipelineCtrl.RunPipeline("Hello!");
     if ((context.flag & (1 << 1)) != 0)
     {
-        //Get text output
+        //获取文本输出
         string output = context.CastStringValue();
-        //Update history
+        //更新历史
         PipelineCtrl.History.AppendBotMessage(output, context.outputEntry.Hash);
         return true;
     }
     else
     {
-        //Remove last user input
+        //移除上次用户输入
         PipelineCtrl.History.RemoveLastUserMessage();
         return false;
     }
 }
 ```
 
-3. Save the generated text and embedding vector
-
+3. 保存生成的文本及嵌入向量
 ```C#
 pubic void Save()
 {
-    //PC save to {ApplicationPath}//UserData//{ModelName}
-    //Android save to {Application.persistentDataPath}//UserData//{ModelName}
+    //PC保存至 {ApplicationPath}//UserData//{ModelName}
+    //Android保存至 {Application.persistentDataPath}//UserData//{ModelName}
     PipelineCtrl.SaveModel();
 }
 ```
 
-### Embedding model
+### 嵌入模型
 
-The embedding model is used `BAAI/bge-small-zh-v1.5` by default and occupies the least video memory. It can be downloaded in Release, however only supports Chinese. You can download the same model from `HuggingFaceHub` and convert it to ONNX format.
+嵌入模型默认使用`BAAI/bge-small-zh-v1.5`，占用显存内存最少。你可以在Release中下载，但其仅支持中文，你可以自行从`HuggingFaceHub`下载同类模型并转为ONNX格式。
 
-The loading mode is optional `UserDataProvider`, `StreamingAssetsProvider` and `ResourcesProvider`, if installed `Unity.Addressables`, optional `AddressableProvider`.
+加载方式可以选择`UserDataProvider`,`StreamingAssetsProvider`和`ResourcesProvider`，如安装`Unity.Addressables`可选`AddressableProvider`。
 
-The `UserDataProvider` file path is as follows:
+`UserDataProvider`文件路径如下:
 
 ![UserData](Images/userdata_provider.png)
 
- `ResourcesProvider` Place the files in the models folder in the Resources folder.
+`ResourcesProvider`则将models文件夹中的文件放入Resources文件夹即可。
 
- `StreamingAssetsProvider` Place the files in the models folder in the StreamingAssets folder.
+`StreamingAssetsProvider`则将models文件夹中的文件放入StreamingAssets文件夹即可。
 
-Address `AddressablesProvider` of is as follows:
+`AddressablesProvider`的Address如下:
 
 ![Addressables](Images/addressable-provider.png)
 
-## Chain
+## 链
 
-UniChat is based on [LangChain C#](https://github.com/tryAGI/LangChain) using a chain structure to connect components in series.
+UniChat基于[C#版LangChain](https://github.com/tryAGI/LangChain)使用链式结构串联各个组件。
 
-You can see an sample in repo's Example.
+你可以在Example中查看示例。
 
-The simple use is as follows:
-
+简单使用如下：
 ```C#
 public class LLM_Chain_Example : MonoBehaviour
 {
@@ -132,7 +126,7 @@ public class LLM_Chain_Example : MonoBehaviour
     {
         var chatPrompt = @"
             You are an AI assistant that greets the world.
-            User: Hello!
+            User: 你好!
             Assistant:";
         var llm = LLMFactory.Create(LLMType.ChatGPT, settingsAsset);
         //Create chain
@@ -146,12 +140,11 @@ public class LLM_Chain_Example : MonoBehaviour
 }
 ```
 
-### Combined with the core pipeline
+### 与核心管线组合
 
-The above example uses `Chain` to call LLM directly, but to simplify searching the database and facilitate engineering, it is recommended to use `ChatPipelineCtrl` as the beginning of the chain.
+上面的例子是直接用Chain来调用LLM，但为了简化搜索数据库和方便工程化，推荐使用ChatPipelineCtrl作为链的开头。
 
-If you run the following example, the first time you call LLM and the second time you reply directly from the database.
-
+如运行下面示例，第一次将调用LLM，第二次则直接从数据库中回复。
 
 ```C#
 public async void Start()
@@ -164,8 +157,8 @@ public async void Start()
     //Init pipeline, set verbose to log status
     await pipelineCtrl.InitializePipeline(new PipelineConfig { verbose = true });
     //Add some chat data
-    pipelineCtrl.Memory.Context = "You are my personal assistant, you should answer my questions.";
-    pipelineCtrl.History.AppendUserMessage("Hello assistant!");
+    pipelineCtrl.Memory.Context = "你是我的私人助理，你会解答我的各种问题";
+    pipelineCtrl.History.AppendUserMessage("你好!");
     //Create chain
     var chain = pipelineCtrl.ToChain().CastStringValue(outputKey: "text");
     //Run chain
@@ -175,14 +168,13 @@ public async void Start()
 }
 ```
 
-## Middleware
+## 中间件
 
-### Text to Speech
+### 文本转语音
 
-If you have a speech synthesis solution, you can refer to [VITSClient](./Runtime/Models/Audio/VITSClient.cs) the implementation of a TTS component.
+如果你有语音合成方案,你可以参考[VITSClient](./Runtime/Models/Audio/VITSClient.cs)实现一个TTS组件。
 
-You can use `AudioCache` to store speech so that it can be played when you pick up an answer from the database in offline mode.
-
+你可以使用`AudioCache`来存储语音，这样在离线模式下从数据库拾取回答时也能播放语音。
 
 ```C#
 public class LLM_VITS_Chain_Example : MonoBehaviour
@@ -200,15 +192,15 @@ public class LLM_VITS_Chain_Example : MonoBehaviour
         await pipelineCtrl.InitializePipeline(new PipelineConfig { verbose = true });
         var vitsClient = new VITSClient(lang: "ja");
         //Add some chat data
-        pipelineCtrl.Memory.Context = "You are my personal assistant, you should answer my questions.";
-        pipelineCtrl.History.AppendUserMessage("Hello assistant!");
+        pipelineCtrl.Memory.Context = "你是我的私人助理，你会解答我的各种问题";
+        pipelineCtrl.History.AppendUserMessage("你好!");
         //Create cache to cache audioClips and translated texts
         var audioCache = AudioCache.CreateCache(chatModelFile.DirectoryPath);
         var textCache = TextMemoryCache.CreateCache(chatModelFile.DirectoryPath);
         //Create chain
         var chain = pipelineCtrl.ToChain().CastStringValue(outputKey: "text")
                                 //Translate to japanese
-                                | Chain.Translate(new GoogleTranslator("en", "ja")).UseCache(textCache)
+                                | Chain.Translate(new GoogleTranslator("zh", "ja")).UseCache(textCache)
                                 //Split them
                                 | Chain.Split(new RegexSplitter(@"(?<=[。！？! ?])"), inputKey: "translated_text")
                                 //Auto batched
@@ -228,22 +220,21 @@ public class LLM_VITS_Chain_Example : MonoBehaviour
 }
 ```
 
-### Sub-classifier
-You can reduce the dependence on LLM by training a downstream classifier on the basis of the embedded model to complete some recognition tasks in the game (such as expression classifier).
+### 子分类器
+你可以在嵌入模型的基础上训练一个下游的分类器来完成一些游戏中的识别任务（例如表情分类器）从而减少对LLM的依赖。
 
-**Notice**
+**注意**
 
-*1. You need to make the component in a Python environment.*
+*1.你需要在Python环境制作该组件*
 
-*2. Currently, Sentis still requires you to manually export to ONNX format*
+*2.目前Sentis仍需你手动导出为ONNX格式*
 
-Best practice: Use an embedded model to generate traits from your training data before training. Only the downstream model needs to be exported afterwards.
+最佳实践：先使用嵌入模型对你的训练数据生成特质再进行训练。之后只需导出下游模型即可。
 
-The following is an example `shape=(512,768,20)` of a multi-layer perceptron classifier with an export size of only 1.5MB:
-
+下面是个多层感知机分类器示例，`shape=(512,768,20)`时导出大小仅为1.5MB：
 ```python
 class SubClassifier(nn.Module):
-    #input_dim is the output dim of your embedding model
+    #输入dim为嵌入模型的输出特征dim
     def __init__(self, input_dim, hidden_dim, output_dim):
         super(CustomClassifier, self).__init__()
         
@@ -260,23 +251,22 @@ class SubClassifier(nn.Module):
         return x
 ```
 
-## Game Components
+## 游戏组件
 
-Game components are various tools that are combined with the dialogue function according to the specific game mechanism.
+游戏组件是根据具体游戏机制来和对话功能进行结合的各类工具。
 
-### Chat StateMachine
+### 对话状态机
 
-A stateMachine that switches States according to the chat content. StateMachine nesting (SubStateMachine) is not currently supported. Depending on the conversation, you can jump to different States and execute the corresponding set of behaviors, similar to Unity's animated state machine.
+一个根据对话内容切换状态的状态机，暂不支持状态机嵌套（SubStateMachine）。你可以根据对话来跳转到不同的状态并执行相应的行为集合，类似于Unity的动画状态机。
 
-1. Configure in code
-
+1. 在代码中配置
 ```C#
  public void BuildStateMachine()
 {
     chatStateMachine = new ChatStateMachine(dim: 512);
     chatStateMachineCtrl = new ChatStateMachineCtrl(
         TextEncoder: encoder, 
-        //Input a host Unity.Object
+        //传入一个Unity.Object对象作为宿主
         hostObject: gameObject, 
         layer: 1
     );
@@ -284,20 +274,19 @@ A stateMachine that switches States according to the chat content. StateMachine 
     chatStateMachine.AddState("Sit");
     chatStateMachine.states[0].AddBehavior<StandBehavior>();
     chatStateMachine.states[0].AddTransition(new LazyStateReference("Sit"));
-    // Add a conversion directive and set scoring thresholds and conditions
-    chatStateMachine.states[0].transitions[0].AddCondition(ChatConditionMode.Greater, 0.6f, "I sit down");
-    chatStateMachine.states[0].transitions[0].AddCondition(ChatConditionMode.Greater, 0.6f, "I want to have a rest on chair");
+    // 添加一个转换的指令，并设置评分阈值以及条件
+    chatStateMachine.states[0].transitions[0].AddCondition(ChatConditionMode.Greater, 0.6f, "我坐下了");
+    chatStateMachine.states[0].transitions[0].AddCondition(ChatConditionMode.Greater, 0.6f, "我想在椅子上休息一会");
     chatStateMachine.states[1].AddBehavior<SitBehavior>();
     chatStateMachine.states[1].AddTransition(new LazyStateReference("Stand"));
-    chatStateMachine.states[1].transitions[0].AddCondition(ChatConditionMode.Greater, 0.6f, "I'm well rested");
+    chatStateMachine.states[1].transitions[0].AddCondition(ChatConditionMode.Greater, 0.6f, "我休息完了");
     chatStateMachineCtrl.SetStateMachine(0, chatStateMachine);
 }
 ```
 
-2. Configured in Editor Window and saved as a text file.
+2. 在EditorWindow中配置，保存为文本文件。
 
-![Configure in editor](Images/edit-fsm.png)
-
+![配置状态机](Images/edit-fsm.png)
 
 ```C#
 public void LoadFromBytes(string bytesFilePath)
@@ -306,8 +295,7 @@ public void LoadFromBytes(string bytesFilePath)
 }
 ```
 
-3. Customize ChatS Tate MachineBehavior.
-
+3. 自定义ChatStateMachineBehavior
 
 ```C#
 public class CustomChatBehavior : ChatStateMachineBehavior
@@ -315,7 +303,7 @@ public class CustomChatBehavior : ChatStateMachineBehavior
     private GameObject hostGameObject;
     public override void OnStateMachineEnter(UnityEngine.Object hostObject)
     {
-        //Get host Unity.Object
+        //获取宿主对象
         hostGameObject = hostObject as GameObject;
     }
     public override void OnStateEnter()
@@ -333,8 +321,7 @@ public class CustomChatBehavior : ChatStateMachineBehavior
 }
 ```
 
-4. Running the state machine after the core pipeline is run
-
+4. 在核心管线运行后运行状态机
 
 ```C#
 private void RunStateMachineAfterPipeline()
@@ -345,11 +332,11 @@ private void RunStateMachineAfterPipeline()
 }
 ```
 
-### Tool usage
+### 工具使用
 
-Invoke tools based on ReActAgent workflow.
+基于ReActAgent的工作流来调用工具。
 
-Here is an example:
+以下是一个示例：
 
 ```C#
 var userCommand = @"I want to watch a dance video.";
@@ -384,41 +371,42 @@ Debug.Log(await chain.Run("text"));
 
 ## Demo
 
-Here are some of the sample apps I've made. Because they include some commercial plug-ins, only Build versions are available.
+这里是我制作的一些示例App，因为包含了一些商业插件，故仅提供Build版本。
 
-See [Release](https://github.com/AkiKurisu/UniChat/releases) page
+见[Release](https://github.com/AkiKurisu/UniChat/releases)页面
 
 
-Based on UniChat to make a similar application in Unity> The synchronized repository version is `V0.0.1-alpha`, the Demo is waiting to be updated.
-### Minimalist Demo Download
+基于UniChat在Unity中制作了一个类似`ChatBox`的应用
+>同步的仓库版本为`V0.0.1-alpha`, Demo待更新。
+### 极简Demo下载
 
 ![聊天界面](Images/chat-view.png)
 
-See [Release](https://github.com/AkiKurisu/UniChat/releases) page
+见[Release](https://github.com/AkiKurisu/UniChat/releases)页面
 
 
-### Advanced Demo download
+### 高级Demo下载
 
 ![Demo Pro](Images/demo-pro.png)
 
-It contains behavioral and voice components and is not yet available.
+包含了行为和语音组件，暂未开放。
 
-### Demo function description
+### Demo功能说明
 
-#### Personalization: role cards
+#### 个性化：角色卡
 
-Demo uses `TavernAI` the character data structure, and we can write the character's personality, sample conversations, and chat scenarios into pictures.
+Demo中使用了`TavernAI`的角色数据结构，并且我们可以将角色的性格、示例对话、聊天情景写入图片中。
 
-![Setting View](Images/setting-view.png)
+![设置界面](Images/setting-view.png)
 
-If you use `TavernAI` a character card, the cue word above is overwritten.
+如果使用`TavernAI`角色卡，则会覆盖上方的提示词。
 
-## Quote
+## 引用
 
-- Make a ChatBox in Unity
-    >https://www.akikurisu.com/blog/posts/create-chatbox-in-unity-2024-03-19/
-- Using NLP Natural Language Processing Technology in Unity
-    >https://www.akikurisu.com/blog/posts/use-nlp-in-unity-2024-04-03/
+- 在Unity中制作一个ChatBox
+    > https://www.akikurisu.com/blog/posts/create-chatbox-in-unity-2024-03-19/
+- 在Unity中使用NLP自然语言处理技术
+    > https://www.akikurisu.com/blog/posts/use-nlp-in-unity-2024-04-03/
 - https://github.com/langchain-ai/langchain
 - https://github.com/tryAGI/LangChain
-- - Yao S, Zhao J, Yu D, et al. React: Synergizing reasoning and acting in language models[J]. arXiv preprint arXiv:2210.03629, 2022.
+- Yao S, Zhao J, Yu D, et al. React: Synergizing reasoning and acting in language models[J]. arXiv preprint arXiv:2210.03629, 2022.
