@@ -306,7 +306,7 @@ public void LoadFromBytes(string bytesFilePath)
 }
 ```
 
-3. Customize ChatS Tate MachineBehavior.
+3. Customize ChatStateMachineBehavior.
 
 
 ```C#
@@ -366,7 +366,7 @@ var chain =
             (e) =>
             {
                 PlayRandomDanceVideo();
-                //Notice agent it finish its work
+                //Notice agent it finished its work
                 return UniTask.FromResult("Dance video 'Queencard' is playing now.");
             }))
         .UseTool(new AgentLambdaTool(
@@ -384,7 +384,7 @@ Debug.Log(await chain.Run("text"));
 
 ## Demo
 
-Here are some of the sample apps I've made. Because they include some commercial plug-ins, only Build versions are available.
+Here are some apps I've made. Since they include some commercial plugins, only Build versions are available.
 
 See [Release](https://github.com/AkiKurisu/UniChat/releases) page
 
@@ -421,4 +421,4 @@ If you use `TavernAI` a character card, the cue word above is overwritten.
     >https://www.akikurisu.com/blog/posts/use-nlp-in-unity-2024-04-03/
 - https://github.com/langchain-ai/langchain
 - https://github.com/tryAGI/LangChain
-- - Yao S, Zhao J, Yu D, et al. React: Synergizing reasoning and acting in language models[J]. arXiv preprint arXiv:2210.03629, 2022.
+- Yao S, Zhao J, Yu D, et al. React: Synergizing reasoning and acting in language models[J]. arXiv preprint arXiv:2210.03629, 2022.

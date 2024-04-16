@@ -353,7 +353,7 @@ var chain =
             (e) =>
             {
                 PlayRandomDanceVideo();
-                //Notice agent it finish its work
+                //Notice agent it finished its work
                 return UniTask.FromResult("Dance video 'Queencard' is playing now.");
             }))
         .UseTool(new AgentLambdaTool(
