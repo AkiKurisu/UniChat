@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using UnityEngine.Pool;
 namespace Kurisu.UniChat
 {
+    /// <summary>
+    /// Define chat history data
+    /// </summary>
     public class ChatHistory
     {
         public string BotName { get; set; } = "Bot";
@@ -13,29 +16,30 @@ namespace Kurisu.UniChat
         /// Append user input message to update history context
         /// </summary>
         /// <param name="content"></param>
-        public void AppendUserMessage(string content)
+        /// <param name="id"></param>
+        public void AppendUserMessage(string content, uint? id = null)
         {
             history.Add(new()
             {
                 character = UserName,
                 Role = MessageRole.User,
                 Content = content,
-                id = 0
+                id = id ?? XXHash.CalculateHash(content)
             });
         }
         /// <summary>
         /// Append bot answered message to update history context
         /// </summary>
         /// <param name="content"></param>
-        /// <param name="hash"></param>
-        public void AppendBotMessage(string content, uint hash)
+        /// <param name="id"></param>
+        public void AppendBotMessage(string content, uint? id = null)
         {
             history.Add(new()
             {
                 character = BotName,
                 Role = MessageRole.Bot,
                 Content = content,
-                id = hash
+                id = id ?? XXHash.CalculateHash(content)
             });
         }
         public bool TryGetLastMessage(MessageRole messageRole, out ChatMessage message)

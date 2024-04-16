@@ -4,14 +4,15 @@ namespace Kurisu.UniChat
     public static class ChainExtensions
     {
         /// <summary>
-        /// Convert run pipeline action to chain
+        /// Convert run pipeline with input action to chain
         /// </summary>
         /// <param name="chatPipelineCtrl"></param>
+        /// <param name="inputKey"></param>
         /// <param name="outputKey"></param>
         /// <returns></returns>
-        public static ChatPipelineChain ToChain(this ChatPipelineCtrl chatPipelineCtrl, string outputKey = "context")
+        public static ChatPipelineChain ToChain(this ChatPipelineCtrl chatPipelineCtrl, string inputKey, string outputKey = "context")
         {
-            return new ChatPipelineChain(chatPipelineCtrl, outputKey);
+            return new ChatPipelineChain(chatPipelineCtrl, inputKey, outputKey);
         }
     }
 }

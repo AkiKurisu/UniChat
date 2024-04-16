@@ -202,10 +202,14 @@ namespace Kurisu.UniChat
             Encoder?.Dispose();
             DataBase?.Dispose();
         }
+        /// <summary>
+        /// Run pipeline using history context
+        /// </summary>
+        /// <returns></returns>
         public async UniTask<GenerateContext> RunPipeline()
         {
             var pool = ListPool<string>.Get();
-            Splitter.Split(Memory.GetHistoryContext(), pool);
+            Splitter.Split(Memory.GetMemoryContext(), pool);
             var context = new GenerateContext(pool);
             try
             {
@@ -214,6 +218,29 @@ namespace Kurisu.UniChat
             }
             finally
             {
+                ListPool<string>.Release(pool);
+            }
+        }
+        /// <summary>
+        /// Run pipeline using history context and new input
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public async UniTask<GenerateContext> RunPipeline(string input)
+        {
+            var pool = ListPool<string>.Get();
+            History.AppendUserMessage(input);
+            Splitter.Split(Memory.GetMemoryContext(), pool);
+            var context = new GenerateContext(pool);
+            try
+            {
+                await Pipeline.Run(context);
+                return context;
+            }
+            finally
+            {
+                //This message is temporary and should be added manually after pipeline
+                History.RemoveLastUserMessage();
                 ListPool<string>.Release(pool);
             }
         }

@@ -195,6 +195,13 @@ namespace Kurisu.UniChat.Chains
         {
             return new LLMChain(llm, inputKey, outputKey);
         }
+        public static UpdateHistoryChain UpdateHistory(
+            ChatHistory history,
+            string requestKey = "text",
+            string responseKey = "text")
+        {
+            return new UpdateHistoryChain(history, requestKey, responseKey);
+        }
 
         public static TTSChain TTS(
             ITextToSpeechModel model,

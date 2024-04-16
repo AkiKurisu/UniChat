@@ -5,9 +5,9 @@ namespace Kurisu.UniChat
     {
         IEnumerable<ChatMessage> GetMessages(MessageRole messageRole);
         /// <summary>
-        /// Get constructed history context
+        /// Get constructed memory context
         /// </summary>
         /// <returns></returns>
-        string GetHistoryContext();
+        string GetMemoryContext();
     }
 }

@@ -11,13 +11,14 @@ namespace Kurisu.UniChat.Example
         {
             var chatPrompt = @"
                 You are an AI assistant that greets the world.
-                User: 你好!
+                User: Hello !
                 Assistant:";
             var translatePrompt = @"
-                You are an translator to translate chinese to japanese.
+                You are an translator to translate English to Japanese.
                 User: {chatResponse}
                 Translation:";
             var llm = LLMFactory.Create(LLMType.ChatGPT, settingsAsset);
+
             //Create chain
             var chain =
                 Chain.Set(chatPrompt, outputKey: "prompt")
@@ -25,6 +26,7 @@ namespace Kurisu.UniChat.Example
                 | Chain.Template(translatePrompt, outputKey: "prompt")
                 | Chain.LLM(llm, inputKey: "prompt", outputKey: "ttsInput")
                 | Chain.TTS(new VITSClient(lang: "ja"), inputKey: "ttsInput", outputKey: "audioClip");
+
             //Run chain
             (string result, AudioClip audioClip) = await chain.Run<string, AudioClip>("chatResponse", "audioClip");
             Debug.Log(result);

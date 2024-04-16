@@ -44,19 +44,4 @@ namespace Kurisu.UniChat
         public MessageRole Role { get; set; }
         public string Content { get; set; }
     }
-    public static class ChatMessageExtensions
-    {
-        public static bool TryGetMessage(this IChatMemory historyQuery, MessageRole messageRole, uint hash, out ChatMessage message)
-        {
-            foreach (var botMg in historyQuery.GetMessages(messageRole))
-            {
-                if (botMg.id == hash)
-                {
-                    message = botMg; return true;
-                }
-            }
-            message = null;
-            return false;
-        }
-    }
 }

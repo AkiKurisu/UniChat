@@ -1,5 +1,3 @@
-using UnityEngine;
-using System;
 using System.Threading;
 using Newtonsoft.Json.Linq;
 using UnityEngine.Networking;

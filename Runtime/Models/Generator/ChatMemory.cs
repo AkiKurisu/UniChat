@@ -5,6 +5,9 @@ using Newtonsoft.Json;
 using UnityEngine.Pool;
 namespace Kurisu.UniChat.Memory
 {
+    /// <summary>
+    /// Memory defines how to load message from <see cref="UniChat.ChatHistory"/>
+    /// </summary>
     public abstract class ChatMemory : IChatMemory, ILLMRequest
     {
         [JsonIgnore]
@@ -25,7 +28,7 @@ namespace Kurisu.UniChat.Memory
         }
         public abstract IEnumerable<ChatMessage> GetAllMessages();
         public abstract IEnumerable<ChatMessage> GetMessages(MessageRole messageRole);
-        public abstract string GetHistoryContext();
+        public abstract string GetMemoryContext();
     }
     /// <summary>
     /// Buffered chat memory
@@ -41,7 +44,7 @@ namespace Kurisu.UniChat.Memory
         {
             return ChatHistory.GetMessages(messageRole);
         }
-        public override string GetHistoryContext()
+        public override string GetMemoryContext()
         {
             formatter.UserPrefix = ChatHistory.UserName;
             formatter.BotPrefix = ChatHistory.BotName;
@@ -82,11 +85,12 @@ namespace Kurisu.UniChat.Memory
                 ListPool<ChatMessage>.Release(pool);
             }
         }
-        public override string GetHistoryContext()
+        public override string GetMemoryContext()
         {
+            formatter.UserPrefix = ChatHistory.UserName;
+            formatter.BotPrefix = ChatHistory.BotName;
             return formatter.Format(GetAllMessages());
         }
-
         public override IEnumerable<ChatMessage> GetAllMessages()
         {
             var pool = ListPool<ChatMessage>.Get();
