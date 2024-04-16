@@ -12,6 +12,16 @@ namespace Kurisu.UniChat
         public string UserName { get; set; } = "User";
         public string Context { get; set; }
         public readonly List<ChatMessage> history = new();
+        public void AppendMessage(MessageRole messageRole, string content, uint? id = null)
+        {
+            history.Add(new()
+            {
+                character = UserName,
+                Role = messageRole,
+                Content = content,
+                id = id ?? XXHash.CalculateHash(content)
+            });
+        }
         /// <summary>
         /// Append user input message to update history context
         /// </summary>
@@ -19,13 +29,11 @@ namespace Kurisu.UniChat
         /// <param name="id"></param>
         public void AppendUserMessage(string content, uint? id = null)
         {
-            history.Add(new()
-            {
-                character = UserName,
-                Role = MessageRole.User,
-                Content = content,
-                id = id ?? XXHash.CalculateHash(content)
-            });
+            AppendMessage(MessageRole.User, content, id);
+        }
+        public void AppendSystemMessage(string content, uint? id = null)
+        {
+            AppendMessage(MessageRole.System, content, id);
         }
         /// <summary>
         /// Append bot answered message to update history context
@@ -34,13 +42,7 @@ namespace Kurisu.UniChat
         /// <param name="id"></param>
         public void AppendBotMessage(string content, uint? id = null)
         {
-            history.Add(new()
-            {
-                character = BotName,
-                Role = MessageRole.Bot,
-                Content = content,
-                id = id ?? XXHash.CalculateHash(content)
-            });
+            AppendMessage(MessageRole.Bot, content, id);
         }
         public bool TryGetLastMessage(MessageRole messageRole, out ChatMessage message)
         {

@@ -26,8 +26,8 @@ namespace Kurisu.UniChat.Chains
             if (verbose) Debug.Log($"LLM request: {prompt}");
 
             var response = await _llm.GenerateAsync(prompt, default);
-            values.Value[OutputKeys[0]] = response;
-            if (verbose) Debug.Log($"LLM response: {response}");
+            values.Value[OutputKeys[0]] = response.Response;
+            if (verbose) Debug.Log($"LLM response: {response.Response}");
             return values;
         }
         public LLMChain Verbose(bool verbose)

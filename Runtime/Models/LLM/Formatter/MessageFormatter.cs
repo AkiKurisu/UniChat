@@ -20,10 +20,9 @@ namespace Kurisu.UniChat.LLMs
             };
         }
         /// <summary>
-        /// Format input and return concat string
+        /// Format llm request
         /// </summary>
         /// <param name="llmInput"></param>
-        /// <param name="ct"></param>
         /// <returns></returns>
         public string Format(ILLMRequest llmInput)
         {
@@ -34,7 +33,9 @@ namespace Kurisu.UniChat.LLMs
             }
             foreach (var param in llmInput.History)
             {
-                if (param.Role != MessageRole.System)
+                if (string.IsNullOrEmpty(GetPrefix(param.Role)))
+                    stringBuilder.AppendLine(param.Content);
+                else
                     stringBuilder.AppendLine($"{GetPrefix(param.Role)}: {param.Content}");
             }
             stringBuilder.Append(llmInput.BotName);
@@ -42,12 +43,19 @@ namespace Kurisu.UniChat.LLMs
             stringBuilder.Append('\n');
             return stringBuilder.ToString();
         }
+        /// <summary>
+        /// Format messages history
+        /// </summary>
+        /// <param name="messages"></param>
+        /// <returns></returns>
         public string Format(IEnumerable<IMessage> messages)
         {
             stringBuilder.Clear();
             foreach (var param in messages)
             {
-                if (param.Role != MessageRole.System)
+                if (string.IsNullOrEmpty(GetPrefix(param.Role)))
+                    stringBuilder.AppendLine(param.Content);
+                else
                     stringBuilder.AppendLine($"{GetPrefix(param.Role)}: {param.Content}");
             }
             return stringBuilder.ToString();

@@ -21,9 +21,10 @@ namespace Kurisu.UniChat.LLMs
         public string GptModel { get; set; } = DefaultModel;
         public string ApiKey { get; set; }
         public MessageFormatter Formatter { get; set; } = new();
+        public List<string> StopWords { get; set; } = new();
         public bool Verbose { get; set; } = false;
-        public float Temperature { get; set; } = 0.5f;
-        public float Top_p { get; set; } = 0.5f;
+        public float Temperature { get; set; } = 0.7f;
+        public float Top_p { get; set; } = 1f;
         public string SystemPrompt { get; set; } = "You are a helpful assistant. You can help me by answering my questions. You can also ask me questions.";
         public OpenAIClient(string url, string model, string apiKey)
         {
@@ -37,18 +38,22 @@ namespace Kurisu.UniChat.LLMs
         public async UniTask<ILLMResponse> GenerateAsync(ILLMRequest input, CancellationToken ct)
         {
             Format(input);
-            PostData _postData = new()
-            {
-                model = GptModel,
-                messages = m_DataList
-            };
-            return await InternalCall(JsonUtility.ToJson(_postData), ct);
+            return await InternalCall(ct);
         }
-        private async UniTask<ILLMResponse> InternalCall(string input, CancellationToken ct)
+        private async UniTask<ILLMResponse> InternalCall(CancellationToken ct)
         {
             await semaphore.WaitAsync();
             try
             {
+                PostData _postData = new()
+                {
+                    model = GptModel,
+                    messages = m_DataList,
+                    temperature = Temperature,
+                    stop = StopWords,
+                    top_p = Top_p
+                };
+                string input = JsonUtility.ToJson(_postData);
                 using UnityWebRequest request = new(ChatAPI, "POST");
                 if (Verbose) Debug.Log($"Request {input}");
                 byte[] data = System.Text.Encoding.UTF8.GetBytes(input);
@@ -115,15 +120,7 @@ namespace Kurisu.UniChat.LLMs
             m_DataList.Clear();
             m_DataList.Add(new SendData("system", SystemPrompt));
             m_DataList.Add(new SendData("user", inputPrompt));
-            PostData _postData = new()
-            {
-                model = GptModel,
-                messages = m_DataList,
-                temperature = Temperature,
-                top_p = Top_p
-            };
-            string input = JsonUtility.ToJson(_postData);
-            var response = await InternalCall(input, ct);
+            var response = await InternalCall(ct);
             if (response.Status)
             {
                 m_DataList.Add(new SendData("assistant", response.Response));

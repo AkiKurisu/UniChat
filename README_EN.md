@@ -14,19 +14,20 @@ A Unity Chat Bot pipeline for on-line and off-line operation.
   - [Core pipeline](#core-pipeline)
     - [Quick use](#quick-use)
     - [Embedded model](#embedded-model)
-    - [Chain](#chain)
-      - [Combined with the core pipeline](#combined-with-the-core-pipeline)
+  - [Chain](#chain)
+    - [Combined with the core pipeline](#combined-with-the-core-pipeline)
   - [Middleware](#middleware)
     - [Text to Speech](#text-to-speech)
     - [Sub-classifier](#sub-classifier)
-  - [Game components](#game-components)
-    - [Dialog state machine](#dialog-state-machine)
+  - [Game Components](#game-components)
+    - [Chat StateMachine](#chat-statemachine)
   - [Demo](#demo)
     - [Minimalist Demo Download](#minimalist-demo-download)
     - [Advanced Demo download](#advanced-demo-download)
     - [Demo function description](#demo-function-description)
       - [Personalization: role cards](#personalization-role-cards)
   - [Quote](#quote)
+
 
 
 
@@ -65,7 +66,7 @@ public void CreatePipelineCtrl()
 ```C#
 public bool RunPipeline()
 {
-    var context = await PipelineCtrl.RunPipeline();
+    var context = await PipelineCtrl.RunPipeline("Hello!");
     if ((context.flag & (1 << 1)) != 0)
     {
         //Get text output
@@ -112,7 +113,7 @@ Address `AddressablesProvider` of is as follows:
 
 ![Addressables](Images/addressable-provider.png)
 
-### Chain
+## Chain
 
 UniChat is based on [LangChain C#](https://github.com/tryAGI/LangChain) using a chain structure to connect components in series.
 
@@ -143,7 +144,7 @@ public class LLM_Chain_Example : MonoBehaviour
 }
 ```
 
-#### Combined with the core pipeline
+### Combined with the core pipeline
 
 The above example uses `Chain` to call LLM directly, but to simplify searching the database and facilitate engineering, it is recommended to use `ChatPipelineCtrl` as the beginning of the chain.
 
@@ -376,6 +377,8 @@ If you use `TavernAI` a character card, the cue word above is overwritten.
 
 - Make a ChatBox in Unity
     >https://www.akikurisu.com/blog/posts/create-chatbox-in-unity-2024-03-19/
-- Using NLP Natural Language Processing Technology in Unity    https://www.akikurisu.com/blog/posts/use-nlp-in-unity-2024-04-03/
+- Using NLP Natural Language Processing Technology in Unity
+    >https://www.akikurisu.com/blog/posts/use-nlp-in-unity-2024-04-03/
 - https://github.com/langchain-ai/langchain
 - https://github.com/tryAGI/LangChain
+- - Yao S, Zhao J, Yu D, et al. React: Synergizing reasoning and acting in language models[J]. arXiv preprint arXiv:2210.03629, 2022.

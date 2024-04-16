@@ -14,7 +14,7 @@
   - [核心管线](#核心管线)
     - [快速使用](#快速使用)
     - [嵌入模型](#嵌入模型)
-    - [链](#链)
+  - [链](#链)
       - [与核心管线组合](#与核心管线组合)
   - [中间件](#中间件)
     - [文本转语音](#文本转语音)
@@ -27,6 +27,7 @@
     - [Demo功能说明](#demo功能说明)
       - [个性化：角色卡](#个性化角色卡)
   - [引用](#引用)
+
 
 
 ## 简介
@@ -62,7 +63,7 @@ public void CreatePipelineCtrl()
 ```C#
 public bool RunPipeline()
 {
-    var context = await PipelineCtrl.RunPipeline();
+    var context = await PipelineCtrl.RunPipeline("Hello!");
     if ((context.flag & (1 << 1)) != 0)
     {
         //获取文本输出
@@ -108,7 +109,7 @@ pubic void Save()
 
 ![Addressables](Images/addressable-provider.png)
 
-### 链
+## 链
 
 UniChat基于[C#版LangChain](https://github.com/tryAGI/LangChain)使用链式结构串联各个组件。
 
@@ -138,7 +139,7 @@ public class LLM_Chain_Example : MonoBehaviour
 }
 ```
 
-#### 与核心管线组合
+### 与核心管线组合
 
 上面的例子是直接用Chain来调用LLM，但为了简化搜索数据库和方便工程化，推荐使用ChatPipelineCtrl作为链的开头。
 
@@ -364,8 +365,9 @@ Demo中使用了`TavernAI`的角色数据结构，并且我们可以将角色的
 ## 引用
 
 - 在Unity中制作一个ChatBox
-> https://www.akikurisu.com/blog/posts/create-chatbox-in-unity-2024-03-19/
+    > https://www.akikurisu.com/blog/posts/create-chatbox-in-unity-2024-03-19/
 - 在Unity中使用NLP自然语言处理技术
-> https://www.akikurisu.com/blog/posts/use-nlp-in-unity-2024-04-03/
+    > https://www.akikurisu.com/blog/posts/use-nlp-in-unity-2024-04-03/
 - https://github.com/langchain-ai/langchain
 - https://github.com/tryAGI/LangChain
+- Yao S, Zhao J, Yu D, et al. React: Synergizing reasoning and acting in language models[J]. arXiv preprint arXiv:2210.03629, 2022.

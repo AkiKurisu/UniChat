@@ -85,6 +85,11 @@ namespace Kurisu.UniChat
             maskTensor.Dispose();
             return outputs;
         }
+        /// <summary>
+        /// Score by semantic similarity
+        /// </summary>
+        /// <param name="inputTensors"></param>
+        /// <returns></returns>
         protected virtual TensorFloat ScoreDataBase(TensorFloat[] inputTensors)
         {
             TensorFloat[] comparedTensors = DataBase.AllocateTensors();

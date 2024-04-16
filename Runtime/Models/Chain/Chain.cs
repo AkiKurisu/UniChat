@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
+using Kurisu.UniChat.Memory;
 using UnityEngine;
 namespace Kurisu.UniChat.Chains
 {
@@ -195,6 +196,13 @@ namespace Kurisu.UniChat.Chains
         {
             return new LLMChain(llm, inputKey, outputKey);
         }
+        /// <summary>
+        /// Updates chat history.
+        /// </summary>
+        /// <param name="history"></param>
+        /// <param name="requestKey">The user's request</param>
+        /// <param name="responseKey">The model's response</param>
+        /// <returns></returns>
         public static UpdateHistoryChain UpdateHistory(
             ChatHistory history,
             string requestKey = "text",
@@ -202,7 +210,14 @@ namespace Kurisu.UniChat.Chains
         {
             return new UpdateHistoryChain(history, requestKey, responseKey);
         }
-
+        /// <summary>
+        /// Converts text to speech using the specified TTS model, will be batched when input is IReadOnlyList<string>
+        /// </summary>
+        /// <param name="model"></param>
+        /// <param name="settings"></param>
+        /// <param name="inputKey"></param>
+        /// <param name="outputKey"></param>
+        /// <returns></returns>
         public static TTSChain TTS(
             ITextToSpeechModel model,
             TextToSpeechSettings settings = null,
@@ -211,6 +226,14 @@ namespace Kurisu.UniChat.Chains
         {
             return new TTSChain(model, settings, inputKey, outputKey);
         }
+
+        /// <summary>
+        /// Split text
+        /// </summary>
+        /// <param name="splitter"></param>
+        /// <param name="inputKey"></param>
+        /// <param name="outputKey"></param>
+        /// <returns></returns>
         public static SplitChain Split(
             ISplitter splitter,
             string inputKey = "text",
@@ -218,6 +241,13 @@ namespace Kurisu.UniChat.Chains
         {
             return new SplitChain(splitter, inputKey, outputKey);
         }
+        /// <summary>
+        /// Translate text, will be batched when input is IReadOnlyList<string>
+        /// </summary>
+        /// <param name="translator"></param>
+        /// <param name="inputKey"></param>
+        /// <param name="outputKey"></param>
+        /// <returns></returns>
         public static TranslateChain Translate(
             ITranslator translator,
             string inputKey = "text",
@@ -225,24 +255,49 @@ namespace Kurisu.UniChat.Chains
         {
             return new TranslateChain(translator, inputKey, outputKey);
         }
-
-        // public static ReActAgentExecutorChain ReActAgentExecutor(
-        //     IChatModel model,
-        //     string? reActPrompt = null,
-        //     int maxActions = 5,
-        //     string inputKey = "text",
-        //     string outputKey = "text")
-        // {
-        //     return new ReActAgentExecutorChain(model, reActPrompt, maxActions, inputKey, outputKey);
-        // }
-
-
-        // public static ReActParserChain ReActParser(
-        //     string inputKey = "text",
-        //     string outputKey = "text")
-        // {
-        //     return new ReActParserChain(inputKey, outputKey);
-        // }
+        /// <summary>
+        /// Loads chat memory.
+        /// Usually used before a model to get the context of the conversation.
+        /// </summary>
+        /// <param name="memory"></param>
+        /// <param name="outputKey"></param>
+        public static LoadMemoryChain LoadMemory(
+            ChatMemory memory,
+            string outputKey = "text")
+        {
+            return new LoadMemoryChain(memory, outputKey);
+        }
+        /// <summary>
+        /// Uses ReAct technique to allow LLM to execute functions.
+        /// <see cref="ReActAgentExecutorChain.UseTool"/> to add tools.
+        /// </summary>
+        /// <param name="model"></param>
+        /// <param name="reActPrompt"></param>
+        /// <param name="maxActions"></param>
+        /// <param name="inputKey"></param>
+        /// <param name="outputKey"></param>
+        public static ReActAgentExecutorChain ReActAgentExecutor(
+            ILargeLanguageModel model,
+            string reactPrompt = null,
+            int maxActions = 5,
+            string inputKey = "text",
+            string outputKey = "text")
+        {
+            return new ReActAgentExecutorChain(model, reactPrompt, maxActions, inputKey, outputKey);
+        }
+        /// <summary>
+        /// Parses the output of LLM model as it would be a ReAct output.
+        /// Can be used with custom ReAct prompts.
+        /// </summary>
+        /// <param name="inputKey"></param>
+        /// <param name="outputKey"></param>
+        /// <returns></returns>
+        public static ReActParserChain ReActParser(
+            string inputKey = "text",
+            string outputKey = "text")
+        {
+            return new ReActParserChain(inputKey, outputKey);
+        }
 
     }
 

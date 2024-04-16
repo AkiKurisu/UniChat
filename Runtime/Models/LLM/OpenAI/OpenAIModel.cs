@@ -9,6 +9,7 @@ namespace Kurisu.UniChat.LLMs
         public float temperature = 0.5f;
         public float top_p = 0.5f;
         public List<SendData> messages;
+        public List<string> stop;
     }
 
     [Serializable]

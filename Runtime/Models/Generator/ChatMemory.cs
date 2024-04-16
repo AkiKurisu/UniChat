@@ -20,7 +20,9 @@ namespace Kurisu.UniChat.Memory
         public string Context { get => ChatHistory.Context; set => ChatHistory.Context = value; }
         [JsonIgnore]
         public IEnumerable<IMessage> History => GetAllMessages();
-        protected readonly MessageFormatter formatter = new();
+        protected readonly MessageFormatter defaultFormatter = new();
+        [JsonIgnore]
+        public MessageFormatter Formatter { get; set; }
         public ChatMemory() { }
         public ChatMemory(ChatHistory chatHistory)
         {
@@ -28,7 +30,19 @@ namespace Kurisu.UniChat.Memory
         }
         public abstract IEnumerable<ChatMessage> GetAllMessages();
         public abstract IEnumerable<ChatMessage> GetMessages(MessageRole messageRole);
-        public abstract string GetMemoryContext();
+        public virtual string GetMemoryContext()
+        {
+            if (Formatter == null)
+            {
+                defaultFormatter.UserPrefix = ChatHistory.UserName;
+                defaultFormatter.BotPrefix = ChatHistory.BotName;
+                return Formatter.Format(GetAllMessages());
+            }
+            else
+            {
+                return Formatter.Format(GetAllMessages());
+            }
+        }
     }
     /// <summary>
     /// Buffered chat memory
@@ -44,16 +58,32 @@ namespace Kurisu.UniChat.Memory
         {
             return ChatHistory.GetMessages(messageRole);
         }
-        public override string GetMemoryContext()
-        {
-            formatter.UserPrefix = ChatHistory.UserName;
-            formatter.BotPrefix = ChatHistory.BotName;
-            return formatter.Format(this);
-        }
 
         public override IEnumerable<ChatMessage> GetAllMessages()
         {
             return ChatHistory.history;
+        }
+    }
+    /// <summary>
+    /// Chat memory exclude user messages
+    /// </summary>
+    public class ToolUseMemory : ChatMemory
+    {
+        public ToolUseMemory() : base() { }
+        public ToolUseMemory(ChatHistory chatHistory) : base(chatHistory)
+        {
+        }
+
+        public override IEnumerable<ChatMessage> GetMessages(MessageRole messageRole)
+        {
+            return ChatHistory.GetMessages(messageRole);
+        }
+        public override IEnumerable<ChatMessage> GetAllMessages()
+        {
+            foreach (var message in ChatHistory.history)
+            {
+                if (message.Role != MessageRole.User) yield return message;
+            }
         }
     }
     /// <summary>
@@ -84,12 +114,6 @@ namespace Kurisu.UniChat.Memory
             {
                 ListPool<ChatMessage>.Release(pool);
             }
-        }
-        public override string GetMemoryContext()
-        {
-            formatter.UserPrefix = ChatHistory.UserName;
-            formatter.BotPrefix = ChatHistory.BotName;
-            return formatter.Format(GetAllMessages());
         }
         public override IEnumerable<ChatMessage> GetAllMessages()
         {

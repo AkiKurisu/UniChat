@@ -1,148 +1,150 @@
-//TODO: Not implement in unity yet
-// using System;
-// using System.Collections.Generic;
-// using Cysharp.Threading.Tasks;
-// using Kurisu.UniChat;
-// using System.Linq;
-// using Kurisu.UniChat.Tools;
-// using static Kurisu.UniChat.Chains.Chain;
-// namespace Kurisu.UniChat.Chains
-// {
-//     public class ReactAgentExecutorChain : StackableChain
-//     {
-//         public const string DefaultPrompt =
-//             @"Answer the following questions as best you can. You have access to the following tools:
-//             {tools}
-//             Use the following format:
-//             Question: the input question you must answer.
-//             Thought: you should always think about what to do.
-//             Action: the tool name, should be one of [{tool_names}].
-//             Action Input: the input to the tool.
-//             Observation: the result of the tool (this Thought/Action/Action Input/Observation can repeat multiple times).
-//             Thought: I now know the final answer (no actions before final answer).
-//             Final Answer: the final answer to the original input question.
-//             You always add [END] after final answer.
-//             <Start>
-//             Question: {input}
-//             Thought:{history}";
+using System;
+using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
+using System.Linq;
+using Kurisu.UniChat.Tools;
+using static Kurisu.UniChat.Chains.Chain;
+using Kurisu.UniChat.LLMs;
+using Kurisu.UniChat.Memory;
+namespace Kurisu.UniChat.Chains
+{
+    //See https://github.com/langchain-ai/langchain/blob/master/libs/langchain/langchain/agents/agent.py
+    public class ReActAgentExecutorChain : StackableChain
+    {
+        //See https://api.python.langchain.com/en/latest/agents/langchain.agents.react.agent.create_react_agent.html
+        public const string DefaultPrompt =
+            @"Answer the following questions as best you can. You have access to the following tools:
 
-//         private StackChain _chain;
-//         private readonly Dictionary<string, AgentTool> _tools = new();
-//         private readonly GPTAgent _model;
-//         private readonly string _reactPrompt;
-//         private readonly int _maxActions;
-//         private readonly MessageFormatter _messageFormatter;
-//         private readonly ChatMessageHistory _chatMessageHistory;
-//         private readonly ConversationBufferMemory _conversationBufferMemory;
+{tools}
 
-//         /// <summary>
-//         /// 
-//         /// </summary>
-//         /// <param name="model"></param>
-//         /// <param name="reActPrompt"></param>
-//         /// <param name="maxActions"></param>
-//         /// <param name="inputKey"></param>
-//         /// <param name="outputKey"></param>
-//         public ReactAgentExecutorChain(
-//             GPTAgent model,
-//             string reactPrompt = null,
-//             int maxActions = 5,
-//             string inputKey = "answer",
-//             string outputKey = "final_answer")
-//         {
-//             reactPrompt ??= DefaultPrompt;
-//             _model = model;
-//             _reactPrompt = reactPrompt;
-//             _maxActions = maxActions;
+Use the following format:
 
-//             InputKeys = new[] { inputKey };
-//             OutputKeys = new[] { outputKey };
+Question: the input question you must answer
+Thought: you should always think about what to do
+Action: the tool name, should be one of [{tool_names}]
+Action Input: the input to the tool
+Observation: the result of the tool
+(this Thought/Action/Action Input/Observation can repeat multiple times)
+Thought: I now know the final answer
+(no actions before final answer)
+Final Answer: the final answer to the original input question
+Always add [END] after final answer
 
-//             _messageFormatter = new MessageFormatter
-//             {
-//                 AiPrefix = "",
-//                 HumanPrefix = "",
-//                 SystemPrefix = ""
-//             };
+Begin!
 
-//             _chatMessageHistory = new ChatMessageHistory()
-//             {
-//                 // Do not save human messages
-//                 IsMessageAccepted = x => (x.Role != MessageRole.Human)
-//             };
+Question: {input}
+Thought:{history}";
 
-//             _conversationBufferMemory = new ConversationBufferMemory(_chatMessageHistory)
-//             {
-//                 Formatter = _messageFormatter
-//             };
-//         }
+        private StackChain _chain;
+        private readonly Dictionary<string, AgentTool> _tools = new();
+        private readonly ILargeLanguageModel _model;
+        private readonly string _reactPrompt;
+        private readonly int _maxActions;
+        private readonly MessageFormatter _messageFormatter;
+        private readonly ChatHistory chatHistory;
+        private readonly ChatMemory chatMemory;
+        private bool verbose;
+        public ReActAgentExecutorChain(
+            ILargeLanguageModel model,
+            string reactPrompt = null,
+            int maxActions = 5,
+            string inputKey = "answer",
+            string outputKey = "final_answer")
+        {
+            reactPrompt ??= DefaultPrompt;
+            _model = model;
+            _reactPrompt = reactPrompt;
+            _maxActions = maxActions;
 
-//         private string _userInput = string.Empty;
-//         private const string ReActAnswer = "answer";
-//         private void InitializeChain()
-//         {
-//             var toolNames = string.Join(",", _tools.Select(x => x.Key));
-//             var tools = string.Join("\n", _tools.Select(x => $"{x.Value.Name}, {x.Value.Description}"));
+            InputKeys = new[] { inputKey };
+            OutputKeys = new[] { outputKey };
 
-//             var chain =
-//                 Set(() => _userInput, "input")
-//                 | Set(tools, "tools")
-//                 | Set(toolNames, "tool_names")
-//                 | LoadMemory(_conversationBufferMemory, outputKey: "history")
-//                 | Template(_reactPrompt)
-//                 | LLM(_model)
-//                 | UpdateMemory(_conversationBufferMemory, requestKey: "input", responseKey: "text")
-//                 | ReactParser(inputKey: "text", outputKey: ReActAnswer);
+            _messageFormatter = new MessageFormatter
+            {
+                BotPrefix = "",
+                UserPrefix = "",
+                SystemPrefix = ""
+            };
 
-//             _chain = chain;
-//         }
+            chatHistory = new ChatHistory();
 
-//         protected override async UniTask<IChainValues> InternalCall(IChainValues values)
-//         {
-//             values = values ?? throw new ArgumentNullException(nameof(values));
+            chatMemory = new ToolUseMemory(chatHistory)
+            {
+                Formatter = _messageFormatter
+            };
+        }
 
-//             var input = (string)values.Value[InputKeys[0]];
-//             var valuesChain = new ChainValues();
+        private string _userInput = string.Empty;
+        private const string ReactAnswerKey = "answer";
+        private void InitializeChain()
+        {
+            var toolNames = string.Join(",", _tools.Select(x => x.Key));
+            var tools = string.Join("\n", _tools.Select(x => $"{x.Value.Name}: {x.Value.Description}"));
 
-//             _userInput = input;
+            var chain =
+                Set(() => _userInput, "input")
+                | Set(tools, "tools")
+                | Set(toolNames, "tool_names")
+                | LoadMemory(chatMemory, outputKey: "history")
+                | Template(_reactPrompt)
+                | LLM(_model).Verbose(verbose)
+                | UpdateHistory(chatHistory, requestKey: "input", responseKey: "text")
+                | ReActParser(inputKey: "text", outputKey: ReactAnswerKey);
 
-//             if (_chain == null)
-//             {
-//                 InitializeChain();
-//             }
+            _chain = chain;
+        }
 
-//             for (int i = 0; i < _maxActions; i++)
-//             {
-//                 var res = await _chain!.CallAsync(valuesChain);
-//                 if (res.Value[ReActAnswer] is AgentAction)
-//                 {
-//                     var action = (AgentAction)res.Value[ReActAnswer];
-//                     var tool = _tools[action.Action.ToLower(CultureInfo.InvariantCulture)];
-//                     var toolRes = await tool.ToolTask(action.ActionInput).ConfigureAwait(false);
-//                     await _conversationBufferMemory.ChatHistory.AddMessage(new Message("Observation: " + toolRes, MessageRole.System))
-//                         .ConfigureAwait(false);
-//                     await _conversationBufferMemory.ChatHistory.AddMessage(new Message("Thought:", MessageRole.System))
-//                         .ConfigureAwait(false);
-//                     continue;
-//                 }
-//                 else if (res.Value[ReActAnswer] is AgentFinish)
-//                 {
-//                     var finish = (AgentFinish)res.Value[ReActAnswer];
-//                     values.Value[OutputKeys[0]] = finish.Output;
-//                     return values;
-//                 }
-//             }
+        protected override async UniTask<IChainValues> InternalCall(IChainValues values)
+        {
+            values = values ?? throw new ArgumentNullException(nameof(values));
 
+            var input = (string)values.Value[InputKeys[0]];
+            var valuesChain = new ChainValues();
 
+            _userInput = input;
 
-//             return values;
-//         }
+            if (_chain == null)
+            {
+                InitializeChain();
+            }
 
-//         public ReactAgentExecutorChain UseTool(AgentTool tool)
-//         {
-//             tool = tool ?? throw new ArgumentNullException(nameof(tool));
-//             _tools.Add(tool.Name, tool);
-//             return this;
-//         }
-//     }
-// }
+            for (int i = 0; i < _maxActions; i++)
+            {
+                var res = await _chain!.CallAsync(valuesChain);
+                if (res.Value[ReactAnswerKey] is AgentAction action)
+                {
+                    var tool = _tools[action.Action];
+                    var toolRes = await tool.ExecuteTool(action.ActionInput);
+                    chatMemory.ChatHistory.AppendSystemMessage("Observation: " + toolRes);
+                    chatMemory.ChatHistory.AppendSystemMessage("Thought:");
+                    continue;
+                }
+                else if (res.Value[ReactAnswerKey] is AgentFinish finish)
+                {
+                    values.Value[OutputKeys[0]] = finish.Output;
+                    return values;
+                }
+            }
+            return values;
+        }
+        public ReActAgentExecutorChain Verbose(bool verbose)
+        {
+            this.verbose = verbose;
+            return this;
+        }
+        public ReActAgentExecutorChain UseTool(AgentTool tool)
+        {
+            tool = tool ?? throw new ArgumentNullException(nameof(tool));
+            _tools.Add(tool.Name, tool);
+            return this;
+        }
+        public ReActAgentExecutorChain UseTool(IEnumerable<AgentTool> tools)
+        {
+            foreach (var tool in tools)
+            {
+                UseTool(tool);
+            }
+            return this;
+        }
+    }
+}
