@@ -1,9 +1,10 @@
 using Kurisu.UniChat.Chains;
 using Kurisu.UniChat.LLMs;
+using Kurisu.UniChat.TTS;
 using UnityEngine;
 namespace Kurisu.UniChat.Example
 {
-    public class LLM_VITS_Chain_Example : MonoBehaviour
+    public class LLM_TTS_Chain_Example : MonoBehaviour
     {
         public LLMSettingsAsset settingsAsset;
         public AudioSource audioSource;

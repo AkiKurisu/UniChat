@@ -36,7 +36,7 @@ namespace Kurisu.UniChat.Memory
             {
                 defaultFormatter.UserPrefix = ChatHistory.UserName;
                 defaultFormatter.BotPrefix = ChatHistory.BotName;
-                return Formatter.Format(GetAllMessages());
+                return defaultFormatter.Format(GetAllMessages());
             }
             else
             {

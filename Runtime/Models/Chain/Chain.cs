@@ -226,7 +226,22 @@ namespace Kurisu.UniChat.Chains
         {
             return new TTSChain(model, settings, inputKey, outputKey);
         }
-
+        /// <summary>
+        /// Converts speech to text using the specified STT model.
+        /// </summary>
+        /// <param name="model"></param>
+        /// <param name="settings"></param>
+        /// <param name="inputKey"></param>
+        /// <param name="outputKey"></param>
+        /// <returns></returns>
+        public static STTChain STT(
+            ISpeechToTextModel model,
+            SpeechToTextSettings settings = null,
+            string inputKey = "audio",
+            string outputKey = "text")
+        {
+            return new STTChain(model, settings, inputKey, outputKey);
+        }
         /// <summary>
         /// Split text
         /// </summary>

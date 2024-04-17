@@ -14,7 +14,7 @@ namespace Kurisu.UniChat.Example
             var llm = LLMFactory.Create(LLMType.ChatGPT, settingsAsset) as OpenAIClient;
             llm.StopWords = new() { "\nObservation:", "\n\tObservation:" };
 
-            //Create agent with muti-tools
+            //Create agent with multi-tools
             var chain =
                 Chain.Set(userCommand)
                 | Chain.ReActAgentExecutor(llm)
@@ -23,6 +23,7 @@ namespace Kurisu.UniChat.Example
                         @"A wrapper to select dance video and play it. Input should be 'None'.",
                         (e) =>
                         {
+                            //PlayRandomVideo();
                             return UniTask.FromResult("Dance video 'Queencard' is playing now.");
                         }))
                     .UseTool(new AgentLambdaTool(
@@ -30,6 +31,7 @@ namespace Kurisu.UniChat.Example
                         @"A wrapper to sleep.",
                         (e) =>
                         {
+                            //SetSleep(true);
                             return UniTask.FromResult("You are now sleeping.");
                         }))
                     .Verbose(true);

@@ -5,6 +5,7 @@ using Kurisu.UniChat.Chains;
 using Kurisu.UniChat.LLMs;
 using Kurisu.UniChat.NLP;
 using Kurisu.UniChat.Translators;
+using Kurisu.UniChat.TTS;
 using UnityEngine;
 namespace Kurisu.UniChat.Example
 {

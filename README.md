@@ -4,7 +4,7 @@
 
 [中文](README_ZH.md) | [English](README.md)
 
-A Unity Chat Bot pipeline for on-line and off-line operation.
+A pipeline for creating online and offline chat-bot in Unity.
 
 <img src="Images/Icon.png" width="256"/>
 
@@ -35,7 +35,7 @@ A Unity Chat Bot pipeline for on-line and off-line operation.
 
 ## Introduction
 
-With `Unity.Sentis` the release of, we can use some neural network models in Runtime, including the text vector embedding model (Text Embedding Model) for natural language processing.
+With the release of `Unity.Sentis`, we can use some neural network models at Runtime, including the text embedding model (Text Embedding Model) for natural language processing.
 
 Although chatting with AI is nothing new, in games, how to design a conversation that does not deviate from the developer's ideas but is more flexible is a difficult point.
 
@@ -43,7 +43,7 @@ Although chatting with AI is nothing new, in games, how to design a conversation
 
 Of course, if you use the online mode, `UniChat` also includes a chain toolkit based on [LangChain](https://github.com/langchain-ai/langchain) to quickly embed LLM and Agent in the game.
 
-The following is the flow chart of UniChat, and the functions that can be used offline are shown in `Local Inference` the box:
+The following is the flow chart of UniChat. In the `Local Inference` box are the functions that can be used offline:
 
 ![流程图](Images/UniChat.png)
 
