@@ -52,7 +52,7 @@ namespace Kurisu.UniChat.Example
 
             //Run chain
             (IReadOnlyList<string> segments, IReadOnlyList<AudioClip> audioClips)
-                = await chain.Run<IReadOnlyList<string>, IReadOnlyList<AudioClip>>("splitted_text", "audio");
+                = await chain.Track(true).Run<IReadOnlyList<string>, IReadOnlyList<AudioClip>>("splitted_text", "audio");
 
             //Play audios
             for (int i = 0; i < audioClips.Count; ++i)

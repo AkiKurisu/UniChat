@@ -4,7 +4,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 namespace Kurisu.UniChat.Chains
 {
-    public class ChainRunner
+    public class RunManager
     {
         public string RunId { get; }
         protected List<CallbackHandler> Handlers { get; }
@@ -12,7 +12,7 @@ namespace Kurisu.UniChat.Chains
         protected string ParentRunId { get; }
         protected Dictionary<string, object> Metadata { get; }
         protected Dictionary<string, object> InheritableMetadata { get; }
-        protected ChainRunner(
+        protected RunManager(
             string runId,
             List<CallbackHandler> handlers,
             List<CallbackHandler> inheritableHandlers,
@@ -27,7 +27,7 @@ namespace Kurisu.UniChat.Chains
             InheritableMetadata = inheritableMetadata ?? new();
             ParentRunId = parentRunId;
         }
-        protected ChainRunner()
+        protected RunManager()
             : this(
                 runId: Guid.NewGuid().ToString("N"),
                 handlers: new(),
@@ -67,7 +67,7 @@ namespace Kurisu.UniChat.Chains
     /// <summary>
     /// Sync Parent Run Manager.
     /// </summary>
-    public class ParentRunManager : ChainRunner
+    public class ParentRunManager : RunManager
     {
         public ParentRunManager()
         {

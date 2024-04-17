@@ -6,6 +6,16 @@ namespace Kurisu.UniChat.Chains
     public abstract class CallbackHandler : ICallbackHandler
     {
         public abstract string Name { get; }
+        public abstract UniTask HandleLlmStartAsync(ILargeLanguageModel llm, string[] prompts, string runId, string parentRunId = null,
+            IReadOnlyList<string> tags = null, IReadOnlyDictionary<string, object> metadata = null,
+            string name = null, IReadOnlyDictionary<string, object> extraParams = null);
+        public abstract UniTask HandleLlmNewTokenAsync(string token, string runId, string parentRunId = null);
+        public abstract UniTask HandleLlmErrorAsync(Exception err, string runId, string parentRunId = null);
+        public abstract UniTask HandleLlmEndAsync(ILLMResponse output, string runId, string parentRunId = null);
+        public abstract UniTask HandleChatModelStartAsync(
+            ILargeLanguageModel llm, IReadOnlyList<List<IMessage>> messages,
+            string runId, string parentRunId = null, IReadOnlyDictionary<string, object> extraParams = null);
+
         public abstract UniTask HandleChainStartAsync(IChain chain, Dictionary<string, object> inputs,
             string runId, string parentRunId = null,
             List<string> tags = null,

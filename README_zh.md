@@ -73,12 +73,6 @@ public bool RunPipeline()
         PipelineCtrl.History.AppendBotMessage(output, context.outputEntry.Hash);
         return true;
     }
-    else
-    {
-        //移除上次用户输入
-        PipelineCtrl.History.RemoveLastUserMessage();
-        return false;
-    }
 }
 ```
 

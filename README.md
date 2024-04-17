@@ -77,12 +77,6 @@ public bool RunPipeline()
         PipelineCtrl.History.AppendBotMessage(output, context.outputEntry.Hash);
         return true;
     }
-    else
-    {
-        //Remove last user input
-        PipelineCtrl.History.RemoveLastUserMessage();
-        return false;
-    }
 }
 ```
 

@@ -75,8 +75,79 @@ namespace Kurisu.UniChat.Chains
                 InheritableMetadata.Remove(key);
             }
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="llm"></param>
+        /// <param name="prompts"></param>
+        /// <param name="runId"></param>
+        /// <param name="parentRunId"></param>
+        /// <param name="extraParams"></param>
+        /// <returns></returns>
+        public async UniTask<CallbackManagerForLlmRun> HandleLlmStart(
+            ILargeLanguageModel llm,
+            IReadOnlyList<string> prompts,
+            string runId = null,
+            string parentRunId = null,
+            IReadOnlyDictionary<string, object> extraParams = null)
+        {
+            runId ??= Guid.NewGuid().ToString();
+
+            foreach (var handler in Handlers)
+            {
+                try
+                {
+                    await handler.HandleLlmStartAsync(
+                        llm,
+                        prompts.ToArray(),
+                        runId,
+                        ParentRunId,
+                        extraParams: extraParams);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"Error in handler {handler.GetType().Name}, HandleLLMStart: {ex}");
+                }
+            }
+
+            return new CallbackManagerForLlmRun(runId, Handlers, InheritableHandlers, ParentRunId);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="llm"></param>
+        /// <param name="messages"></param>
+        /// <param name="runId"></param>
+        /// <param name="parentRunId"></param>
+        /// <param name="extraParams"></param>
+        /// <returns></returns>
+        public async UniTask<CallbackManagerForLlmRun> HandleChatModelStart(
+            ILargeLanguageModel llm,
+            IReadOnlyList<List<IMessage>> messages,
+            string runId = null,
+            string parentRunId = null,
+            IReadOnlyDictionary<string, object> extraParams = null)
+        {
+            runId ??= Guid.NewGuid().ToString();
+
+            foreach (var handler in Handlers)
+            {
+                try
+                {
+                    await handler.HandleChatModelStartAsync(llm, messages, runId, ParentRunId, extraParams);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"Error in handler {handler.GetType().Name}, HandleLLMStart: {ex}");
+                }
+            }
+
+            return new CallbackManagerForLlmRun(runId, Handlers, InheritableHandlers, ParentRunId);
+        }
         public async UniTask<CallbackManagerForChainRun> HandleChainStart(
-            Chain chain,
+            IChain chain,
             IChainValues inputs,
             string runId = null)
         {
@@ -214,6 +285,16 @@ namespace Kurisu.UniChat.Chains
             if (localTags != null) callBack.AddTags(localTags, inherit: false);
             if (inheritableMetadata != null) callBack.AddMetadata(inheritableMetadata);
             if (localMetadata != null) callBack.AddMetadata(localMetadata, inherit: false);
+
+#if !DISABLE_TRACING_CHAIN
+            {
+                if (callBack.Handlers.All(h => h.Name != "console_callback_handler"))
+                {
+                    var consoleHandler = new ConsoleCallbackHandler();
+                    callBack.AddHandler(consoleHandler, inherit: true);
+                }
+            }
+#endif
 
             return UniTask.FromResult(callBack);
         }

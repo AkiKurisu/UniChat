@@ -10,7 +10,7 @@ namespace Kurisu.UniChat.Chains
         public virtual IReadOnlyList<string> InputKeys { get; protected set; } = Array.Empty<string>();
         public virtual IReadOnlyList<string> OutputKeys { get; protected set; } = Array.Empty<string>();
         protected StackableChain() { }
-
+        private bool stackTrack;
         protected StackableChain(StackableChain lastChild)
         {
             lastChild = lastChild ?? throw new ArgumentNullException(nameof(lastChild));
@@ -46,18 +46,30 @@ namespace Kurisu.UniChat.Chains
             return string.Join(",\n", res);
         }
 
-        public UniTask<IChainValues> CallAsync(IChainValues values, ICallbacks callbacks = null,
+        public async UniTask<IChainValues> CallAsync(IChainValues values, ICallbacks callbacks = null,
         IReadOnlyList<string> tags = null, IReadOnlyDictionary<string, object> metadata = null)
         {
-            if (values == null)
+            values = values ?? throw new ArgumentNullException(nameof(values));
+
+            CallbackManagerForChainRun runManager = null;
+            if (stackTrack)
             {
-                throw new ArgumentNullException(nameof(values));
+                var callBack = await ChainCallback.Configure(
+                    callbacks,
+                        null,
+                    tags,
+                    null,
+                    metadata,
+                    null
+                );
+                runManager = await callBack.HandleChainStart(this, values);
             }
             try
             {
-                var res = InternalCall(values);
+                var result = await InternalCall(values);
                 _hook?.Invoke(values);
-                return res;
+                if (runManager != null) await runManager.HandleChainEndAsync(values, result);
+                return result;
             }
             catch (StackableChainException)
             {
@@ -70,7 +82,7 @@ namespace Kurisu.UniChat.Chains
                     : Name;
                 var inputValues = FormatInputValues(values);
                 var message = $"Error occured in {name} with inputs \n{inputValues}\n.";
-
+                if (runManager != null) await runManager.HandleChainErrorAsync(ex, values);
                 throw new StackableChainException(message, ex);
             }
 
@@ -160,9 +172,20 @@ namespace Kurisu.UniChat.Chains
         }
 
         private Action<IChainValues> _hook;
-        public void SetHook(Action<IChainValues> hook)
+        public StackableChain SetHook(Action<IChainValues> hook)
         {
             _hook = hook;
+            return this;
+        }
+        /// <summary>
+        /// Track this chain to debug status
+        /// </summary>
+        /// <param name="stackTrack"></param>
+        /// <returns></returns>
+        public StackableChain Track(bool stackTrack)
+        {
+            this.stackTrack = stackTrack;
+            return this;
         }
     }
     public class StackChain : StackableChain

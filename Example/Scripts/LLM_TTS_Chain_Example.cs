@@ -29,7 +29,7 @@ namespace Kurisu.UniChat.Example
                 | Chain.TTS(new VITSClient(lang: "ja"), inputKey: "ttsInput", outputKey: "audioClip");
 
             //Run chain
-            (string result, AudioClip audioClip) = await chain.Run<string, AudioClip>("chatResponse", "audioClip");
+            (string result, AudioClip audioClip) = await chain.Track(true).Run<string, AudioClip>("chatResponse", "audioClip");
             Debug.Log(result);
             audioSource.clip = audioClip;
             audioSource.Play();

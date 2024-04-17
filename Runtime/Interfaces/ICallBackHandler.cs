@@ -6,30 +6,30 @@ namespace Kurisu.UniChat
     public interface ICallbackHandler
     {
         string Name { get; }
-        // public abstract UniTask HandleLlmStartAsync(BaseLlm llm, string[] prompts, string runId, string parentRunId = null,
-        //     IReadOnlyList<string> tags = null, IReadOnlyDictionary<string, object> metadata = null,
-        //     string name = null, IReadOnlyDictionary<string, object> extraParams = null);
+        public abstract UniTask HandleLlmStartAsync(ILargeLanguageModel llm, string[] prompts, string runId, string parentRunId = null,
+            IReadOnlyList<string> tags = null, IReadOnlyDictionary<string, object> metadata = null,
+            string name = null, IReadOnlyDictionary<string, object> extraParams = null);
 
-        // public UniTask HandleLlmNewTokenAsync(
-        //     string token,
-        //     string runId,
-        //     string parentRunId = null);
+        public UniTask HandleLlmNewTokenAsync(
+            string token,
+            string runId,
+            string parentRunId = null);
 
-        // public UniTask HandleLlmErrorAsync(
-        //     Exception err,
-        //     string runId,
-        //     string parentRunId = null);
+        public UniTask HandleLlmErrorAsync(
+            Exception err,
+            string runId,
+            string parentRunId = null);
 
-        // public UniTask HandleLlmEndAsync(
-        //     LlmResult output,
-        //     string runId,
-        //     string parentRunId = null);
+        public UniTask HandleLlmEndAsync(
+            ILLMResponse output,
+            string runId,
+            string parentRunId = null);
 
-        // public UniTask HandleChatModelStartAsync(BaseLlm llm,
-        //     IReadOnlyList<List<Message>> messages,
-        //     string runId,
-        //     string parentRunId = null,
-        //     IReadOnlyDictionary<string, object> extraParams = null);
+        public UniTask HandleChatModelStartAsync(ILargeLanguageModel llm,
+            IReadOnlyList<List<IMessage>> messages,
+            string runId,
+            string parentRunId = null,
+            IReadOnlyDictionary<string, object> extraParams = null);
 
         public UniTask HandleChainStartAsync(IChain chain,
             Dictionary<string, object> inputs,
@@ -87,6 +87,8 @@ namespace Kurisu.UniChat
             Dictionary<string, object> action,
             string runId,
             string parentRunId = null);
+
+        //Notice: Not implement in Unity
 
         // public UniTask HandleRetrieverStartAsync(
         //     BaseRetriever retriever,

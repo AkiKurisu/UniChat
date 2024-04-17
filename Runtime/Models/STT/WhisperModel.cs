@@ -4,6 +4,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Whisper;
 using Whisper.Native;
+using Whisper.Utils;
 namespace Kurisu.UniChat.STT
 {
     public class WhisperModel : ISpeechToTextModel
@@ -39,6 +40,7 @@ namespace Kurisu.UniChat.STT
             [Tooltip("[EXPERIMENTAL] Overwrite the audio context size (0 = use default). " +
                      "These can significantly reduce the quality of the output.")]
             public int audioCtx;
+            public LogLevel logLevel = LogLevel.Error;
         }
         private readonly WhisperWrapper whisper;
         public WhisperParams Params { get; }
@@ -70,6 +72,7 @@ namespace Kurisu.UniChat.STT
                 Params.EnableTokens = whisperSettings.enableTokens;
                 Params.TokenTimestamps = whisperSettings.tokensTimestamps;
                 Params.InitialPrompt = whisperSettings.initialPrompt;
+                LogUtils.Level = whisperSettings.logLevel;
             }
             var result = await whisper.GetTextAsync(request.samples, request.frequency, request.channels, Params);
             return result.Result;
