@@ -27,7 +27,6 @@ namespace Kurisu.UniChat
             }
             public TensorFloat[] Convert(Ops ops, IReadOnlyList<string> inputs)
             {
-                //Exclude last bot response 
                 var lastResponse = memory.GetMessages(MessageRole.Bot).LastOrDefault()?.Content;
                 if (lastResponse != null)
                     inputTensors[1] = encoder.Encode(ops, lastResponse);

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 namespace Kurisu.UniChat.Chains
 {
     /// <summary>
@@ -117,9 +118,9 @@ namespace Kurisu.UniChat.Chains
     public abstract class Tracer : CallbackHandler
     {
         /// <summary>
-        /// 
+        /// Map contains all existed run
         /// </summary>
-        protected Dictionary<string, Run> RunMap { get; } = new();
+        protected static Dictionary<string, Run> RunMap { get; } = new();
 
         /// <summary>
         /// 
@@ -596,10 +597,9 @@ namespace Kurisu.UniChat.Chains
                 }
                 else
                 {
-                    Console.WriteLine($"Parent run with id {run.ParentRunId} not found.");
+                    Debug.LogWarning($"Parent run with id {run.ParentRunId} not found.");
                 }
             }
-
             RunMap[run.Id] = run;
             OnRunCreate(run);
         }
@@ -623,10 +623,9 @@ namespace Kurisu.UniChat.Chains
                 }
                 else
                 {
-                    Console.WriteLine($"Parent run with id {run.ParentRunId} not found.");
+                    Debug.LogWarning($"Parent run with id {run.ParentRunId} not found.");
                 }
             }
-
             RunMap.Remove(run.Id);
             OnRunUpdate(run);
         }
@@ -648,7 +647,7 @@ namespace Kurisu.UniChat.Chains
             }
             else
             {
-                Console.WriteLine($"Parent run with id {parentRunId} not found.");
+                Debug.LogWarning($"Parent run with id {parentRunId} not found.");
             }
 
             return 1;

@@ -91,7 +91,7 @@ namespace Kurisu.UniChat.Chains
         /// <returns>The child callback manager.</returns>
         public ChainCallback GetChild()
         {
-            var manager = new ChainCallback(parentRunId: RunId);
+            var manager = new ChainCallback(new(), parentRunId: RunId);
             manager.SetHandlers(InheritableHandlers);
             manager.AddMetadata(InheritableMetadata);
             return manager;

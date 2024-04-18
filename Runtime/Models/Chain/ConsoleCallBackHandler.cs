@@ -262,10 +262,10 @@ namespace Kurisu.UniChat.Chains
         private static class ConsoleFormats
         {
             public static string Normal = "<color=#FFFFFF>{0}</color>";
-            public static string Red = "<color=#FF0000>{0}</color>";
-            public static string Green = "<color=#00FF00>{0}</color>";
+            public static string Red = "<color=#FF6486>{0}</color>";
+            public static string Green = "<color=#59CB86>{0}</color>";
             public static string Yellow = "<color=#FFFF00>{0}</color>";
-            public static string Blue = "<color=#0000FF>{0}</color>";
+            public static string Blue = "<color=#5973CB>{0}</color>";
             public static string Bold = "<b>{0}</b>";
             public static string Underline = "<u>{0}</u>";
         }

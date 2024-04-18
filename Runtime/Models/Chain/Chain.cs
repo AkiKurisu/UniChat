@@ -90,6 +90,7 @@ namespace Kurisu.UniChat.Chains
         )
         {
             var callBack = await ChainCallback.Configure(
+                RunContext.GetContext(values).RunId,
                 callbacks,
                 Inputs.Callbacks,
                 tags,
@@ -336,6 +337,7 @@ namespace Kurisu.UniChat.Chains
         {
             input = input ?? throw new ArgumentNullException(nameof(input));
             output = output ?? throw new ArgumentNullException(nameof(output));
+            RunContext.GetContext(input).End(RunId);
             foreach (var handler in Handlers)
             {
                 try
@@ -356,7 +358,7 @@ namespace Kurisu.UniChat.Chains
         public async UniTask HandleChainErrorAsync(Exception error, IChainValues input)
         {
             input = input ?? throw new ArgumentNullException(nameof(input));
-
+            RunContext.GetContext(input).End(RunId);
             foreach (var handler in Handlers)
             {
                 try
