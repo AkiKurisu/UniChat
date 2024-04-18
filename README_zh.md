@@ -54,9 +54,9 @@
 ```C#
 public void CreatePipelineCtrl()
 {
-    //1. New file
+    //1. 新对话模型（向量+文本+配置表）
     ChatPipelineCtrl PipelineCtrl = new(new ChatModelFile() { fileName = $"ChatModel_{Guid.NewGuid().ToString()[0..6]}" });
-    //2. Load from filePath
+    //2. 从filePath加载
     PipelineCtrl= new(JsonConvert.DeserializeObject<ChatModelFile>(File.ReadAllText(filePath)))
 }
 ```

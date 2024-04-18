@@ -55,7 +55,7 @@ The following is the flow chart of UniChat. In the `Local Inference` box are the
 ```C#
 public void CreatePipelineCtrl()
 {
-    //1. New file
+    //1. New chat model file (embedding database + text table + config)
     ChatPipelineCtrl PipelineCtrl = new(new ChatModelFile() { fileName = $"ChatModel_{Guid.NewGuid().ToString()[0..6]}" });
     //2. Load from filePath
     PipelineCtrl= new(JsonConvert.DeserializeObject<ChatModelFile>(File.ReadAllText(filePath)))
@@ -71,9 +71,9 @@ public bool RunPipeline()
     var context = await PipelineCtrl.RunPipeline("Hello!");
     if ((context.flag & (1 << 1)) != 0)
     {
-        //获取文本输出
+        //Get pipeline output
         string output = context.CastStringValue();
-        //更新历史
+        //Update history
         PipelineCtrl.History.AppendUserMessage(input);
         PipelineCtrl.History.AppendBotMessage(output);
         return true;
