@@ -2,7 +2,7 @@
 
 # UniChat
 
-[中文](README_ZH.md) | [English](README.md)
+[中文](README_zh.md) | [English](README.md)
 
 A pipeline for creating online and offline chat-bot in Unity.
 
