@@ -40,7 +40,7 @@ namespace Kurisu.UniChat.Example
             buttonText.text = "Record";
             var chain = Chain.Set(recordedAudio, "audio")
                         | Chain.STT(whisperModel, whisperSettings);
-            Debug.Log(await chain.Track(true).Run("text"));
+            Debug.Log(await chain.Trace(true, true).Run("text"));
         }
     }
 }

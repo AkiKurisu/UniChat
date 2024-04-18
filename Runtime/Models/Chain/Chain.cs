@@ -13,6 +13,8 @@ namespace Kurisu.UniChat.Chains
         public abstract string ChainType();
         public abstract IReadOnlyList<string> InputKeys { get; }
         public abstract IReadOnlyList<string> OutputKeys { get; }
+        private bool stackTrace;
+        private bool recursive;
         public Chain(IChainInputs inputs)
         {
             Inputs = inputs;
@@ -89,13 +91,19 @@ namespace Kurisu.UniChat.Chains
             IReadOnlyDictionary<string, object> metadata = null
         )
         {
+            values = values ?? throw new ArgumentNullException(nameof(values));
+            var runContext = RunContext.GetContext(values);
+            if (recursive) runContext.StackTrace |= stackTrace;
+
             var callBack = await ChainCallback.Configure(
+                runContext.RunId,
                 callbacks,
                 Inputs.Callbacks,
                 tags,
                 Inputs.Tags,
                 metadata,
-                Inputs.Metadata
+                Inputs.Metadata,
+                stackTrace: stackTrace || runContext.StackTrace
             );
 
             var runManager = await callBack.HandleChainStart(this, values);
@@ -114,7 +122,18 @@ namespace Kurisu.UniChat.Chains
                 throw;
             }
         }
-
+        /// <summary>
+        /// Trace this chain to debug status
+        /// </summary>
+        /// <param name="stackTrace">Enable stack track</param>
+        /// <param name="recursive">Track all child chains when run this chain</param>
+        /// <returns></returns>
+        public Chain Trace(bool stackTrace, bool recursive = false)
+        {
+            this.stackTrace = stackTrace;
+            this.recursive = recursive;
+            return this;
+        }
         /// <summary>
         /// Execute the chain, using the values provided.
         /// </summary>
@@ -336,6 +355,7 @@ namespace Kurisu.UniChat.Chains
         {
             input = input ?? throw new ArgumentNullException(nameof(input));
             output = output ?? throw new ArgumentNullException(nameof(output));
+            RunContext.GetContext(input).End(RunId);
             foreach (var handler in Handlers)
             {
                 try
@@ -356,7 +376,7 @@ namespace Kurisu.UniChat.Chains
         public async UniTask HandleChainErrorAsync(Exception error, IChainValues input)
         {
             input = input ?? throw new ArgumentNullException(nameof(input));
-
+            RunContext.GetContext(input).End(RunId);
             foreach (var handler in Handlers)
             {
                 try

@@ -4,6 +4,10 @@ namespace Kurisu.UniChat.Chains
 {
     public class ChainValues : IChainValues
     {
+        ~ChainValues()
+        {
+            RunContext.ReleaseContext(this);
+        }
         public ChainValues(object getFinalOutput)
         {
             Value = new Dictionary<string, object>
@@ -47,6 +51,10 @@ namespace Kurisu.UniChat.Chains
     public class StackableChainValues : ChainValues
     {
         public StackableChainHook Hook { get; set; }
+        ~StackableChainValues()
+        {
+            RunContext.ReleaseContext(this);
+        }
     }
     public class StackableChainHook
     {

@@ -37,7 +37,7 @@ namespace Kurisu.UniChat.Example
                     .Verbose(true);
 
             //Run chain
-            Debug.Log(await chain.Track(true).Run("text"));
+            Debug.Log(await chain.Trace(true, true).Run("text"));
         }
     }
 }

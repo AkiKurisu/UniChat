@@ -10,13 +10,13 @@ A pipeline for creating online and offline chat-bot in Unity.
 
 </div>
 
-
   - [Introduction](#introduction)
   - [Core pipeline](#core-pipeline)
     - [Quick use](#quick-use)
     - [Embedding model](#embedding-model)
   - [Chain](#chain)
     - [Combined with the core pipeline](#combined-with-the-core-pipeline)
+    - [Stack Trace](#stack-trace)
   - [Middleware](#middleware)
     - [Text to Speech](#text-to-speech)
     - [Speech to Text](#speech-to-text)
@@ -30,10 +30,6 @@ A pipeline for creating online and offline chat-bot in Unity.
     - [Demo function description](#demo-function-description)
       - [Personalization: role cards](#personalization-role-cards)
   - [Quote](#quote)
-
-
-
-
 
 
 ## Introduction
@@ -172,6 +168,19 @@ public async void Start()
     pipelineCtrl.SaveModel();
 }
 ```
+
+### Stack Trace
+
+You can trace the chain using the `Trace()` method.
+
+
+| Method name | Return type | Description |
+| ------ | -------- | ---- |
+| `Trace(stackTrace, recursive)` |`void`|Trace chain|
+`stackTrace: bool`|| Enables stack tracing
+`recursive: bool` ||Applies to all subchains
+
+![StackTrace](Images/stack-trace.png)
 
 ## Middleware
 

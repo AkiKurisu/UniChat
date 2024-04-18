@@ -4,19 +4,19 @@
 
 [中文](README_zh.md) | [English](README.md)
 
-一个在线和离线时的Unity Chat Bot管线。
+一在Unity中创建在线和离线时chat-bot的管线。
 
 <img src="Images/Icon.png" width="256"/>
 
 </div>
 
-- [UniChat](#unichat)
   - [简介](#简介)
   - [核心管线](#核心管线)
     - [快速使用](#快速使用)
     - [嵌入模型](#嵌入模型)
   - [链](#链)
     - [与核心管线组合](#与核心管线组合)
+    - [堆栈跟踪](#堆栈跟踪)
   - [中间件](#中间件)
     - [文本转语音](#文本转语音)
     - [语音转文本](#语音转文本)
@@ -30,7 +30,6 @@
     - [Demo功能说明](#demo功能说明)
       - [个性化：角色卡](#个性化角色卡)
   - [引用](#引用)
-
 
 
 ## 简介
@@ -164,6 +163,19 @@ public async void Start()
     pipelineCtrl.SaveModel();
 }
 ```
+
+### 堆栈跟踪
+
+你可以使用`Trace()`方法跟踪链。
+
+
+| 方法名 | 返回类型 | 描述 |
+| ------ | -------- | ---- |
+| `Trace(stackTrace, recursive)` |`void`|跟踪链|
+`stackTrace: bool`||启用堆栈跟踪
+`recursive: bool` ||应用于所有子链 
+
+![StackTrace](Images/stack-trace.png)
 
 ## 中间件
 

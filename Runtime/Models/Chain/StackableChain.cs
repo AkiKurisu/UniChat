@@ -10,7 +10,8 @@ namespace Kurisu.UniChat.Chains
         public virtual IReadOnlyList<string> InputKeys { get; protected set; } = Array.Empty<string>();
         public virtual IReadOnlyList<string> OutputKeys { get; protected set; } = Array.Empty<string>();
         protected StackableChain() { }
-        private bool stackTrack;
+        private bool stackTrace;
+        private bool recursive;
         protected StackableChain(StackableChain lastChild)
         {
             lastChild = lastChild ?? throw new ArgumentNullException(nameof(lastChild));
@@ -50,25 +51,26 @@ namespace Kurisu.UniChat.Chains
         IReadOnlyList<string> tags = null, IReadOnlyDictionary<string, object> metadata = null)
         {
             values = values ?? throw new ArgumentNullException(nameof(values));
+            RunContext runContext = RunContext.GetContext(values);
+            if (recursive) runContext.StackTrace |= stackTrace;
 
-            CallbackManagerForChainRun runManager = null;
-            if (stackTrack)
-            {
-                var callBack = await ChainCallback.Configure(
-                    callbacks,
-                        null,
-                    tags,
-                    null,
-                    metadata,
-                    null
-                );
-                runManager = await callBack.HandleChainStart(this, values);
-            }
+            var callBack = await ChainCallback.Configure(
+                //Current stack top run id => parent run id
+                runContext.RunId,
+                localCallbacks: callbacks,
+                inheritableCallbacks: null,
+                localTags: tags,
+                inheritableTags: null,
+                localMetadata: metadata,
+                inheritableMetadata: null,
+                stackTrace: stackTrace || runContext.StackTrace
+            );
+            var runManager = await callBack.HandleChainStart(this, values);
             try
             {
                 var result = await InternalCall(values);
                 _hook?.Invoke(values);
-                if (runManager != null) await runManager.HandleChainEndAsync(values, result);
+                await runManager.HandleChainEndAsync(values, result);
                 return result;
             }
             catch (StackableChainException)
@@ -178,13 +180,15 @@ namespace Kurisu.UniChat.Chains
             return this;
         }
         /// <summary>
-        /// Track this chain to debug status
+        /// Trace this chain to debug status
         /// </summary>
-        /// <param name="stackTrack"></param>
+        /// <param name="stackTrace">Enable stack track</param>
+        /// <param name="recursive">Track all child chains when run this chain</param>
         /// <returns></returns>
-        public StackableChain Track(bool stackTrack)
+        public StackableChain Trace(bool stackTrace, bool recursive = false)
         {
-            this.stackTrack = stackTrack;
+            this.stackTrace = stackTrace;
+            this.recursive = recursive;
             return this;
         }
     }

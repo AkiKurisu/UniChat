@@ -36,7 +36,7 @@ namespace Kurisu.UniChat.Example
                         .CastStringValue(outputKey: "text")
                         .UpdateHistory();
             //Run chain
-            Debug.Log(await chain.Track(true).Run("text"));
+            Debug.Log(await chain.Trace(true, true).Run("text"));
         }
         //2. Normal chain
         public async UniTask DoChain2()
@@ -47,7 +47,7 @@ namespace Kurisu.UniChat.Example
                         PipelineChain.CastStringValue(inputKey: "context", outputKey: "text") |
                         PipelineChain.UpdateHistory(pipelineCtrl.History, "input", "context");
             //Run chain
-            Debug.Log(await chain.Track(true).Run("text"));
+            Debug.Log(await chain.Trace(true, true).Run("text"));
         }
         //3. Without chain
         public async UniTask NoChain()

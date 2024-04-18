@@ -3,8 +3,88 @@ using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Pool;
 namespace Kurisu.UniChat.Chains
 {
+    /// <summary>
+    /// A replacement of run_tree_context (https://github.com/langchain-ai/langsmith-sdk/blob/main/python/langsmith/run_helpers.py).
+    /// Since AsyncLocal not worked in UniTask (https://github.com/Cysharp/UniTask?tab=readme-ov-file#net-core).
+    /// Instead, we use a stacked based context to trace run id.
+    /// </summary>
+    public class RunContext
+    {
+        private RunContext() { }
+        private static readonly ObjectPool<RunContext> pool = new(() => new RunContext(), null, delegate (RunContext context)
+        {
+            context.runStack.Clear();
+        });
+        private static RunContext Get()
+        {
+            return pool.Get();
+        }
+        private static void Release(RunContext toRelease)
+        {
+            pool.Release(toRelease);
+        }
+        /// <summary>
+        /// Whether trace the whole run session
+        /// </summary>
+        /// <value></value>
+        public bool StackTrace { get; set; }
+        /// <summary>
+        /// The id of current run
+        /// </summary> <summary>
+        public string RunId
+        {
+            get
+            {
+                if (runStack.TryPeek(out var runId)) return runId;
+                return null;
+            }
+        }
+        private static readonly Dictionary<IChainValues, RunContext> contextMap = new();
+        public readonly Stack<string> runStack = new();
+        /// <summary>
+        /// Start a run step
+        /// </summary>
+        /// <param name="runId"></param>
+        public void Start(string runId)
+        {
+            runStack.Push(runId);
+        }
+        /// <summary>
+        /// End a run step
+        /// </summary>
+        /// <param name="runId"></param>
+        public void End(string runId)
+        {
+            if (RunId == runId)
+            {
+                runStack.Pop();
+            }
+            else
+                throw new TracerException($"Run id on top of the stack is not {runId}.");
+        }
+        public static void ReleaseContext(IChainValues values)
+        {
+            if (contextMap.TryGetValue(values, out var context))
+            {
+                contextMap.Remove(values);
+                Release(context);
+            }
+        }
+        /// <summary>
+        /// Get or create a run context
+        /// </summary>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        public static RunContext GetContext(IChainValues values)
+        {
+            if (!contextMap.TryGetValue(values, out var context))
+                context = contextMap[values] = Get();
+            return context;
+        }
+    }
     public class ChainCallback
     {
         public List<CallbackHandler> Handlers { get; private set; }
@@ -76,15 +156,6 @@ namespace Kurisu.UniChat.Chains
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="llm"></param>
-        /// <param name="prompts"></param>
-        /// <param name="runId"></param>
-        /// <param name="parentRunId"></param>
-        /// <param name="extraParams"></param>
-        /// <returns></returns>
         public async UniTask<CallbackManagerForLlmRun> HandleLlmStart(
             ILargeLanguageModel llm,
             IReadOnlyList<string> prompts,
@@ -114,15 +185,6 @@ namespace Kurisu.UniChat.Chains
             return new CallbackManagerForLlmRun(runId, Handlers, InheritableHandlers, ParentRunId);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="llm"></param>
-        /// <param name="messages"></param>
-        /// <param name="runId"></param>
-        /// <param name="parentRunId"></param>
-        /// <param name="extraParams"></param>
-        /// <returns></returns>
         public async UniTask<CallbackManagerForLlmRun> HandleChatModelStart(
             ILargeLanguageModel llm,
             IReadOnlyList<List<IMessage>> messages,
@@ -153,12 +215,12 @@ namespace Kurisu.UniChat.Chains
         {
             inputs = inputs ?? throw new ArgumentNullException(nameof(inputs));
             runId ??= Guid.NewGuid().ToString();
-
+            RunContext.GetContext(inputs).Start(runId);
             foreach (var handler in Handlers)
             {
                 try
                 {
-                    await handler.HandleChainStartAsync(chain, inputs.Value, runId, ParentRunId);
+                    await handler.HandleChainStartAsync(chain, inputs.Value, runId, ParentRunId, name: chain.GetType().Name);
                 }
                 catch (Exception ex)
                 {
@@ -231,14 +293,15 @@ namespace Kurisu.UniChat.Chains
         }
 
         public static UniTask<ChainCallback> Configure(
-            ICallbacks inheritableCallbacks = null,
+            string parentId,
             ICallbacks localCallbacks = null,
+            ICallbacks inheritableCallbacks = null,
             IReadOnlyList<string> localTags = null,
             IReadOnlyList<string> inheritableTags = null,
             IReadOnlyDictionary<string, object> localMetadata = null,
-            IReadOnlyDictionary<string, object> inheritableMetadata = null)
+            IReadOnlyDictionary<string, object> inheritableMetadata = null,
+            bool stackTrace = false)
         {
-            string parentId = null;
 
             ChainCallback callBack;
 
@@ -287,6 +350,7 @@ namespace Kurisu.UniChat.Chains
             if (localMetadata != null) callBack.AddMetadata(localMetadata, inherit: false);
 
 #if !DISABLE_TRACING_CHAIN
+            if (stackTrace)
             {
                 if (callBack.Handlers.All(h => h.Name != "console_callback_handler"))
                 {
