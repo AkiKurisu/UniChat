@@ -174,11 +174,11 @@ public async void Start()
 You can trace the chain using the `Trace()` method.
 
 
-| Method name | Parameters | Return type | Description |
-| ------ | ---- | -------- | ---- |
-| `Trace(stackTrace, recursive)` | |`void`|Trace chain|
-`stackTrace: bool` enables stack tracing
-`recursive: bool` applies to all subchains
+| Method name | Return type | Description |
+| ------ | -------- | ---- |
+| `Trace(stackTrace, recursive)` |`void`|Trace chain|
+`stackTrace: bool`|| Enables stack tracing
+`recursive: bool` ||Applies to all subchains
 
 ![StackTrace](Images/stack-trace.png)
 

@@ -169,11 +169,11 @@ public async void Start()
 你可以使用`Trace()`方法跟踪链。
 
 
-| 方法名 | 参数 | 返回类型 | 描述 |
-| ------ | ---- | -------- | ---- |
-| `Trace(stackTrace, recursive)` | |`void`|跟踪链|
-`stackTrace: bool`启用堆栈跟踪
-`recursive: bool` 应用于所有子链 
+| 方法名 | 返回类型 | 描述 |
+| ------ | -------- | ---- |
+| `Trace(stackTrace, recursive)` |`void`|跟踪链|
+`stackTrace: bool`||启用堆栈跟踪
+`recursive: bool` ||应用于所有子链 
 
 ![StackTrace](Images/stack-trace.png)
 
