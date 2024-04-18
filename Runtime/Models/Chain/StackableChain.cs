@@ -56,7 +56,7 @@ namespace Kurisu.UniChat.Chains
 
             var callBack = await ChainCallback.Configure(
                 //Current stack top run id => parent run id
-                RunContext.GetContext(values).RunId,
+                runContext.RunId,
                 localCallbacks: callbacks,
                 inheritableCallbacks: null,
                 localTags: tags,
