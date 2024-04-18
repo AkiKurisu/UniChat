@@ -19,10 +19,11 @@ A pipeline for creating online and offline chat-bot in Unity.
     - [Combined with the core pipeline](#combined-with-the-core-pipeline)
   - [Middleware](#middleware)
     - [Text to Speech](#text-to-speech)
+    - [Speech to Text](#speech-to-text)
     - [Sub-classifier](#sub-classifier)
   - [Game Components](#game-components)
     - [Chat StateMachine](#chat-statemachine)
-    - [Tool usage](#tool-usage)
+    - [Tool Use](#tool-use)
   - [Demo](#demo)
     - [Minimalist Demo Download](#minimalist-demo-download)
     - [Advanced Demo download](#advanced-demo-download)
@@ -33,9 +34,11 @@ A pipeline for creating online and offline chat-bot in Unity.
 
 
 
+
+
 ## Introduction
 
-With the release of `Unity.Sentis`, we can use some neural network models at Runtime, including the text embedding model (Text Embedding Model) for natural language processing.
+With the release of `Unity.Sentis`, we can use some neural network models at Runtime, including the text embedding model for natural language processing.
 
 Although chatting with AI is nothing new, in games, how to design a conversation that does not deviate from the developer's ideas but is more flexible is a difficult point.
 
@@ -68,13 +71,15 @@ public void CreatePipelineCtrl()
 ```C#
 public bool RunPipeline()
 {
+    string input="Hello!";
     var context = await PipelineCtrl.RunPipeline("Hello!");
     if ((context.flag & (1 << 1)) != 0)
     {
-        //Get text output
+        //获取文本输出
         string output = context.CastStringValue();
-        //Update history
-        PipelineCtrl.History.AppendBotMessage(output, context.outputEntry.Hash);
+        //更新历史
+        PipelineCtrl.History.AppendUserMessage(input);
+        PipelineCtrl.History.AppendBotMessage(output);
         return true;
     }
 }
@@ -157,11 +162,10 @@ public async void Start()
     pipelineCtrl.SwitchGenerator(ChatGeneratorIds.ChatGPT, true);
     //Init pipeline, set verbose to log status
     await pipelineCtrl.InitializePipeline(new PipelineConfig { verbose = true });
-    //Add some chat data
+    //Add system prompt
     pipelineCtrl.Memory.Context = "You are my personal assistant, you should answer my questions.";
-    pipelineCtrl.History.AppendUserMessage("Hello assistant!");
     //Create chain
-    var chain = pipelineCtrl.ToChain().CastStringValue(outputKey: "text");
+    var chain = pipelineCtrl.ToChain().Input("Hello assistant!").CastStringValue(outputKey: "text");
     //Run chain
     string result = await chain.Run<string>("text");
     //Save chat model
@@ -179,7 +183,7 @@ You can use `AudioCache` to store speech so that it can be played when you pick 
 
 
 ```C#
-public class LLM_VITS_Chain_Example : MonoBehaviour
+public class LLM_TTS_Chain_Example : MonoBehaviour
 {
     public LLMSettingsAsset settingsAsset;
     public AudioSource audioSource;
@@ -193,14 +197,13 @@ public class LLM_VITS_Chain_Example : MonoBehaviour
         //Init pipeline, set verbose to log status
         await pipelineCtrl.InitializePipeline(new PipelineConfig { verbose = true });
         var vitsClient = new VITSClient(lang: "ja");
-        //Add some chat data
+        //Add system prompt
         pipelineCtrl.Memory.Context = "You are my personal assistant, you should answer my questions.";
-        pipelineCtrl.History.AppendUserMessage("Hello assistant!");
         //Create cache to cache audioClips and translated texts
         var audioCache = AudioCache.CreateCache(chatModelFile.DirectoryPath);
         var textCache = TextMemoryCache.CreateCache(chatModelFile.DirectoryPath);
         //Create chain
-        var chain = pipelineCtrl.ToChain().CastStringValue(outputKey: "text")
+        var chain = pipelineCtrl.ToChain().Input("Hello assistant!").CastStringValue(outputKey: "text")
                                 //Translate to japanese
                                 | Chain.Translate(new GoogleTranslator("en", "ja")).UseCache(textCache)
                                 //Split them
@@ -219,6 +222,23 @@ public class LLM_VITS_Chain_Example : MonoBehaviour
             await UniTask.WaitUntil(() => !audioSource.isPlaying);
         }
     }
+}
+```
+
+### Speech to Text
+
+You can use a speech-to-text service such as [whisper.unity](https://github.com/Macoron/whisper.unity) for local inference.
+
+```C#
+public void RunSTTChain(AudioClip audioClip)
+{
+     WhisperModel whisperModel = await WhisperModel.FromPath(modelPath);
+     var chain = Chain.Set(audioClip, "audio")
+                         | Chain.STT(whisperModel, new WhisperSettings(){
+                             language="en",
+                             initialPrompt="The following is a paragraph in English."
+                         });
+     Debug.Log(await chain.Run("text"));
 }
 ```
 
@@ -333,13 +353,13 @@ public class CustomChatBehavior : ChatStateMachineBehavior
 ```C#
 private void RunStateMachineAfterPipeline()
 {
-    var chain = PipelineCtrl.ToChain().CastStringValue("stringValue") 
+    var chain = PipelineCtrl.ToChain().Input("Your question.").CastStringValue("stringValue") 
                 | new StateMachineChain(chatStateMachineCtrl, "stringValue");
     await chain.Run();   
 }
 ```
 
-### Tool usage
+### Tool Use
 
 Invoke tools based on ReActAgent workflow.
 

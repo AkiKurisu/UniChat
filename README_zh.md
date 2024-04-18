@@ -10,6 +10,7 @@
 
 </div>
 
+- [UniChat](#unichat)
   - [简介](#简介)
   - [核心管线](#核心管线)
     - [快速使用](#快速使用)
@@ -18,6 +19,7 @@
     - [与核心管线组合](#与核心管线组合)
   - [中间件](#中间件)
     - [文本转语音](#文本转语音)
+    - [语音转文本](#语音转文本)
     - [子分类器](#子分类器)
   - [游戏组件](#游戏组件)
     - [对话状态机](#对话状态机)
@@ -64,13 +66,15 @@ public void CreatePipelineCtrl()
 ```C#
 public bool RunPipeline()
 {
+    string input="Hello!";
     var context = await PipelineCtrl.RunPipeline("Hello!");
     if ((context.flag & (1 << 1)) != 0)
     {
         //获取文本输出
         string output = context.CastStringValue();
         //更新历史
-        PipelineCtrl.History.AppendBotMessage(output, context.outputEntry.Hash);
+        PipelineCtrl.History.AppendUserMessage(input);
+        PipelineCtrl.History.AppendBotMessage(output);
         return true;
     }
 }
@@ -150,11 +154,10 @@ public async void Start()
     pipelineCtrl.SwitchGenerator(ChatGeneratorIds.ChatGPT, true);
     //Init pipeline, set verbose to log status
     await pipelineCtrl.InitializePipeline(new PipelineConfig { verbose = true });
-    //Add some chat data
-    pipelineCtrl.Memory.Context = "你是我的私人助理，你会解答我的各种问题";
-    pipelineCtrl.History.AppendUserMessage("你好!");
+    //Add system prompt
+    pipelineCtrl.Memory.Context = "You are my personal assistant, you should answer my questions.";
     //Create chain
-    var chain = pipelineCtrl.ToChain().CastStringValue(outputKey: "text");
+    var chain = pipelineCtrl.ToChain().Input("Hello assistant!").CastStringValue(outputKey: "text");
     //Run chain
     string result = await chain.Run<string>("text");
     //Save chat model
@@ -171,7 +174,7 @@ public async void Start()
 你可以使用`AudioCache`来存储语音，这样在离线模式下从数据库拾取回答时也能播放语音。
 
 ```C#
-public class LLM_VITS_Chain_Example : MonoBehaviour
+public class LLM_TTS_Chain_Example : MonoBehaviour
 {
     public LLMSettingsAsset settingsAsset;
     public AudioSource audioSource;
@@ -185,14 +188,13 @@ public class LLM_VITS_Chain_Example : MonoBehaviour
         //Init pipeline, set verbose to log status
         await pipelineCtrl.InitializePipeline(new PipelineConfig { verbose = true });
         var vitsClient = new VITSClient(lang: "ja");
-        //Add some chat data
-        pipelineCtrl.Memory.Context = "你是我的私人助理，你会解答我的各种问题";
-        pipelineCtrl.History.AppendUserMessage("你好!");
+         //Add system prompt
+        pipelineCtrl.Memory.Context = "You are my personal assistant, you should answer my questions.";
         //Create cache to cache audioClips and translated texts
         var audioCache = AudioCache.CreateCache(chatModelFile.DirectoryPath);
         var textCache = TextMemoryCache.CreateCache(chatModelFile.DirectoryPath);
         //Create chain
-        var chain = pipelineCtrl.ToChain().CastStringValue(outputKey: "text")
+        var chain = pipelineCtrl.ToChain().Input("Hello assistant!").CastStringValue(outputKey: "text")
                                 //Translate to japanese
                                 | Chain.Translate(new GoogleTranslator("zh", "ja")).UseCache(textCache)
                                 //Split them
@@ -211,6 +213,23 @@ public class LLM_VITS_Chain_Example : MonoBehaviour
             await UniTask.WaitUntil(() => !audioSource.isPlaying);
         }
     }
+}
+```
+
+### 语音转文本
+
+你可以使用语音转文本服务，例如本地推理的[whisper.unity](https://github.com/Macoron/whisper.unity)。
+
+```C#
+public void RunSTTChain(AudioClip audioClip)
+{
+    WhisperModel whisperModel = await WhisperModel.FromPath(modelPath);
+    var chain = Chain.Set(audioClip, "audio")
+                        | Chain.STT(whisperModel, new WhisperSettings(){
+                            language="zh",
+                            initialPrompt="以下是一段简体中文普通话。"
+                        });
+    Debug.Log(await chain.Run("text"));
 }
 ```
 
@@ -320,7 +339,7 @@ public class CustomChatBehavior : ChatStateMachineBehavior
 ```C#
 private void RunStateMachineAfterPipeline()
 {
-    var chain = PipelineCtrl.ToChain().CastStringValue("stringValue") 
+    var chain = PipelineCtrl.ToChain().Input("Your question.").CastStringValue("stringValue") 
                 | new StateMachineChain(chatStateMachineCtrl, "stringValue");
     await chain.Run();   
 }
