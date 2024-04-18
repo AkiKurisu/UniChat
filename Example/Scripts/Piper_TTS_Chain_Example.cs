@@ -19,10 +19,10 @@ namespace Kurisu.UniChat.Example
                 Assistant:";
             var llm = LLMFactory.Create(LLMType.ChatGPT, settingsAsset);
 
-            var factory = ModelProviderFactory.Instance.Create(ModelProvider.AddressableProvider);
+            var provider = ModelProviderFactory.Instance.Create(ModelProvider.AddressableProvider);
 
             //Load pre-trained Chinese piper model downloaded from https://github.com/rhasspy/piper/blob/master/VOICES.md
-            piperModel = new(await factory.LoadModel("piper/zh_CN-huayan-medium.sentis"),
+            piperModel = new(await provider.LoadModel("piper/zh_CN-huayan-medium.sentis"),
                                Path.Combine(Application.streamingAssetsPath, "espeak-ng-data"),
                                BackendType.GPUCompute);
 
