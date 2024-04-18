@@ -8,7 +8,7 @@ namespace Kurisu.UniChat.Chains
 {
     /// <summary>
     /// A replacement of run_tree_context (https://github.com/langchain-ai/langsmith-sdk/blob/main/python/langsmith/run_helpers.py).
-    /// However AsyncLocal not worked in UniTask (https://github.com/Cysharp/UniTask?tab=readme-ov-file#net-core).
+    /// Since AsyncLocal not worked in UniTask (https://github.com/Cysharp/UniTask?tab=readme-ov-file#net-core).
     /// Instead, we use a stacked based context to trace run id.
     /// </summary>
     public class RunContext
