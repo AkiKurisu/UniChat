@@ -17,6 +17,7 @@ namespace Kurisu.UniChat.Chains
         private static readonly ObjectPool<RunContext> pool = new(() => new RunContext(), null, delegate (RunContext context)
         {
             context.runStack.Clear();
+            context.StackTrace = false;
         });
         private static RunContext Get()
         {

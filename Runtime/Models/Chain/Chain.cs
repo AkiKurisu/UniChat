@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
 using Kurisu.UniChat.Memory;
-using UnityEngine;
 namespace Kurisu.UniChat.Chains
 {
     public abstract class Chain : IChain
@@ -331,78 +330,6 @@ namespace Kurisu.UniChat.Chains
             string outputKey = "text")
         {
             return new ReActParserChain(inputKey, outputKey);
-        }
-
-    }
-
-    public class CallbackManagerForChainRun : ParentRunManager, IChainRunner<CallbackManagerForChainRun>
-    {
-        public CallbackManagerForChainRun()
-        {
-
-        }
-
-        public CallbackManagerForChainRun(
-            string runId,
-            List<CallbackHandler> handlers,
-            List<CallbackHandler> inheritableHandlers,
-            string parentRunId = null)
-            : base(runId, handlers, inheritableHandlers, parentRunId)
-        {
-        }
-
-        public async UniTask HandleChainEndAsync(IChainValues input, IChainValues output)
-        {
-            input = input ?? throw new ArgumentNullException(nameof(input));
-            output = output ?? throw new ArgumentNullException(nameof(output));
-            RunContext.GetContext(input).End(RunId);
-            foreach (var handler in Handlers)
-            {
-                try
-                {
-                    await handler.HandleChainEndAsync(
-                        input.Value,
-                        output.Value,
-                        RunId,
-                        ParentRunId);
-                }
-                catch (Exception ex)
-                {
-                    await Console.Error.WriteLineAsync($"Error in handler {handler.GetType().Name}, HandleChainEnd: {ex}");
-                }
-            }
-        }
-
-        public async UniTask HandleChainErrorAsync(Exception error, IChainValues input)
-        {
-            input = input ?? throw new ArgumentNullException(nameof(input));
-            RunContext.GetContext(input).End(RunId);
-            foreach (var handler in Handlers)
-            {
-                try
-                {
-                    await handler.HandleChainErrorAsync(error, RunId, input.Value, ParentRunId);
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError($"Error in handler {handler.GetType().Name}, HandleChainError: {ex}");
-                }
-            }
-        }
-
-        public async UniTask HandleTextAsync(string text)
-        {
-            foreach (var handler in Handlers)
-            {
-                try
-                {
-                    await handler.HandleTextAsync(text, RunId, ParentRunId);
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError($"Error in handler {handler.GetType().Name}, HandleText: {ex}");
-                }
-            }
         }
     }
 }
