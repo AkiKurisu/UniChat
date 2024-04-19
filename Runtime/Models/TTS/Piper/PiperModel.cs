@@ -31,11 +31,7 @@ namespace Kurisu.UniChat.TTS
         {
             var setting = settings as PiperSettings;
             setting ??= defaultSettings;
-            var sw = new System.Diagnostics.Stopwatch();
-            sw.Start();
             var phonemes = PiperWrapper.ProcessText(prompt, setting.Voice);
-            sw.Restart();
-
             var inputLengthsShape = new TensorShape(1);
             var scalesShape = new TensorShape(3);
             using var scalesTensor = new TensorFloat(scalesShape, new float[] { 0.667f, 1f, 0.8f });
@@ -64,8 +60,6 @@ namespace Kurisu.UniChat.TTS
                 var output = outputTensor.ToReadOnlyArray();
                 audioBuffer.AddRange(output);
             }
-
-            sw.Restart();
             var audioClip = AudioClip.Create("piper_tts", audioBuffer.Count, 1, setting.SampleRate, false);
             audioClip.SetData(audioBuffer.ToArray(), 0);
             return audioClip;
