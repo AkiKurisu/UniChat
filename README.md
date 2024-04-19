@@ -11,6 +11,7 @@ A pipeline for creating online and offline chat-bot in Unity.
 </div>
 
   - [Introduction](#introduction)
+  - [Install](#install)
   - [Core pipeline](#core-pipeline)
     - [Quick use](#quick-use)
     - [Embedding model](#embedding-model)
@@ -28,8 +29,9 @@ A pipeline for creating online and offline chat-bot in Unity.
     - [Minimalist Demo Download](#minimalist-demo-download)
     - [Advanced Demo download](#advanced-demo-download)
     - [Demo function description](#demo-function-description)
-      - [Personalization: role cards](#personalization-role-cards)
+      - [Personalization: Character Cards](#personalization-character-cards)
   - [Quote](#quote)
+
 
 
 ## Introduction
@@ -44,7 +46,25 @@ Of course, if you use the online mode, `UniChat` also includes a chain toolkit b
 
 The following is the flow chart of UniChat. In the `Local Inference` box are the functions that can be used offline:
 
-![流程图](Images/UniChat.png)
+![Flow](Images/UniChat.png)
+
+## Install
+
+Add the following dependencies in `manifest.json`:
+```json
+{
+  "dependencies": {
+    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
+    "com.huggingface.sharp-transformers": "https://github.com/huggingface/sharp-transformers.git",
+    "com.unity.addressables": "1.21.20",
+    "com.unity.burst": "1.8.13",
+    "com.unity.collections": "2.2.1",
+    "com.unity.nuget.newtonsoft-json": "3.2.1",
+    "com.unity.sentis": "1.3.0-pre.3",
+    "com.whisper.unity": "https://github.com/Macoron/whisper.unity.git?path=Packages/com.whisper.unity"
+    }
+}
+```
 
 ## Core pipeline
 
@@ -415,7 +435,7 @@ See [Release](https://github.com/AkiKurisu/UniChat/releases) page
 Based on UniChat to make a similar application in Unity> The synchronized repository version is `V0.0.1-alpha`, the Demo is waiting to be updated.
 ### Minimalist Demo Download
 
-![聊天界面](Images/chat-view.png)
+![Chat-View](Images/chat-view.png)
 
 See [Release](https://github.com/AkiKurisu/UniChat/releases) page
 
@@ -428,7 +448,7 @@ It contains behavioral and voice components and is not yet available.
 
 ### Demo function description
 
-#### Personalization: role cards
+#### Personalization: Character Cards
 
 Demo uses `TavernAI` the character data structure, and we can write the character's personality, sample conversations, and chat scenarios into pictures.
 

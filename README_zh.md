@@ -11,6 +11,7 @@
 </div>
 
   - [简介](#简介)
+  - [安装](#安装)
   - [核心管线](#核心管线)
     - [快速使用](#快速使用)
     - [嵌入模型](#嵌入模型)
@@ -32,6 +33,7 @@
   - [引用](#引用)
 
 
+
 ## 简介
 
 随着`Unity.Sentis`的发布，我们可以在Runtime使用一些神经网络模型，其中就包括自然语言处理的文本向量嵌入模型(Text Embedding Model)。
@@ -45,6 +47,24 @@
 以下是UniChat的流程图，在`Local Inference`框中的为可以离线使用的功能：
 
 ![流程图](Images/UniChat.png)
+
+## 安装
+
+在`manifest.json`中添加以下依赖：
+```json
+{
+  "dependencies": {
+    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
+    "com.huggingface.sharp-transformers": "https://github.com/huggingface/sharp-transformers.git",
+    "com.unity.addressables": "1.21.20",
+    "com.unity.burst": "1.8.13",
+    "com.unity.collections": "2.2.1",
+    "com.unity.nuget.newtonsoft-json": "3.2.1",
+    "com.unity.sentis": "1.3.0-pre.3",
+    "com.whisper.unity": "https://github.com/Macoron/whisper.unity.git?path=Packages/com.whisper.unity"
+    }
+}
+```
 
 ## 核心管线
 
