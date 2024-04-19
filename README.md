@@ -50,7 +50,7 @@ The following is the flow chart of UniChat. In the `Local Inference` box are the
 
 ## Install
 
-Add the following dependencies in `manifest.json`:
+1. Add the following dependencies in `manifest.json`:
 ```json
 {
   "dependencies": {
@@ -65,6 +65,8 @@ Add the following dependencies in `manifest.json`:
     }
 }
 ```
+
+2. Download by `Unity Package Manager` using git url `https://github.com/AkiKurisu/UniChat.git`
 
 ## Core pipeline
 
@@ -196,9 +198,9 @@ You can trace the chain using the `Trace()` method.
 
 | Method name | Return type | Description |
 | ------ | -------- | ---- |
-| `Trace(stackTrace, recursive)` |`void`|Trace chain|
+| `Trace(stackTrace, applyToContext)` |`void`|Trace chain|
 `stackTrace: bool`|| Enables stack tracing
-`recursive: bool` ||Applies to all subchains
+`applyToContext: bool` ||Applies to all subchains
 
 ![StackTrace](Images/stack-trace.png)
 

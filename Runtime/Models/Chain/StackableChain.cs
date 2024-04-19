@@ -11,7 +11,7 @@ namespace Kurisu.UniChat.Chains
         public virtual IReadOnlyList<string> OutputKeys { get; protected set; } = Array.Empty<string>();
         protected StackableChain() { }
         private bool stackTrace;
-        private bool recursive;
+        private bool applyToContext;
         protected StackableChain(StackableChain lastChild)
         {
             lastChild = lastChild ?? throw new ArgumentNullException(nameof(lastChild));
@@ -52,7 +52,7 @@ namespace Kurisu.UniChat.Chains
         {
             values = values ?? throw new ArgumentNullException(nameof(values));
             RunContext runContext = RunContext.GetContext(values);
-            if (recursive) runContext.StackTrace |= stackTrace;
+            if (applyToContext) runContext.StackTrace |= stackTrace;
 
             var callBack = await ChainCallback.Configure(
                 //Current stack top run id => parent run id
@@ -183,12 +183,12 @@ namespace Kurisu.UniChat.Chains
         /// Trace this chain to debug status
         /// </summary>
         /// <param name="stackTrace">Enable stack track</param>
-        /// <param name="recursive">Track all child chains when run this chain</param>
+        /// <param name="applyToContext">Trace all child chains when run this chain</param>
         /// <returns></returns>
-        public StackableChain Trace(bool stackTrace, bool recursive = false)
+        public StackableChain Trace(bool stackTrace, bool applyToContext = false)
         {
             this.stackTrace = stackTrace;
-            this.recursive = recursive;
+            this.applyToContext = applyToContext;
             return this;
         }
     }

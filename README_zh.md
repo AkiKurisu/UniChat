@@ -50,7 +50,7 @@
 
 ## 安装
 
-在`manifest.json`中添加以下依赖：
+1. 在`manifest.json`中添加以下依赖：
 ```json
 {
   "dependencies": {
@@ -65,6 +65,7 @@
     }
 }
 ```
+2. 使用`Unity Package Manager`从git url下载 `https://github.com/AkiKurisu/UniChat.git`
 
 ## 核心管线
 
@@ -191,9 +192,9 @@ public async void Start()
 
 | 方法名 | 返回类型 | 描述 |
 | ------ | -------- | ---- |
-| `Trace(stackTrace, recursive)` |`void`|跟踪链|
+| `Trace(stackTrace, applyToContext)` |`void`|跟踪链|
 `stackTrace: bool`||启用堆栈跟踪
-`recursive: bool` ||应用于所有子链 
+`applyToContext: bool` ||应用于所有子链 
 
 ![StackTrace](Images/stack-trace.png)
 

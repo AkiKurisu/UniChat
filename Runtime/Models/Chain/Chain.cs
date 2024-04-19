@@ -13,7 +13,7 @@ namespace Kurisu.UniChat.Chains
         public abstract IReadOnlyList<string> InputKeys { get; }
         public abstract IReadOnlyList<string> OutputKeys { get; }
         private bool stackTrace;
-        private bool recursive;
+        private bool applyToContext;
         public Chain(IChainInputs inputs)
         {
             Inputs = inputs;
@@ -92,7 +92,7 @@ namespace Kurisu.UniChat.Chains
         {
             values = values ?? throw new ArgumentNullException(nameof(values));
             var runContext = RunContext.GetContext(values);
-            if (recursive) runContext.StackTrace |= stackTrace;
+            if (applyToContext) runContext.StackTrace |= stackTrace;
 
             var callBack = await ChainCallback.Configure(
                 runContext.RunId,
@@ -125,12 +125,12 @@ namespace Kurisu.UniChat.Chains
         /// Trace this chain to debug status
         /// </summary>
         /// <param name="stackTrace">Enable stack track</param>
-        /// <param name="recursive">Track all child chains when run this chain</param>
+        /// <param name="applyToContext">Trace all child chains when run this chain</param>
         /// <returns></returns>
-        public Chain Trace(bool stackTrace, bool recursive = false)
+        public Chain Trace(bool stackTrace, bool applyToContext = false)
         {
             this.stackTrace = stackTrace;
-            this.recursive = recursive;
+            this.applyToContext = applyToContext;
             return this;
         }
         /// <summary>
