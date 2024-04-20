@@ -13,20 +13,7 @@ namespace Kurisu.UniChat.Chains
     /// </summary>
     public class RunContext
     {
-        private RunContext() { }
-        private static readonly ObjectPool<RunContext> pool = new(() => new RunContext(), null, delegate (RunContext context)
-        {
-            context.runStack.Clear();
-            context.StackTrace = false;
-        });
-        private static RunContext Get()
-        {
-            return pool.Get();
-        }
-        private static void Release(RunContext toRelease)
-        {
-            pool.Release(toRelease);
-        }
+        public IChainValues Values { get; private set; }
         /// <summary>
         /// Whether trace the whole run session
         /// </summary>
@@ -45,6 +32,22 @@ namespace Kurisu.UniChat.Chains
         }
         private static readonly Dictionary<IChainValues, RunContext> contextMap = new();
         public readonly Stack<string> runStack = new();
+        private static readonly ObjectPool<RunContext> pool = new(() => new RunContext(), null, delegate (RunContext context)
+        {
+            context.runStack.Clear();
+            context.Values = null;
+            context.StackTrace = false;
+        });
+        private static RunContext Get(IChainValues chainValues)
+        {
+            var context = pool.Get();
+            context.Values = chainValues;
+            return context;
+        }
+        private static void Release(RunContext toRelease)
+        {
+            pool.Release(toRelease);
+        }
         /// <summary>
         /// Start a run step
         /// </summary>
@@ -62,9 +65,16 @@ namespace Kurisu.UniChat.Chains
             if (RunId == runId)
             {
                 runStack.Pop();
+                //Release after stack empty
+                if (runStack.Peek() == null)
+                {
+                    ReleaseContext(Values);
+                }
             }
             else
+            {
                 throw new TracerException($"Run id on top of the stack is not {runId}.");
+            }
         }
         public static void ReleaseContext(IChainValues values)
         {
@@ -82,7 +92,7 @@ namespace Kurisu.UniChat.Chains
         public static RunContext GetContext(IChainValues values)
         {
             if (!contextMap.TryGetValue(values, out var context))
-                context = contextMap[values] = Get();
+                context = contextMap[values] = Get(values);
             return context;
         }
     }

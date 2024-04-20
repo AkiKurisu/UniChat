@@ -261,6 +261,7 @@ namespace Kurisu.UniChat.Chains
 
         private static class ConsoleFormats
         {
+#if UNITY_EDITOR
             public static string Normal = "<color=#FFFFFF>{0}</color>";
             public static string Red = "<color=#FF6486>{0}</color>";
             public static string Green = "<color=#59CB86>{0}</color>";
@@ -268,6 +269,15 @@ namespace Kurisu.UniChat.Chains
             public static string Blue = "<color=#5973CB>{0}</color>";
             public static string Bold = "<b>{0}</b>";
             public static string Underline = "<u>{0}</u>";
+#else
+            public static string Normal = "{0}";
+            public static string Red = "{0}";
+            public static string Green = "{0}";
+            public static string Yellow = "{0}";
+            public static string Blue = "{0}";
+            public static string Bold = "{0}";
+            public static string Underline = "{0}";
+#endif
         }
     }
 }

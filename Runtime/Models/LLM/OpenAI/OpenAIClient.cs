@@ -29,11 +29,8 @@ namespace Kurisu.UniChat.LLMs
         public OpenAIClient(string url, string model, string apiKey)
         {
             ApiKey = apiKey;
-            GptModel = model;
-            if (string.IsNullOrEmpty(url))
-                ChatAPI = DefaultAPI;
-            else
-                ChatAPI = url;
+            GptModel = string.IsNullOrEmpty(model) ? DefaultModel : model;
+            ChatAPI = string.IsNullOrEmpty(url) ? DefaultAPI : url;
         }
         public async UniTask<ILLMResponse> GenerateAsync(ILLMRequest input, CancellationToken ct)
         {

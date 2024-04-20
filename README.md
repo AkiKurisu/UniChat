@@ -6,7 +6,7 @@
 
 A pipeline for creating online and offline chat-bot in Unity.
 
-<img src="Images/Icon.png" width="256"/>
+<img src="./Docs/Images/Icon.png" width="256"/>
 
 </div>
 
@@ -46,7 +46,7 @@ Of course, if you use the online mode, `UniChat` also includes a chain toolkit b
 
 The following is the flow chart of UniChat. In the `Local Inference` box are the functions that can be used offline:
 
-![Flow](Images/UniChat.png)
+![Flow](./Docs/Images/UniChat.png)
 
 ## Install
 
@@ -122,7 +122,7 @@ The loading mode is optional `UserDataProvider`, `StreamingAssetsProvider` and `
 
 The `UserDataProvider` file path is as follows:
 
-![UserData](Images/userdata_provider.png)
+![UserData](./Docs/Images/userdata_provider.png)
 
  `ResourcesProvider` Place the files in the models folder in the Resources folder.
 
@@ -130,7 +130,7 @@ The `UserDataProvider` file path is as follows:
 
 Address `AddressablesProvider` of is as follows:
 
-![Addressables](Images/addressable-provider.png)
+![Addressables](./Docs/Images/addressable-provider.png)
 
 ## Chain
 
@@ -202,7 +202,7 @@ You can trace the chain using the `Trace()` method.
 `stackTrace: bool`|| Enables stack tracing
 `applyToContext: bool` ||Applies to all subchains
 
-![StackTrace](Images/stack-trace.png)
+![StackTrace](./Docs/Images/stack-trace.png)
 
 ## Middleware
 
@@ -341,7 +341,7 @@ A stateMachine that switches States according to the chat content. StateMachine 
 
 2. Configured in Editor Window and saved as a text file.
 
-![Configure in editor](Images/edit-fsm.png)
+![Configure in editor](./Docs/Images/edit-fsm.png)
 
 
 ```C#
@@ -437,14 +437,14 @@ See [Release](https://github.com/AkiKurisu/UniChat/releases) page
 Based on UniChat to make a similar application in Unity> The synchronized repository version is `V0.0.1-alpha`, the Demo is waiting to be updated.
 ### Minimalist Demo Download
 
-![Chat-View](Images/chat-view.png)
+![Chat-View](./Docs/Images/chat-view.png)
 
 See [Release](https://github.com/AkiKurisu/UniChat/releases) page
 
 
 ### Advanced Demo download
 
-![Demo Pro](Images/demo-pro.png)
+![Demo Pro](./Docs/Images/demo-pro.png)
 
 It contains behavioral and voice components and is not yet available.
 
@@ -454,7 +454,7 @@ It contains behavioral and voice components and is not yet available.
 
 Demo uses `TavernAI` the character data structure, and we can write the character's personality, sample conversations, and chat scenarios into pictures.
 
-![Setting View](Images/setting-view.png)
+![Setting View](./Docs/Images/setting-view.png)
 
 If you use `TavernAI` a character card, the cue word above is overwritten.
 

@@ -6,7 +6,7 @@
 
 一在Unity中创建在线和离线时chat-bot的管线。
 
-<img src="Images/Icon.png" width="256"/>
+<img src="./Docs/Images/Icon.png" width="256"/>
 
 </div>
 
@@ -46,7 +46,7 @@
 
 以下是UniChat的流程图，在`Local Inference`框中的为可以离线使用的功能：
 
-![流程图](Images/UniChat.png)
+![流程图](./Docs/Images/UniChat.png)
 
 ## 安装
 
@@ -118,7 +118,7 @@ pubic void Save()
 
 `UserDataProvider`文件路径如下:
 
-![UserData](Images/userdata_provider.png)
+![UserData](./Docs/Images/userdata_provider.png)
 
 `ResourcesProvider`则将models文件夹中的文件放入Resources文件夹即可。
 
@@ -126,7 +126,7 @@ pubic void Save()
 
 `AddressablesProvider`的Address如下:
 
-![Addressables](Images/addressable-provider.png)
+![Addressables](./Docs/Images/addressable-provider.png)
 
 ## 链
 
@@ -196,7 +196,7 @@ public async void Start()
 `stackTrace: bool`||启用堆栈跟踪
 `applyToContext: bool` ||应用于所有子链 
 
-![StackTrace](Images/stack-trace.png)
+![StackTrace](./Docs/Images/stack-trace.png)
 
 ## 中间件
 
@@ -332,7 +332,7 @@ class SubClassifier(nn.Module):
 
 2. 在EditorWindow中配置，保存为文本文件。
 
-![配置状态机](Images/edit-fsm.png)
+![配置状态机](./Docs/Images/edit-fsm.png)
 
 ```C#
 public void LoadFromBytes(string bytesFilePath)
@@ -426,14 +426,14 @@ Debug.Log(await chain.Run("text"));
 >同步的仓库版本为`V0.0.1-alpha`, Demo待更新。
 ### 极简Demo下载
 
-![聊天界面](Images/chat-view.png)
+![聊天界面](./Docs/Images/chat-view.png)
 
 见[Release](https://github.com/AkiKurisu/UniChat/releases)页面
 
 
 ### 高级Demo下载
 
-![Demo Pro](Images/demo-pro.png)
+![Demo Pro](./Docs/Images/demo-pro.png)
 
 包含了行为和语音组件，暂未开放。
 
@@ -443,7 +443,7 @@ Debug.Log(await chain.Run("text"));
 
 Demo中使用了`TavernAI`的角色数据结构，并且我们可以将角色的性格、示例对话、聊天情景写入图片中。
 
-![设置界面](Images/setting-view.png)
+![设置界面](./Docs/Images/setting-view.png)
 
 如果使用`TavernAI`角色卡，则会覆盖上方的提示词。
 

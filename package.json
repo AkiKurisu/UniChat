@@ -20,5 +20,12 @@
   "author": {
     "name": "AkiKurisu",
     "url": "https://github.com/AkiKurisu/UniChat.git"
-  }
+  },
+  "samples": [
+    {
+      "displayName": "UniChat Example",
+      "description": "This sample contains a set of example scripts and usage.",
+      "path": "Samples~/Main"
+    }
+  ]
 }
