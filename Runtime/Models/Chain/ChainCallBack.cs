@@ -66,7 +66,7 @@ namespace Kurisu.UniChat.Chains
             {
                 runStack.Pop();
                 //Release after stack empty
-                if (runStack.Peek() == null)
+                if (!runStack.TryPeek(out _))
                 {
                     ReleaseContext(Values);
                 }
