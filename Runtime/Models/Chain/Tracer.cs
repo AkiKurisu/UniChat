@@ -644,6 +644,7 @@ namespace Kurisu.UniChat.Chains
                 {
                     throw new TracerException($"Parent run with id {parentRunId} has no child execution order.");
                 }
+                return parentRun.ChildExecutionOrder.Value + 1;
             }
             else
             {
