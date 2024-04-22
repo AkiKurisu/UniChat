@@ -3,6 +3,9 @@ using System.Text.RegularExpressions;
 using Cysharp.Threading.Tasks;
 namespace Kurisu.UniChat.Chains
 {
+    /// <summary>
+    /// Reference https://api.python.langchain.com/en/latest/_modules/langchain/agents/output_parsers/react_single_input.html#ReActSingleInputOutputParser
+    /// </summary>
     public class ReActParserChain : StackableChain
     {
         public ReActParserChain(
@@ -39,7 +42,7 @@ namespace Kurisu.UniChat.Chains
             }
             else if (includesAnswer)
             {
-                return new AgentFinish(text.Split(new[] { FinalAnswerAction }, StringSplitOptions.None)[^1].Trim(), text);
+                return new AgentFinish(text.Split(FinalAnswerAction, StringSplitOptions.None)[^1].Trim(), text);
             }
 
             if (!Regex.IsMatch(text, @"Action\s*\d*\s*:[\s]*(.*?)", RegexOptions.Singleline))

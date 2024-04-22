@@ -44,6 +44,7 @@ Thought:{history}";
         private readonly ChatHistory chatHistory;
         private readonly ChatMemory chatMemory;
         private bool verbose;
+        private bool handle_parsing_errors;
         public ReActAgentExecutorChain(
             ILargeLanguageModel model,
             string reactPrompt = null,
@@ -110,19 +111,42 @@ Thought:{history}";
 
             for (int i = 0; i < _maxActions; i++)
             {
-                var res = await _chain!.CallAsync(valuesChain);
-                if (res.Value[ReactAnswerKey] is AgentAction action)
+                try
                 {
-                    var tool = _tools[action.Action];
-                    var toolRes = await tool.ExecuteTool(action.ActionInput);
-                    chatMemory.ChatHistory.AppendSystemMessage("Observation: " + toolRes);
-                    chatMemory.ChatHistory.AppendSystemMessage("Thought:");
-                    continue;
+                    var res = await _chain!.CallAsync(valuesChain);
+                    if (res.Value[ReactAnswerKey] is AgentAction action)
+                    {
+                        var tool = _tools[action.Action];
+                        var toolRes = await tool.ExecuteTool(action.ActionInput);
+                        chatMemory.ChatHistory.AppendSystemMessage("Observation: " + toolRes);
+                        // chatMemory.ChatHistory.AppendSystemMessage("Thought:");
+                        continue;
+                    }
+                    else if (res.Value[ReactAnswerKey] is AgentFinish finish)
+                    {
+                        values.Value[OutputKeys[0]] = finish.Output;
+                        return values;
+                    }
                 }
-                else if (res.Value[ReactAnswerKey] is AgentFinish finish)
+                catch (OutputParserException e)
                 {
-                    values.Value[OutputKeys[0]] = finish.Output;
-                    return values;
+                    if (handle_parsing_errors)
+                    {
+                        if (string.IsNullOrEmpty(e.Output))
+                        {
+                            chatMemory.ChatHistory.AppendSystemMessage("Observation: Invalid or incomplete response");
+                        }
+                        else
+                        {
+                            chatMemory.ChatHistory.AppendSystemMessage($"Observation: {e.Output}");
+                        }
+                        //chatMemory.ChatHistory.AppendSystemMessage("Thought:");
+                        continue;
+                    }
+                    else
+                    {
+                        throw new Exception($"An output parsing error occurred. In order to pass this error back to the agent and have it try again, pass `handle_parsing_errors=True` to the AgentExecutor. This is the error: {e}");
+                    }
                 }
             }
             return values;
@@ -144,6 +168,18 @@ Thought:{history}";
             {
                 UseTool(tool);
             }
+            return this;
+        }
+        /// <summary>
+        /// How to handle errors raised by the agent's output parser.
+        /// Defaults to `False`, which raises the error.
+        /// If `true`, the error will be sent back to the LLM as an observation.
+        /// </summary>
+        /// <param name="handle_parsing_errors"></param>
+        /// <returns></returns>
+        public ReActAgentExecutorChain HandleParsingErrors(bool handle_parsing_errors)
+        {
+            this.handle_parsing_errors = handle_parsing_errors;
             return this;
         }
     }
