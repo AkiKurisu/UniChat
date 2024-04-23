@@ -50,7 +50,7 @@ namespace Kurisu.UniChat
         }
         public void RemoveEdge(int index)
         {
-            edges.RemoveRange(index, 2);
+            edges.RemoveRange(index, 1);
             embeddings.RemoveRange(index * dim, 2 * dim);
         }
         public uint GetOutput(int index)

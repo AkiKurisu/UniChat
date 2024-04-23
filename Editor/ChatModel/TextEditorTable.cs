@@ -7,7 +7,7 @@ using Cysharp.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 using static Kurisu.UniChat.TextEmbeddingTable;
-namespace Kurisu.UniChat.Editor.TextTable
+namespace Kurisu.UniChat.Editor.ChatModel
 {
     public class TextEditorTable : ScriptableObject
     {
@@ -66,6 +66,7 @@ namespace Kurisu.UniChat.Editor.TextTable
         {
             tableEntries.ForEach(x => x.Update());
             internalTable.tableEntries = tableEntries.Select(x => x.internalEntry).ToList();
+            File.Move(path, Path.Combine(Path.GetDirectoryName(path), $"backup_{Path.GetFileName(path)}"));
             internalTable.Save(path);
             lastEntries.ForEach(x => { if (!tableEntries.Contains(x)) audioFileAssist.Delate(x.uniqueId); });
             lastEntries.Clear();

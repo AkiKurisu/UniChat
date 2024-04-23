@@ -1,14 +1,17 @@
 using System.Collections;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using Cysharp.Threading.Tasks;
+using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
-namespace Kurisu.UniChat.Editor.TextTable
+namespace Kurisu.UniChat.Editor.ChatModel
 {
-    public class TextTableEditorWindow : EditorWindow
+    public class ChatModelEditorWindow : EditorWindow
     {
         private TextEmbeddingTable sourceTable;
+        private ChatEditorGraph sourceGraph;
         private SerializedObject tableObject;
         private TextEditorTable editorTable;
         public delegate Vector2 BeginVerticalScrollViewFunc(Vector2 scrollPosition, bool alwaysShowVertical, GUIStyle verticalScrollbar, GUIStyle background, params GUILayoutOption[] options);
@@ -27,11 +30,12 @@ namespace Kurisu.UniChat.Editor.TextTable
                 return s_func;
             }
         }
+        private uint? selectId;
         private static GUIStyle FixedWidthButtonStyle => new(GUI.skin.button) { fixedWidth = 80 };
-        [MenuItem("Tools/UniChat/Text Table Editor")]
+        [MenuItem("Tools/UniChat/Chat Model Editor")]
         private static void ShowEditorWindow()
         {
-            GetWindow<TextTableEditorWindow>("Text Table Editor");
+            GetWindow<ChatModelEditorWindow>("Chat Model Editor");
         }
         private void OnEnable()
         {
@@ -63,6 +67,12 @@ namespace Kurisu.UniChat.Editor.TextTable
         }
         private void OnGUI()
         {
+            DrawTable();
+            GUILayout.FlexibleSpace();
+            DrawToolBar();
+        }
+        private void DrawTable()
+        {
             m_ScrollPosition = BeginVerticalScrollView(m_ScrollPosition, false, GUI.skin.verticalScrollbar, "OL Box");
             var enumerator = tableObject.FindProperty("tableEntries").GetEnumerator();
             while (enumerator.MoveNext())
@@ -71,6 +81,10 @@ namespace Kurisu.UniChat.Editor.TextTable
                 var canEdit = property.FindPropertyRelative("isEdit");
                 var audioInfos = property.FindPropertyRelative("audioInfos");
                 uint id = property.FindPropertyRelative("uniqueId").uintValue;
+                if (selectId.HasValue && selectId.Value != id)
+                {
+                    continue;
+                }
                 EditorGUILayout.BeginHorizontal();
                 GUI.enabled = canEdit.boolValue;
                 EditorGUILayout.PropertyField(property);
@@ -95,23 +109,59 @@ namespace Kurisu.UniChat.Editor.TextTable
                 GUILayout.Space(20);
             }
             EditorGUILayout.EndScrollView();
-            GUILayout.FlexibleSpace();
+        }
+        private void DrawToolBar()
+        {
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Select Table"))
+            if (GUILayout.Button("Select Chat Model"))
             {
-                string path = EditorUtility.OpenFilePanel("Choose table file", PathUtil.UserDataPath, "bin");
+                string path = EditorUtility.OpenFilePanel("Choose chat model", PathUtil.UserDataPath, "cfg");
                 if (string.IsNullOrEmpty(path)) return;
-                sourceTable = new(path);
-                editorTable.Initialize(sourceTable, path);
+                ChatModelFile file = JsonConvert.DeserializeObject<ChatModelFile>(File.ReadAllText(path));
+                sourceTable = new(file.TablePath);
+                sourceGraph = new(file.GraphPath);
+                editorTable.Initialize(sourceTable, file.TablePath);
                 tableObject.Update();
+                ChatGraphViewer.CreateWindow(file.GraphPath).OnSelectEdge = OnSelectEdge;
             }
             GUI.enabled = sourceTable != null;
-            if (GUILayout.Button("Update"))
+            if (GUILayout.Button(new GUIContent("Update Table", "This will overwrite the text table")))
             {
                 editorTable.Update();
             }
+            if (GUILayout.Button(new GUIContent("Intersect Graph", "Remove ports without linking in the text table")))
+            {
+                sourceGraph.Intersect(sourceTable);
+                ChatGraphViewer.CreateWindow(sourceGraph.graphPath).OnSelectEdge = OnSelectEdge;
+            }
             GUI.enabled = true;
             EditorGUILayout.EndHorizontal();
+        }
+        private void OnSelectEdge(ChatGraph.Edge? edge)
+        {
+            selectId = edge.HasValue ? edge.Value.output.uniqueId : null;
+            Repaint();
+        }
+    }
+    public class ChatEditorGraph
+    {
+        public readonly string graphPath;
+        public ChatEditorGraph(string graphPath)
+        {
+            this.graphPath = graphPath;
+        }
+        public void Intersect(TextEmbeddingTable table)
+        {
+            using var db = new ChatDataBase(graphPath);
+            for (int i = db.Count - 1; i >= 0; i--)
+            {
+                if (!table.tableEntries.Any(x => x.uniqueId == db.GetOutput(i)))
+                {
+                    db.RemoveEdge(i);
+                }
+            }
+            File.Move(graphPath, Path.Combine(Path.GetDirectoryName(graphPath), $"backup_{Path.GetFileName(graphPath)}"));
+            db.Save(graphPath);
         }
     }
 }
