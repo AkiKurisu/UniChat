@@ -24,6 +24,11 @@
             "name": "com.unity.addressables",
             "expression": "1.21.0",
             "define": "ADDRESSABLES_INSTALL"
+        },
+        {
+            "name": "com.whisper.unity",
+            "expression": "1.0.0",
+            "define": "WHISPER_INSTALL"
         }
     ],
     "noEngineReferences": false

@@ -1,3 +1,4 @@
+#if WHISPER_INSTALL
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -79,3 +80,4 @@ namespace Kurisu.UniChat.STT
         }
     }
 }
+#endif

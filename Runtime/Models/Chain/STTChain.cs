@@ -1,8 +1,6 @@
 using System;
 using Cysharp.Threading.Tasks;
-using UnityEngine;
 using UnityEngine.Assertions;
-using Whisper.Utils;
 namespace Kurisu.UniChat.Chains
 {
     /// <summary>
@@ -33,20 +31,9 @@ namespace Kurisu.UniChat.Chains
         {
             values = values ?? throw new ArgumentNullException(nameof(values));
 
-            var audioObject = values.Value[_inputKey];
-            SpeechToTextRequest request = null;
-            if (audioObject is SpeechToTextRequest speechToTextRequest)
-            {
-                request = speechToTextRequest;
-            }
-            else
-            {
-                if (audioObject is AudioClip audioClip) request = audioClip;
-                else if (audioObject is AudioChunk audioChunk) request = audioChunk;
-            }
-
+            SpeechToTextRequest request = (SpeechToTextRequest)values.Value[_inputKey];
             Assert.IsNotNull(request);
-            string text = await _model.TranscribeAsync(request, _settings);
+            string text = await _model.TranscribeAsync((SpeechToTextRequest)values.Value[_inputKey], _settings);
             values.Value[_outputKey] = text;
             return values;
         }

@@ -1,3 +1,4 @@
+#if WHISPER_INSTALL
 using System.IO;
 using Kurisu.UniChat.Chains;
 using Kurisu.UniChat.STT;
@@ -44,3 +45,12 @@ namespace Kurisu.UniChat.Example
         }
     }
 }
+#else
+using UnityEngine;
+namespace Kurisu.UniChat.Example
+{
+    public class STT_Chain_Example : MonoBehaviour
+    {
+    }
+}
+#endif

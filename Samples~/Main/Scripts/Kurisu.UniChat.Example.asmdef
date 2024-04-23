@@ -14,6 +14,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.whisper.unity",
+            "expression": "1.0.0",
+            "define": "WHISPER_INSTALL"
+        }
+    ],
     "noEngineReferences": false
 }
