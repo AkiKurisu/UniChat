@@ -12,13 +12,14 @@ namespace Kurisu.UniChat.Editor.ChatModel
         private Vector2[] data = new Vector2[0];
         public Action<ChatGraph.Edge?> OnSelectEdge;
         private string graphPath;
+        private int? selectId;
         private static readonly Dictionary<string, ChatGraphViewer> map = new();
         public static ChatGraphViewer CreateWindow(string graphPath)
         {
             if (!map.TryGetValue(graphPath, out ChatGraphViewer window))
             {
                 window = GetWindow<ChatGraphViewer>("ChatGraph Viewer");
-                window.maxSize = window.minSize = new Vector2(512, 512);
+                window.maxSize = window.minSize = new Vector2(552, 552);
             }
             window.LoadGraph(graphPath);
             return window;
@@ -61,7 +62,7 @@ namespace Kurisu.UniChat.Editor.ChatModel
         private void DrawGraph()
         {
             const int graphSize = 512;
-            const int graphPadding = 0;
+            const int graphPadding = 20;
             Rect graphRect = new(graphPadding, graphPadding, graphSize, graphSize);
             EditorGUI.DrawRect(graphRect, Color.gray);
             bool selectEdge = false;
@@ -73,18 +74,29 @@ namespace Kurisu.UniChat.Editor.ChatModel
                     Mathf.Lerp(graphRect.yMax, graphRect.y, (point.y + 1) * 0.5f)
                 );
 
-                Rect pointRect = new(graphPoint.x - 2, graphPoint.y - 2, 10, 10);
+                Rect pointRect;
+                if (selectId == i)
+                {
+                    pointRect = new(graphPoint.x - 10, graphPoint.y - 10, 20, 20);
+                }
+                else
+                {
+                    pointRect = new(graphPoint.x - 5, graphPoint.y - 5, 10, 10);
+                }
                 GUI.DrawTexture(pointRect, image, ScaleMode.ScaleToFit);
-
                 if (Event.current.type == EventType.MouseDown && pointRect.Contains(Event.current.mousePosition))
                 {
                     selectEdge = true;
+                    selectId = i;
                     OnSelectEdge?.Invoke(edges[i]);
+                    Repaint();
                 }
             }
             if (!selectEdge && Event.current.type == EventType.MouseDown)
             {
+                selectId = null;
                 OnSelectEdge?.Invoke(null);
+                Repaint();
             }
         }
     }
