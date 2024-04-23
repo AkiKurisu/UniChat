@@ -51,11 +51,11 @@ namespace Kurisu.UniChat.Editor.ChatModel
             //Using a simplest dimensionality reduction method
             using var projection = ops.RandomNormal(new TensorShape(dataBase.dim, 2), 0, 1, 0);
             using var transformed_vectors = ops.MatMul2D(tensor, projection, false, false);
-            using var meanPool_vectors = ops.L2Norm(transformed_vectors);
-            meanPool_vectors.MakeReadable();
+            using var normalized_vectors = ops.L2Norm(transformed_vectors);
+            normalized_vectors.MakeReadable();
             for (int i = 0; i < count; i++)
             {
-                data[i] = new(meanPool_vectors[i, 0], meanPool_vectors[i, 1]);
+                data[i] = new(normalized_vectors[i, 0], normalized_vectors[i, 1]);
             }
         }
 
