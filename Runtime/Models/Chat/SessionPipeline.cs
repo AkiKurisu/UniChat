@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Kurisu.UniChat.NLP;
 using Unity.Sentis;
 using UnityEngine.Assertions;
 using Debug = UnityEngine.Debug;
@@ -17,7 +16,6 @@ namespace Kurisu.UniChat
         private readonly SemaphoreSlim semaphore = new(1, 1);
         #region Properties
         protected IEncoder Encoder { get; set; }
-        protected IClassifier Classifier { get; set; }
         protected IEmbeddingTable SourceTable { get; set; }
         protected ChatDataBase DataBase { get; set; }
         protected IPersistEmbeddingValue<string> StringPersister { get; set; }
@@ -45,11 +43,6 @@ namespace Kurisu.UniChat
             Encoder = encoder;
             return this;
         }
-        public SessionPipeline SetClassifier(IClassifier classifier)
-        {
-            Classifier = classifier;
-            return this;
-        }
         public SessionPipeline SetPersister(IPersistEmbeddingValue<string> stringPersister)
         {
             StringPersister = stringPersister;
@@ -60,9 +53,9 @@ namespace Kurisu.UniChat
         {
             Assert.IsNotNull(ops);
             Assert.IsNotNull(Encoder);
-            Assert.IsNotNull(Classifier);
             Assert.IsNotNull(SourceTable);
             Assert.IsNotNull(DataBase);
+            Assert.IsNotNull(StringPersister);
         }
         /// <summary>
         /// Run chat session embedding pipeline
@@ -83,16 +76,10 @@ namespace Kurisu.UniChat
                 var inputs = (from x in pairs select x[0]).ToArray();
                 var outputs = (from x in pairs select x[1]).ToArray();
                 var inputTextEmbeddings = Encoder.Encode(ops, inputs);
-                (var inputSentimentEmbeddings, var inputSentimentLabelIds) = Classifier.Classify(ops, inputs);
                 var outputTextEmbeddings = Encoder.Encode(ops, outputs);
-                (var outputSentimentEmbeddings, var outputSentimentLabelIds) = Classifier.Classify(ops, outputs);
                 //Mark
                 inputTextEmbeddings.MakeReadable();
-                inputSentimentEmbeddings.MakeReadable();
-                inputSentimentLabelIds.MakeReadable();
                 outputTextEmbeddings.MakeReadable();
-                outputSentimentEmbeddings.MakeReadable();
-                outputSentimentLabelIds.MakeReadable();
                 //Writing
                 for (int i = 0; i < pairs.Length; ++i)
                 {

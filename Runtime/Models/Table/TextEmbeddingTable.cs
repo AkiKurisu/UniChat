@@ -1,19 +1,20 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 namespace Kurisu.UniChat
 {
-    public class TextEmbeddingTable : IEmbeddingTable, ISerializable
+    public class TextEmbeddingTable : IEmbeddingTable, ISerializable, IPersistHandlerFactory<string>
     {
-        public class PersistHandler : IPersistEmbeddingValue<string, string>, IPersistEmbeddingValue<string>
+        public struct PersistHandler : IPersistEmbeddingValue<string, string>, IPersistEmbeddingValue<string>
         {
-            public bool Persist(uint hash, string value, Embedding embedding, out IEmbeddingEntry<string> entry)
+            public readonly bool Persist(uint hash, string value, Embedding embedding, out IEmbeddingEntry<string> entry)
             {
                 entry = new TextEmbeddingEntry() { uniqueId = hash, stringValue = value, embedding = embedding };
                 return true;
             }
 
-            public bool Persist(uint hash, string value, Embedding embedding, out IEmbeddingEntry entry)
+            public readonly bool Persist(uint hash, string value, Embedding embedding, out IEmbeddingEntry entry)
             {
                 bool result = Persist(hash, value, embedding, out IEmbeddingEntry<string> stringEntry);
                 entry = stringEntry;
@@ -23,16 +24,6 @@ namespace Kurisu.UniChat
         public int Count => tableEntries.Count;
 
         public IEmbeddingEntry this[int index] => tableEntries[index];
-
-        public IEmbeddingEntry this[uint uniqueId]
-        {
-            get
-            {
-                if (TryGetEntry(uniqueId, out var entry))
-                    return entry;
-                return null;
-            }
-        }
 
         public List<TextEmbeddingEntry> tableEntries = new();
         public TextEmbeddingTable() { }
@@ -114,6 +105,22 @@ namespace Kurisu.UniChat
                 tableEntries.Add(entry);
             }
         }
+
+        public IPersistEmbeddingValue<string> CreatePersistHandler()
+        {
+            return new PersistHandler();
+        }
+
+        public IEnumerator<IEmbeddingEntry> GetEnumerator()
+        {
+            return tableEntries.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return tableEntries.GetEnumerator();
+        }
+
         [Serializable]
         public class TextEmbeddingEntry : IEmbeddingEntry<string>
         {

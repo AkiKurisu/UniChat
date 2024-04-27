@@ -13,36 +13,10 @@ namespace Kurisu.UniChat
 {
     public class ChatPipeline : IDisposable
     {
-        public class ContextConverter : ITensorConverter
-        {
-            private readonly IEncoder encoder;
-            private static readonly int[] reduceAxis = new int[1] { 1 };
-            private readonly TensorFloat[] inputTensors;
-            private readonly IChatMemory memory;
-            public ContextConverter(IEncoder encoder, IChatMemory memory)
-            {
-                this.encoder = encoder;
-                this.memory = memory;
-                inputTensors = new TensorFloat[2];
-            }
-            public TensorFloat[] Convert(Ops ops, IReadOnlyList<string> inputs)
-            {
-                var lastResponse = memory.GetMessages(MessageRole.Bot).LastOrDefault()?.Content;
-                if (lastResponse != null)
-                    inputTensors[1] = encoder.Encode(ops, lastResponse);
-                else
-                    inputTensors[1] = encoder.Encode(ops, inputs[^1]);
-                var contextTensor = encoder.Encode(ops, inputs);
-                TensorFloat contextTensorExpanded = contextTensor.ShallowReshape(contextTensor.shape.Unsqueeze(0)) as TensorFloat;
-                inputTensors[0] = ops.ReduceMean(contextTensorExpanded, new(reduceAxis), false);
-                return inputTensors;
-            }
-        }
         private readonly SemaphoreSlim semaphore = new(1, 1);
         #region Public Properties
         public bool Verbose { get; set; }
-        public ITensorConverter InputConverter { get; set; }
-        public ITensorConverter OutputConverter { get; set; }
+        public IEncoder Encoder { get; set; }
         public IGenerator Generator { get; set; }
         public IFilter Filter { get; set; }
         public IEmbeddingTable SourceTable { get; set; }
@@ -55,18 +29,31 @@ namespace Kurisu.UniChat
         public float Temperature { get; set; } = 0.85f;
         #endregion
         private CancellationTokenSource ct;
-        private readonly ITensorAllocator allocator = new TensorCachingAllocator();
+        private BackendType backendType;
+        private ITensorAllocator allocator = new TensorCachingAllocator();
         protected Ops ops;
-
+        private static readonly int[] reduceAxis = new int[1] { 1 };
+        private readonly TensorFloat[] inputTensors = new TensorFloat[2];
         private void AssertPipeline()
         {
             Assert.IsNotNull(ops);
             Assert.IsNotNull(Memory);
-            Assert.IsNotNull(InputConverter);
-            Assert.IsNotNull(OutputConverter);
+            Assert.IsNotNull(Encoder);
             Assert.IsNotNull(Filter);
             Assert.IsNotNull(SourceTable);
             Assert.IsNotNull(DataBase);
+        }
+        public TensorFloat[] Input2Tensor(Ops ops, IReadOnlyList<string> inputs)
+        {
+            var lastResponse = Memory.GetMessages(MessageRole.Bot).LastOrDefault()?.Content;
+            if (lastResponse != null)
+                inputTensors[1] = Encoder.Encode(ops, lastResponse);
+            else
+                inputTensors[1] = Encoder.Encode(ops, inputs[^1]);
+            var contextTensor = Encoder.Encode(ops, inputs);
+            TensorFloat contextTensorExpanded = contextTensor.ShallowReshape(contextTensor.shape.Unsqueeze(0)) as TensorFloat;
+            inputTensors[0] = ops.ReduceMean(contextTensorExpanded, new(reduceAxis), false);
+            return inputTensors;
         }
         public TensorFloat ThresholdClipping(TensorFloat input, TensorFloat clip, float threshold)
         {
@@ -124,8 +111,8 @@ namespace Kurisu.UniChat
             try
             {
                 AssertPipeline();
-                if (Verbose) Debug.Log($"Pipeline convert inputs, batch size {context.input.Count}, inputs content: {string.Concat(context.input)}");
-                TensorFloat[] inputTensors = InputConverter.Convert(ops, context.input);
+                if (Verbose) Debug.Log($"Pipeline convert inputs, batch size {context.input.Count}, inputs content: {string.Join('\n', context.input)}");
+                TensorFloat[] inputTensors = Input2Tensor(ops, context.input);
                 if (DataBase.Count > 0 && Filter.Filter(ops, ScoreDataBase(inputTensors), ref ids, ref scores))
                 {
                     if (Verbose) Debug.Log($"Pipeline call selector");
@@ -165,17 +152,26 @@ namespace Kurisu.UniChat
                 semaphore.Release();
                 ids.DisposeSafe();
                 scores.DisposeSafe();
+                FreeMemoryAndReAllocate();
             }
         }
         public void Dispose()
         {
             ct?.Dispose();
-            ops.Dispose();
+            ops?.Dispose();
             allocator.Dispose();
+        }
+        private void FreeMemoryAndReAllocate()
+        {
+            ops?.Dispose();
+            allocator.Dispose();
+            allocator = new TensorCachingAllocator();
+            ops = WorkerFactory.CreateOps(backendType, allocator);
         }
         #region  Build Methods
         public ChatPipeline SetBackend(BackendType backendType)
         {
+            this.backendType = backendType;
             ops = WorkerFactory.CreateOps(backendType, allocator);
             return this;
         }
@@ -194,14 +190,9 @@ namespace Kurisu.UniChat
             DataBase = embeddingDB;
             return this;
         }
-        public ChatPipeline SetInputConvertor(ITensorConverter converter)
+        public ChatPipeline SetEncoder(IEncoder encoder)
         {
-            InputConverter = converter;
-            return this;
-        }
-        public ChatPipeline SetOutputConvertor(ITensorConverter converter)
-        {
-            OutputConverter = converter;
+            Encoder = encoder;
             return this;
         }
         public ChatPipeline SetGenerator(IGenerator generator)
@@ -250,22 +241,22 @@ namespace Kurisu.UniChat
         {
             var pool = ListPool<string>.Get();
             pool.Add(persistStringValue);
-            var outputTensors = OutputConverter.Convert(ops, pool);
+            var outputTensor = Encoder.Encode(ops, pool);
             ListPool<string>.Release(pool);
 
             inputTensors.MakeReadable();
-            outputTensors.MakeReadable();
+            outputTensor.MakeReadable();
 
             //Calculate hash
             uint inputHash = XXHash.CalculateHash(inputTensors[0]);
-            uint outputHash = XXHash.CalculateHash(outputTensors[0]);
+            uint outputHash = XXHash.CalculateHash(outputTensor);
             var inputEmb = new Embedding()
             {
                 values = inputTensors[0].ToReadOnlyArray(),
             };
             var outputEmb = new Embedding()
             {
-                values = outputTensors[0].ToReadOnlyArray(),
+                values = outputTensor.ToReadOnlyArray(),
             };
 
             //Persist value

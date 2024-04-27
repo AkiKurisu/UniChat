@@ -7,6 +7,7 @@ using Kurisu.UniChat.Memory;
 using Kurisu.UniChat.NLP;
 using Newtonsoft.Json;
 using Unity.Sentis;
+using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Pool;
 namespace Kurisu.UniChat
@@ -71,7 +72,7 @@ namespace Kurisu.UniChat
     }
     public class ChatPipelineCtrl<TPipeline, KTable> : IDisposable
     where TPipeline : ChatPipeline, new()
-    where KTable : ISerializable, IEmbeddingTable, new()
+    where KTable : ISerializable, IEmbeddingTable, IPersistHandlerFactory<string>, new()
     {
         public TextEncoder Encoder { get; protected set; }
         public ChatDataBase DataBase { get; protected set; }
@@ -88,6 +89,7 @@ namespace Kurisu.UniChat
         public string BotName { get => Memory.BotName; set => Memory.BotName = value; }
         public event Action<InputGenerationRequest> OnCallGeneration;
         private readonly Dictionary<int, IGenerator> generatorMap = new();
+        private PipelineConfig config;
         public ChatPipelineCtrl(ChatModelFile chatFile, ILLMSettings llmSettings)
         {
             ChatFile = chatFile;
@@ -170,6 +172,7 @@ namespace Kurisu.UniChat
         public virtual async UniTask InitializePipeline(PipelineConfig config = null)
         {
             config ??= PipelineConfig.Default;
+            this.config = config;
             Encoder?.Dispose();
             Pipeline?.Dispose();
             ModelProvider provider = ModelProviderFactory.Instance.Create(ChatFile.modelProvider);
@@ -180,13 +183,12 @@ namespace Kurisu.UniChat
             );
             Pipeline = new TPipeline()
                             .SetBackend(config.backendType)
-                            .SetInputConvertor(new ChatPipeline.ContextConverter(Encoder, Memory))
-                            .SetOutputConvertor(new MultiEncoderConverter(Encoder))
+                            .SetEncoder(Encoder)
                             .SetGenerator(Generator)
                             .SetMemory(Memory)
                             .SetSource(Table)
                             .SetEmbedding(DataBase)
-                            .SetPersister(config.canWrite ? new TextEmbeddingTable.PersistHandler() : null)
+                            .SetPersister(config.canWrite ? Table.CreatePersistHandler() : null)
                             .SetTemperature(config.outputThreshold)
                             .SetVerbose(config.verbose)
                             .SetFilter(new TopSimilarityFilter(config.inputThreshold)) as TPipeline;
@@ -244,6 +246,11 @@ namespace Kurisu.UniChat
                 ListPool<string>.Release(pool);
             }
         }
+        /// <summary>
+        /// Change pipeline generator
+        /// </summary>
+        /// <param name="generatorId"></param>
+        /// <param name="forceNewGenerator"></param>
         public void SwitchGenerator(int generatorId, bool forceNewGenerator)
         {
             if (generatorId == ChatGeneratorIds.Input)
@@ -280,6 +287,9 @@ namespace Kurisu.UniChat
             OnCallGeneration?.Invoke(request);
             return request.waitSource;
         }
+        /// <summary>
+        /// Save chat model
+        /// </summary>
         public void SaveModel()
         {
             if (!Directory.Exists(ChatFile.DirectoryPath))
@@ -290,10 +300,19 @@ namespace Kurisu.UniChat
             Table.Save(ChatFile.TablePath);
             DataBase.Save(ChatFile.GraphPath);
         }
+        /// <summary>
+        /// Save chat session
+        /// </summary>
+        /// <param name="filePath"></param>
         public void SaveSession(string filePath)
         {
             File.WriteAllText(filePath, JsonConvert.SerializeObject(History.SaveSession(), Formatting.Indented));
         }
+        /// <summary>
+        /// Load chat session
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <returns></returns>
         public bool LoadSession(string filePath)
         {
             if (!File.Exists(filePath))
@@ -304,10 +323,50 @@ namespace Kurisu.UniChat
             History.LoadSession(session); ;
             return true;
         }
+        /// <summary>
+        /// Load chat session
+        /// </summary>
+        /// <param name="chatSession"></param>
+        /// <returns></returns>
         public bool LoadSession(ChatSession chatSession)
         {
             History.LoadSession(chatSession);
             return true;
+        }
+        /// <summary>
+        /// Embed from chat session, need initialize pipeline first
+        /// </summary>
+        /// <param name="chatSession"></param>
+        /// <returns></returns>
+        public async UniTask<bool> EmbedSession(ChatSession chatSession)
+        {
+            if (Pipeline == null)
+            {
+                Debug.LogWarning("Pipeline should be initialized before embedding session");
+                return false;
+            }
+            using var sessionPipeline = new SessionPipeline();
+            sessionPipeline.SetEncoder(Encoder)
+                            .SetSource(Table)
+                            .SetPersister(Table.CreatePersistHandler())
+                            .SetEmbedding(DataBase)
+                            .SetBackend(config.backendType);
+            await sessionPipeline.Run(chatSession);
+            return true;
+        }
+        /// <summary>
+        /// Embed from chat session, need initialize pipeline first
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <returns></returns>
+        public async UniTask<bool> EmbedSession(string filePath)
+        {
+            if (!File.Exists(filePath))
+            {
+                return false;
+            }
+            var session = JsonConvert.DeserializeObject<ChatSession>(File.ReadAllText(filePath));
+            return await EmbedSession(session);
         }
     }
     /// <summary>

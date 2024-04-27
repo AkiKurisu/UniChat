@@ -1,10 +1,8 @@
+using System.Collections.Generic;
 namespace Kurisu.UniChat
 {
-    public interface IEmbeddingTable
+    public interface IEmbeddingTable : IReadOnlyList<IEmbeddingEntry>
     {
-        int Count { get; }
-        IEmbeddingEntry this[int index] { get; }
-        IEmbeddingEntry this[uint hash] { get; }
         /// <summary>
         /// Get embedding entry from table
         /// </summary>
@@ -18,6 +16,14 @@ namespace Kurisu.UniChat
         /// <param name="entry">entry</param>
         /// <returns></returns>
         bool AddEntry(IEmbeddingEntry entry);
+    }
+    public interface IPersistHandlerFactory<T>
+    {
+        /// <summary>
+        /// Create a persist handler
+        /// </summary>
+        /// <returns></returns>
+        IPersistEmbeddingValue<T> CreatePersistHandler();
     }
     public interface IPersistEmbeddingValue<T>
     {

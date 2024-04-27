@@ -434,7 +434,9 @@ Here are some apps I've made. Since they include some commercial plugins, only B
 See [Release](https://github.com/AkiKurisu/UniChat/releases) page
 
 
-Based on UniChat to make a similar application in Unity> The synchronized repository version is `V0.0.1-alpha`, the Demo is waiting to be updated.
+Based on UniChat to make a similar application in Unity
+> The synchronized repository version is `V0.0.1-alpha`, the Demo is waiting to be updated.
+
 ### Minimalist Demo Download
 
 ![Chat-View](./Docs/Images/chat-view.png)
