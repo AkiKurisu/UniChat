@@ -101,6 +101,7 @@ namespace Kurisu.UniChat
                     inputTextEmbeddings[i] = ops.ReduceMean(contextTensorExpanded, new(reduceAxis), false);
                     memory.ChatHistory.AppendBotMessage(pairs[i][1]);
                 }
+                ListPool<string>.Release(pool);
                 var outputs = (from x in pairs select x[1]).ToArray();
                 var outputTextEmbeddings = encoder.Encode(ops, outputs);
                 //Make Readable
