@@ -75,7 +75,12 @@ namespace Kurisu.UniChat.LLMs
         private async UniTask<ILLMResponse> InternalCall(OllamaCompletionRequest generateRequest, CancellationToken ct)
         {
             generateRequest = generateRequest ?? throw new ArgumentNullException(nameof(generateRequest));
-
+            var models = await ListLocalModels();
+            if (!models.Any(x => x.Name == Model || x.Name == $"{Model}:latest"))
+            {
+                if (Verbose) Debug.Log($"Pull {Model}...");
+                await PullModel(Model);
+            }
             var content = JsonConvert.SerializeObject(generateRequest, serializerSettings);
 
             if (Verbose) Debug.Log($"Request {content}");
@@ -101,12 +106,6 @@ namespace Kurisu.UniChat.LLMs
 
         public override async UniTask<ILLMResponse> GenerateAsync(string prompt, CancellationToken ct = default)
         {
-            var models = await ListLocalModels();
-            if (!models.Any(x => x.Name == Model || x.Name == $"{Model}:latest"))
-            {
-                if (Verbose) Debug.Log($"Pull {Model}...");
-                await PullModel(Model);
-            }
             return await InternalCall(new OllamaCompletionRequest()
             {
                 Prompt = prompt,
@@ -163,6 +162,12 @@ namespace Kurisu.UniChat.LLMs
         }
         private async UniTask<ILLMResponse> InternalCall(List<SendData> m_DataList, CancellationToken ct)
         {
+            var models = await ListLocalModels();
+            if (!models.Any(x => x.Name == Model || x.Name == $"{Model}:latest"))
+            {
+                if (Verbose) Debug.Log($"Pull {Model}...");
+                await PullModel(Model);
+            }
             OllamaChatRequest _postData = new()
             {
                 model = Model,
