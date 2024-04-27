@@ -12,37 +12,40 @@ namespace Kurisu.UniChat
         public string UserName { get; set; } = "User";
         public string Context { get; set; }
         public readonly List<ChatMessage> history = new();
-        public void AppendMessage(MessageRole messageRole, string content, uint? id = null)
+        public void AppendMessage(MessageRole messageRole, string content)
         {
             history.Add(new()
             {
                 character = UserName,
                 Role = messageRole,
                 Content = content,
-                id = id ?? XXHash.CalculateHash(content)
+                id = XXHash.CalculateHash(content)
             });
         }
         /// <summary>
         /// Append user input message to update history context
         /// </summary>
         /// <param name="content"></param>
-        /// <param name="id"></param>
-        public void AppendUserMessage(string content, uint? id = null)
+        public void AppendUserMessage(string content)
         {
-            AppendMessage(MessageRole.User, content, id);
+            AppendMessage(MessageRole.User, content);
         }
-        public void AppendSystemMessage(string content, uint? id = null)
+        /// <summary>
+        /// Append system message to update history context
+        /// </summary>
+        /// <param name="content"></param>
+
+        public void AppendSystemMessage(string content)
         {
-            AppendMessage(MessageRole.System, content, id);
+            AppendMessage(MessageRole.System, content);
         }
         /// <summary>
         /// Append bot answered message to update history context
         /// </summary>
         /// <param name="content"></param>
-        /// <param name="id"></param>
-        public void AppendBotMessage(string content, uint? id = null)
+        public void AppendBotMessage(string content)
         {
-            AppendMessage(MessageRole.Bot, content, id);
+            AppendMessage(MessageRole.Bot, content);
         }
         public bool TryGetLastMessage(MessageRole messageRole, out ChatMessage message)
         {
@@ -134,7 +137,7 @@ namespace Kurisu.UniChat
                 history.Add(new()
                 {
                     character = session.name1,
-                    Role = session.name1 == UserName ? MessageRole.User : MessageRole.Bot,
+                    Role = MessageRole.User,
                     Content = contents[0],
                     id = ids[0]
                 });
@@ -142,7 +145,7 @@ namespace Kurisu.UniChat
                     history.Add(new()
                     {
                         character = session.name2,
-                        Role = session.name2 == UserName ? MessageRole.User : MessageRole.Bot,
+                        Role = MessageRole.Bot,
                         Content = contents[1],
                         id = ids[1]
                     });

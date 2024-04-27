@@ -11,11 +11,11 @@ namespace Kurisu.UniChat
     public class ChatGraph : IDisposable
     {
         /// <summary>
-        /// Max count should lower than 1048 (according to NativeList max length)
+        /// Max count should lower than 1048 (according to NativeList max length).
         /// </summary>
         public List<Edge> edges = new();
         /// <summary>
-        /// Embedding dim should be the same, so we can use index to slice it
+        /// Embedding dim should be the same, so we can use index to slice it.
         /// </summary>
         public int dim = 512;
         [NativeDisableContainerSafetyRestriction]

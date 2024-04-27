@@ -118,7 +118,7 @@ namespace Kurisu.UniChat
                     if (Verbose) Debug.Log($"Pipeline call selector");
                     context.flag |= 1 << 0;
                     context.flag |= 1 << 1;
-                    SelectorPostProcessing(inputTensors, ref ids, ref scores, context);
+                    await SelectorPostProcessing(inputTensors, ref ids, ref scores, context);
                 }
                 else
                 {
@@ -130,7 +130,7 @@ namespace Kurisu.UniChat
                         {
                             if (Verbose) Debug.Log($"Generate content: {context.generatedContent}");
                             context.flag |= 1 << 1;
-                            GeneratorPostProcessing(inputTensors, context);
+                            await GeneratorPostProcessing(inputTensors, context);
                         }
                         else
                         {
@@ -221,35 +221,36 @@ namespace Kurisu.UniChat
             return this;
         }
         #endregion
-        protected virtual void SelectorPostProcessing(TensorFloat[] inputTensors, ref NativeArray<int> ids, ref NativeArray<float> scores, GenerateContext context)
+        protected virtual UniTask SelectorPostProcessing(TensorFloat[] inputTensors, ref NativeArray<int> ids, ref NativeArray<float> scores, GenerateContext context)
         {
             //You selector implementation, in this case select first one
             if (SourceTable.TryGetEntry(DataBase.GetOutput(ids[0]), out var entry))
             {
                 context.outputEntry = entry;
             }
+            return UniTask.CompletedTask;
         }
-        protected virtual void GeneratorPostProcessing(TensorFloat[] inputTensors, GenerateContext context)
+        protected virtual async UniTask GeneratorPostProcessing(TensorFloat[] inputTensors, GenerateContext context)
         {
             if (StringPersister != null)
             {
-                if (Persist(inputTensors, context.generatedContent, out var entry))
-                    context.outputEntry = entry;
+                await Persist(inputTensors, context);
             }
         }
-        private bool Persist(TensorFloat[] inputTensors, string persistStringValue, out IEmbeddingEntry entry)
+        private async UniTask<bool> Persist(TensorFloat[] inputTensors, GenerateContext context)
         {
             var pool = ListPool<string>.Get();
-            pool.Add(persistStringValue);
+            pool.Add(context.generatedContent);
             var outputTensor = Encoder.Encode(ops, pool);
             ListPool<string>.Release(pool);
 
-            inputTensors.MakeReadable();
-            outputTensor.MakeReadable();
+            await inputTensors.MakeReadableAsync();
+            await outputTensor.MakeReadableAsync();
 
-            //Calculate hash
+            //Calculate input hash by tensor
             uint inputHash = XXHash.CalculateHash(inputTensors[0]);
-            uint outputHash = XXHash.CalculateHash(outputTensor);
+            //Calculate output hash by string
+            uint outputHash = XXHash.CalculateHash(context.generatedContent);
             var inputEmb = new Embedding()
             {
                 values = inputTensors[0].ToReadOnlyArray(),
@@ -258,13 +259,13 @@ namespace Kurisu.UniChat
             {
                 values = outputTensor.ToReadOnlyArray(),
             };
-
             //Persist value
-            if (!StringPersister.Persist(outputHash, persistStringValue, outputEmb, out entry)) return false;
+            if (!StringPersister.Persist(outputHash, context.generatedContent, outputEmb, out IEmbeddingEntry entry)) return false;
             //Update embedding table
             if (!SourceTable.AddEntry(entry)) return false;
             //Update embedding db
             DataBase.AddEdge(inputHash, inputEmb, outputHash, outputEmb);
+            context.outputEntry = entry;
             return true;
         }
     }

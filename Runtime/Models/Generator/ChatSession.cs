@@ -2,7 +2,7 @@ using Newtonsoft.Json;
 namespace Kurisu.UniChat
 {
     /// <summary>
-    /// Chat session for <see cref="ChatGeneratorBase"/> ,data structure is similar to OobaboogaSession
+    /// Chat session for <see cref="ChatHistory"/> ,data structure is similar to OobaboogaSession
     /// </summary>
     public class ChatSession
     {

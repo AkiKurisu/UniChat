@@ -2,6 +2,7 @@ using System.Text;
 using UnityEngine;
 using Unity.Sentis;
 using UnityEngine.Pool;
+using Cysharp.Threading.Tasks;
 namespace Kurisu.UniChat
 {
     public static class TensorExtensions
@@ -63,6 +64,22 @@ namespace Kurisu.UniChat
             for (int i = 0; i < tensorFloats.Length; ++i)
             {
                 tensorFloats[i].MakeReadable();
+            }
+        }
+        public static async UniTask MakeReadableAsync(this TensorFloat[] tensorFloats)
+        {
+            var pool = ListPool<UniTask>.Get();
+            try
+            {
+                for (int i = 0; i < tensorFloats.Length; ++i)
+                {
+                    pool.Add(tensorFloats[i].MakeReadableAsync().AsUniTask());
+                }
+                await UniTask.WhenAll(pool);
+            }
+            finally
+            {
+                ListPool<UniTask>.Release(pool);
             }
         }
         public static void Dispose(this TensorFloat[] tensorFloats)

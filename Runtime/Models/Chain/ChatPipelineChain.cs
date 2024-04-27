@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Cysharp.Threading.Tasks;
+using UnityEngine.Assertions;
 namespace Kurisu.UniChat.Chains
 {
     public class ChatPipelineChain : StackableChain
@@ -139,6 +140,7 @@ namespace Kurisu.UniChat.Chains
         {
             values = values ?? throw new ArgumentNullException(nameof(values));
             var context = values.Value[InputKeys[0]] as GenerateContext;
+            Assert.IsNotNull(context);
             values.Value[OutputKeys[0]] = context.CastStringValue();
             return UniTask.FromResult(values);
         }
@@ -159,6 +161,7 @@ namespace Kurisu.UniChat.Chains
             values = values ?? throw new ArgumentNullException(nameof(values));
             chatHistory.AppendUserMessage((string)values.Value[inputKey]);
             var context = values.Value[outputKey] as GenerateContext;
+            Assert.IsNotNull(context);
             chatHistory.AppendBotMessage(context.CastStringValue());
             return UniTask.FromResult(values);
         }

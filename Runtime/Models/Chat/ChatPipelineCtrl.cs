@@ -345,17 +345,26 @@ namespace Kurisu.UniChat
                 Debug.LogWarning("Pipeline should be initialized before embedding session");
                 return false;
             }
-            using var sessionPipeline = new SessionPipeline();
-            sessionPipeline.SetEncoder(Encoder)
+            using var sessionPipeline = new SessionPipeline()
+                            .SetEncoder(Encoder)
                             .SetSource(Table)
                             .SetPersister(Table.CreatePersistHandler())
                             .SetEmbedding(DataBase)
+                            .SetSplitter(Splitter)
+                            .SetMemory(new ChatBufferMemory()
+                            {
+                                ChatHistory = new ChatHistory(),
+                                Context = Context,
+                                BotName = BotName,
+                                UserName = UserName
+                            })
                             .SetBackend(config.backendType);
             await sessionPipeline.Run(chatSession);
             return true;
         }
         /// <summary>
-        /// Embed from chat session, need initialize pipeline first
+        /// Embed from chat session, need initialize pipeline first. 
+        /// You can directly use session file from Oobabooga to embed.
         /// </summary>
         /// <param name="filePath"></param>
         /// <returns></returns>
