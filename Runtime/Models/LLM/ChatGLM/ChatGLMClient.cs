@@ -1,4 +1,3 @@
-using System;
 using System.Text;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -15,8 +14,6 @@ namespace Kurisu.UniChat.LLMs
     {
         private struct GLMResponse : ILLMResponse
         {
-            public bool Status { get; internal set; }
-
             public string Response { get; internal set; }
         }
         public bool Verbose { get; set; }
@@ -44,45 +41,22 @@ namespace Kurisu.UniChat.LLMs
         private async UniTask<ILLMResponse> InternalCall(string input, CancellationToken ct)
         {
             if (Verbose) Debug.Log($"Request {input}");
-            UnityWebRequest request = new(Uri, "POST")
+            using UnityWebRequest request = new(Uri, "POST")
             {
-                uploadHandler =
-                     new UploadHandlerRaw(new UTF8Encoding().GetBytes(input)),
+                uploadHandler = new UploadHandlerRaw(new UTF8Encoding().GetBytes(input)),
                 downloadHandler = new DownloadHandlerBuffer()
             };
             request.SetRequestHeader("Content-Type", "application/json");
-            try
-            {
-                await request.SendWebRequest().ToUniTask(cancellationToken: ct);
-            }
-            catch
-            {
-                Debug.LogError(request.error);
-                return new GLMResponse()
-                {
-                    Status = false,
-                    Response = string.Empty
-                };
-            }
+            await request.SendWebRequest().ToUniTask(cancellationToken: ct);
             string response = string.Empty;
-            bool validate;
-            try
-            {
-                var messageBack = JsonConvert.DeserializeObject<GLMMessageBack>(request.downloadHandler.text);
-                response = messageBack.Response;
-                GenParams.History = messageBack.History;
-                validate = true;
-            }
-            catch (Exception e)
-            {
-                Debug.LogError(e.Message);
-                validate = false;
-            }
+
+            var messageBack = JsonConvert.DeserializeObject<GLMMessageBack>(request.downloadHandler.text);
+            response = messageBack.Response;
+            GenParams.History = messageBack.History;
             if (Verbose) Debug.Log($"Response {response}");
             return new GLMResponse()
             {
-                Response = response,
-                Status = validate
+                Response = response
             };
         }
     }

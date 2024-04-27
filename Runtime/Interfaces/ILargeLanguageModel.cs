@@ -5,7 +5,6 @@ namespace Kurisu.UniChat
 {
     public interface ILLMResponse
     {
-        bool Status { get; }
         string Response { get; }
     }
     public enum MessageRole
@@ -37,10 +36,10 @@ namespace Kurisu.UniChat
         /// <value></value>
         string Context { get; }
         /// <summary>
-        /// The history of request
+        /// The messages of request
         /// </summary>
         /// <value></value>
-        IEnumerable<IMessage> History { get; }
+        IEnumerable<IMessage> Messages { get; }
     }
     public interface ITranslator
     {

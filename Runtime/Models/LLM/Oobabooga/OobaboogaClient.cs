@@ -10,8 +10,6 @@ namespace Kurisu.UniChat.LLMs
     {
         private struct OobaboogaResponse : ILLMResponse
         {
-            public bool Status { get; internal set; }
-
             public string Response { get; internal set; }
         }
         public bool Verbose { get; set; }
@@ -43,28 +41,14 @@ namespace Kurisu.UniChat.LLMs
             if (Verbose) Debug.Log($"Request {input}");
             //TODO: Add chat mode
             using UnityWebRequest request = new($"{Uri}/api/v1/generate", "POST");
-            byte[] data = Encoding.UTF8.GetBytes(input);
-            request.uploadHandler = new UploadHandlerRaw(data);
+            request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(input));
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
-            try
-            {
-                await request.SendWebRequest().ToUniTask(cancellationToken: ct);
-            }
-            catch
-            {
-                Debug.LogError(request.error);
-                return new OobaboogaResponse()
-                {
-                    Response = string.Empty,
-                    Status = false
-                };
-            }
+            await request.SendWebRequest().ToUniTask(cancellationToken: ct);
             var result = JsonConvert.DeserializeObject<ModelOutput>(request.downloadHandler.text.Trim());
             if (Verbose) Debug.Log($"Response {result.Results[0].Text}");
             return new OobaboogaResponse()
             {
-                Status = true,
                 Response = FormatResponse(result.Results[0].Text)
             };
         }

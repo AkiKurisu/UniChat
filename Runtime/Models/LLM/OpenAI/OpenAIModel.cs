@@ -1,18 +1,14 @@
-using System;
 using System.Collections.Generic;
 namespace Kurisu.UniChat.LLMs
 {
-    [Serializable]
     public class PostData
     {
         public string model;
-        public float temperature = 0.5f;
-        public float top_p = 0.5f;
+        public float temperature;
+        public float top_p;
         public List<SendData> messages;
         public List<string> stop;
     }
-
-    [Serializable]
     public class SendData
     {
         public string role;
@@ -24,7 +20,6 @@ namespace Kurisu.UniChat.LLMs
         }
 
     }
-    [Serializable]
     public class MessageBack
     {
         public string id;
@@ -32,14 +27,12 @@ namespace Kurisu.UniChat.LLMs
         public string model;
         public List<MessageBody> choices;
     }
-    [Serializable]
     public class MessageBody
     {
         public Message message;
         public string finish_reason;
         public string index;
     }
-    [Serializable]
     public class Message
     {
         public string role;
