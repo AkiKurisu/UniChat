@@ -360,8 +360,9 @@ namespace Kurisu.UniChat.Chains
             if (inheritableMetadata != null) callBack.AddMetadata(inheritableMetadata);
             if (localMetadata != null) callBack.AddMetadata(localMetadata, inherit: false);
 
-#if !DISABLE_TRACING_CHAIN
+#if !UNICHAT_ALWAYS_TRACE_CHAIN
             if (stackTrace)
+#endif
             {
                 if (callBack.Handlers.All(h => h.Name != "console_callback_handler"))
                 {
@@ -369,7 +370,6 @@ namespace Kurisu.UniChat.Chains
                     callBack.AddHandler(consoleHandler, inherit: true);
                 }
             }
-#endif
 
             return UniTask.FromResult(callBack);
         }

@@ -1,7 +1,9 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Kurisu.UniChat.Memory;
+using UnityEngine;
 namespace Kurisu.UniChat
 {
     /// <summary>
@@ -23,9 +25,17 @@ namespace Kurisu.UniChat
         }
         public async UniTask<bool> Generate(GenerateContext context, CancellationToken ct)
         {
-            var llmData = await InternalCall(ct);
-            context.generatedContent = llmData.Response;
-            return llmData.Status;
+            try
+            {
+                var llmData = await InternalCall(ct);
+                context.generatedContent = llmData.Response;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError(ex.Message);
+                return false;
+            }
         }
     }
 }

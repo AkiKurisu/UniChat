@@ -19,7 +19,7 @@ namespace Kurisu.UniChat.Memory
         [JsonIgnore]
         public string Context { get => ChatHistory.Context; set => ChatHistory.Context = value; }
         [JsonIgnore]
-        public IEnumerable<IMessage> History => GetAllMessages();
+        public IEnumerable<IMessage> Messages => GetAllMessages();
         protected readonly MessageFormatter defaultFormatter = new();
         [JsonIgnore]
         public MessageFormatter Formatter { get; set; }

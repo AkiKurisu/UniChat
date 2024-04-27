@@ -187,7 +187,7 @@ public async void Start()
 
 ### 堆栈跟踪
 
-你可以使用`Trace()`方法跟踪链。
+你可以使用`Trace()`方法跟踪链，或者在Project Settings中添加宏`UNICHAT_ALWAYS_TRACE_CHAIN`。
 
 
 | 方法名 | 返回类型 | 描述 |
@@ -198,11 +198,12 @@ public async void Start()
 
 ![StackTrace](./Docs/Images/stack-trace.png)
 
+
 ## 中间件
 
 ### 文本转语音
 
-如果你有语音合成方案,你可以参考[VITSClient](./Runtime/Models/Audio/VITSClient.cs)实现一个TTS组件。
+如果你有语音合成方案,你可以参考[VITSClient](./Runtime/Models/Audio/VITSClient.cs)实现一个TTS组件📢。
 
 你可以使用`AudioCache`来存储语音，这样在离线模式下从数据库拾取回答时也能播放语音。
 
@@ -251,7 +252,7 @@ public class LLM_TTS_Chain_Example : MonoBehaviour
 
 ### 语音转文本
 
-你可以使用语音转文本服务，例如本地推理的[whisper.unity](https://github.com/Macoron/whisper.unity)。
+你可以使用语音转文本服务，例如本地推理的[whisper.unity](https://github.com/Macoron/whisper.unity)🎤。
 
 ```C#
 public void RunSTTChain(AudioClip audioClip)
@@ -267,7 +268,7 @@ public void RunSTTChain(AudioClip audioClip)
 ```
 
 ### 子分类器
-你可以在嵌入模型的基础上训练一个下游的分类器来完成一些游戏中的识别任务（例如表情分类器）从而减少对LLM的依赖。
+你可以在嵌入模型的基础上训练一个下游的分类器来完成一些游戏中的识别任务（例如表情分类器）从而减少对LLM的依赖🤗。
 
 **注意**
 

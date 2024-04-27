@@ -193,7 +193,7 @@ public async void Start()
 
 ### Stack Trace
 
-You can trace the chain using the `Trace()` method.
+You can trace the chain using the `Trace()` method, or add `UNICHAT_ALWAYS_TRACE_CHAIN` scripting symbol in Project Settings.
 
 
 | Method name | Return type | Description |
@@ -204,11 +204,13 @@ You can trace the chain using the `Trace()` method.
 
 ![StackTrace](./Docs/Images/stack-trace.png)
 
+
+
 ## Middleware
 
 ### Text to Speech
 
-If you have a speech synthesis solution, you can refer to [VITSClient](./Runtime/Models/Audio/VITSClient.cs) the implementation of a TTS component.
+If you have a speech synthesis solution, you can refer to [VITSClient](./Runtime/Models/Audio/VITSClient.cs) the implementation of a TTS component📢.
 
 You can use `AudioCache` to store speech so that it can be played when you pick up an answer from the database in offline mode.
 
@@ -258,7 +260,7 @@ public class LLM_TTS_Chain_Example : MonoBehaviour
 
 ### Speech to Text
 
-You can use a speech-to-text service such as [whisper.unity](https://github.com/Macoron/whisper.unity) for local inference.
+You can use a speech-to-text service such as [whisper.unity](https://github.com/Macoron/whisper.unity) for local inference🎤.
 
 ```C#
 public void RunSTTChain(AudioClip audioClip)
@@ -274,7 +276,7 @@ public void RunSTTChain(AudioClip audioClip)
 ```
 
 ### Sub-classifier
-You can reduce the dependence on LLM by training a downstream classifier on the basis of the embedded model to complete some recognition tasks in the game (such as expression classifier).
+You can reduce the dependence on LLM by training a downstream classifier on the basis of the embedded model to complete some recognition tasks in the game (such as expression classifier表情🤗).
 
 **Notice**
 

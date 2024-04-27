@@ -31,7 +31,7 @@ namespace Kurisu.UniChat.LLMs
             {
                 stringBuilder.AppendLine(llmInput.Context);
             }
-            foreach (var param in llmInput.History)
+            foreach (var param in llmInput.Messages)
             {
                 if (string.IsNullOrEmpty(GetPrefix(param.Role)))
                     stringBuilder.AppendLine(param.Content);
