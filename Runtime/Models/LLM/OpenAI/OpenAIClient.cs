@@ -8,16 +8,20 @@ using UnityEngine.Networking;
 using UnityEngine.Pool;
 namespace Kurisu.UniChat.LLMs
 {
-    public class OpenAIClient : ILargeLanguageModel
+    public class OpenAIModels
+    {
+        public const string ChatGPT3 = "gpt-3.5-turbo";
+        public const string ChatGPT4 = "gpt-4";
+    }
+    public class OpenAIClient : IChatModel
     {
         private struct GPTResponse : ILLMResponse
         {
             public string Response { get; internal set; }
         }
-        public const string DefaultModel = "gpt-3.5-turbo";
         public const string DefaultAPI = "https://api.openai-proxy.com/v1/chat/completions";
         public string ChatAPI { get; set; } = DefaultAPI;
-        public string GptModel { get; set; } = DefaultModel;
+        public string GptModel { get; set; } = OpenAIModels.ChatGPT3;
         public string ApiKey { get; set; }
         public List<string> StopWords { get; set; } = new();
         public bool Verbose { get; set; } = false;
@@ -27,7 +31,7 @@ namespace Kurisu.UniChat.LLMs
         public OpenAIClient(string url, string model, string apiKey)
         {
             ApiKey = apiKey;
-            GptModel = string.IsNullOrEmpty(model) ? DefaultModel : model;
+            GptModel = string.IsNullOrEmpty(model) ? OpenAIModels.ChatGPT3 : model;
             ChatAPI = string.IsNullOrEmpty(url) ? DefaultAPI : url;
         }
         public async UniTask<ILLMResponse> GenerateAsync(ILLMRequest input, CancellationToken ct)

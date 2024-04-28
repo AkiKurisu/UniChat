@@ -4,11 +4,11 @@ namespace Kurisu.UniChat.LLMs
     public class OllamaChatRequest
     {
         public string model;
-        public float temperature;
-        public float top_p;
+        public double? temperature;
+        public double? top_p;
         public bool stream = false;
         public List<SendData> messages;
-        public List<string> stop;
+        public string[] stop;
     }
     public class OllamaChatResponse
     {

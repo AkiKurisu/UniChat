@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 namespace Kurisu.UniChat.LLMs
 {
@@ -22,28 +23,44 @@ namespace Kurisu.UniChat.LLMs
         [CreateAssetMenu(fileName = "LLMSettingsAsset", menuName = "UniChat/LLM Settings Asset")]
         public class LLMSettingsAsset : ScriptableObject, ILLMSettings
         {
-                public enum GPT_ModelType
+                public enum ModelType
                 {
-                        [InspectorName("GPT-3.5-Turbo")]
-                        GPT3_5,
-                        [InspectorName("GPT-4")]
-                        GPT4
+                        Custom,
+                        ChatGPT3,
+                        ChatGPT4,
+                        Llama2,
+                        Llama3,
+                        Qwen,
+                        Llama2_Uncensored
                 }
-                [field: Header("LLM Setting")]
+                [field: Header("OpenAI Setting")]
                 [field: SerializeField]
                 public string OpenAI_API_URL { get; set; }
-                [Tooltip("Set ChatGPT model type")]
-                public GPT_ModelType gptType;
+                [field: SerializeField]
+                public string OpenAIKey { get; set; }
+                [field: Header("Model Setting")]
+                [Tooltip("Set model type from list of use custom model")]
+                public ModelType modelType;
                 public string Model_Type
                 {
                         get
                         {
-                                if (gptType == GPT_ModelType.GPT3_5) return "gpt-3.5-turbo";
-                                else return "gpt-4";
+                                if (modelType == ModelType.Custom) return customModel;
+                                return modelType switch
+                                {
+                                        ModelType.ChatGPT3 => OpenAIModels.ChatGPT3,
+                                        ModelType.ChatGPT4 => OpenAIModels.ChatGPT4,
+                                        ModelType.Llama2 => OllamaModels.Llama2,
+                                        ModelType.Llama3 => OllamaModels.Llama3,
+                                        ModelType.Qwen => OllamaModels.Qwen,
+                                        ModelType.Llama2_Uncensored => OllamaModels.Llama2_Uncensored,
+                                        _ => throw new ArgumentOutOfRangeException(nameof(modelType)),
+                                };
                         }
                 }
-                [field: SerializeField]
-                public string OpenAIKey { get; set; }
+                public string customModel;
+
+                [field: Header("Local LLM Setting")]
                 [field: SerializeField]
                 public string LLM_Address { get; set; } = "127.0.0.1";
                 [field: SerializeField]

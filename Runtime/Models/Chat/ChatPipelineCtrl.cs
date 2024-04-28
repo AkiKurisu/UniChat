@@ -69,6 +69,7 @@ namespace Kurisu.UniChat
         public const int Input = 0;
         public const int ChatGPT = 1;
         public const int Oobabooga = 2;
+        public const int Ollama = 3;
     }
     public class ChatPipelineCtrl<TPipeline, KTable> : IDisposable
     where TPipeline : ChatPipeline, new()
@@ -263,6 +264,7 @@ namespace Kurisu.UniChat
                 {
                     ChatGeneratorIds.ChatGPT => LLMType.ChatGPT,
                     ChatGeneratorIds.Oobabooga => LLMType.Oobabooga,
+                    ChatGeneratorIds.Ollama => LLMType.Ollama_Chat,
                     _ => throw new ArgumentOutOfRangeException()
                 };
                 SwitchLLMGenerator(llmType, forceNewGenerator);
@@ -345,19 +347,18 @@ namespace Kurisu.UniChat
                 Debug.LogWarning("Pipeline should be initialized before embedding session");
                 return false;
             }
+            var memory = CreateMemory(ChatFile.memory, ChatFile.memoryPattern);
+            memory.Context = Context;
+            memory.BotName = BotName;
+            memory.UserName = UserName;
+            memory.ChatHistory = new();
             using var sessionPipeline = new SessionPipeline()
                             .SetEncoder(Encoder)
                             .SetSource(Table)
                             .SetPersister(Table.CreatePersistHandler())
                             .SetEmbedding(DataBase)
                             .SetSplitter(Splitter)
-                            .SetMemory(new ChatBufferMemory()
-                            {
-                                ChatHistory = new ChatHistory(),
-                                Context = Context,
-                                BotName = BotName,
-                                UserName = UserName
-                            })
+                            .SetMemory(memory)
                             .SetBackend(config.backendType);
             await sessionPipeline.Run(chatSession);
             return true;

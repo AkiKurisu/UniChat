@@ -13,7 +13,7 @@ namespace Kurisu.UniChat.LLMs
     /// <summary>
     /// Model list see https://ollama.com/library
     /// </summary>
-    public class OllamaModel
+    public class OllamaModels
     {
         public const string Qwen = "qwen";
         public const string Llama2 = "llama2";
@@ -26,7 +26,7 @@ namespace Kurisu.UniChat.LLMs
         {
             public string Response { get; internal set; }
         }
-        public string Model { get; set; } = OllamaModel.Llama3;
+        public string Model { get; set; } = OllamaModels.Llama3;
         public OllamaOptions Options { get; } = new();
         public bool UseJson { get; set; }
         public bool Verbose { get; set; }
@@ -48,7 +48,7 @@ namespace Kurisu.UniChat.LLMs
             await request.SendWebRequest().ToUniTask();
         }
 
-        public async UniTask<IEnumerable<Model>> ListLocalModels()
+        public async UniTask<IEnumerable<OllamaListModelsResponse.Model>> ListLocalModels()
         {
             using UnityWebRequest request = new($"{Uri}api/tags", "GET")
             {
@@ -56,7 +56,7 @@ namespace Kurisu.UniChat.LLMs
             };
             request.SetRequestHeader("Content-Type", "application/json");
             await request.SendWebRequest().ToUniTask();
-            return JsonConvert.DeserializeObject<ListModelsResponse>(request.downloadHandler.text)?.Models ?? throw new InvalidOperationException("Response body was null");
+            return JsonConvert.DeserializeObject<OllamaListModelsResponse>(request.downloadHandler.text)?.Models ?? throw new InvalidOperationException("Response body was null");
         }
 
         public abstract UniTask<ILLMResponse> GenerateAsync(ILLMRequest input, CancellationToken ct = default);
@@ -137,11 +137,12 @@ namespace Kurisu.UniChat.LLMs
             return string.Join("\n", messages.Select(ConvertMessage).ToArray());
         }
     }
-    public class OllamaChat : OllamaClient
+    public class OllamaChat : OllamaClient, IChatModel
     {
-        public List<string> StopWords { get; set; } = new();
-        public float Temperature { get; set; } = 0.7f;
-        public float Top_p { get; set; } = 1f;
+        private readonly JsonSerializerSettings serializerSettings = new()
+        {
+            NullValueHandling = NullValueHandling.Ignore
+        };
         public string SystemPrompt { get; set; } = "You are a helpful assistant. You can help me by answering my questions. You can also ask me questions.";
         public OllamaChat(string address = "127.0.0.1", string port = "11434") : base(address, port)
         {
@@ -172,12 +173,12 @@ namespace Kurisu.UniChat.LLMs
             {
                 model = Model,
                 messages = m_DataList,
-                temperature = Temperature,
-                stop = StopWords,
-                top_p = Top_p,
+                temperature = Options.Temperature,
+                stop = Options.Stop,
+                top_p = Options.TopP,
                 stream = false
             };
-            string input = JsonConvert.SerializeObject(_postData);
+            string input = JsonConvert.SerializeObject(_postData, serializerSettings);
             using UnityWebRequest request = new($"{Uri}api/chat", "POST");
             if (Verbose) Debug.Log($"Request {input}");
             byte[] data = Encoding.UTF8.GetBytes(input);
