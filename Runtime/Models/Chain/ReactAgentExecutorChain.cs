@@ -128,28 +128,41 @@ Thought:{history}";
                         return values;
                     }
                 }
-                catch (OutputParserException e)
+                catch (StackableChainException e)
                 {
-                    if (handle_parsing_errors)
+                    if (e.InnerException is OutputParserException parserException)
                     {
-                        if (string.IsNullOrEmpty(e.Output))
-                        {
-                            chatMemory.ChatHistory.AppendSystemMessage("Observation: Invalid or incomplete response");
-                        }
-                        else
-                        {
-                            chatMemory.ChatHistory.AppendSystemMessage($"Observation: {e.Output}");
-                        }
-                        //chatMemory.ChatHistory.AppendSystemMessage("Thought:");
-                        continue;
+                        HandleParserException(parserException);
                     }
                     else
                     {
-                        throw new Exception($"An output parsing error occurred. In order to pass this error back to the agent and have it try again, pass `handle_parsing_errors=True` to the AgentExecutor. This is the error: {e}");
+                        throw e;
                     }
+                }
+                catch (OutputParserException e)
+                {
+                    HandleParserException(e);
                 }
             }
             return values;
+        }
+        private void HandleParserException(OutputParserException e)
+        {
+            if (handle_parsing_errors)
+            {
+                if (string.IsNullOrEmpty(e.Output))
+                {
+                    chatMemory.ChatHistory.AppendSystemMessage("Observation: Invalid or incomplete response");
+                }
+                else
+                {
+                    chatMemory.ChatHistory.AppendSystemMessage($"Observation: {e.Output}");
+                }
+            }
+            else
+            {
+                throw new Exception($"An output parsing error occurred. In order to pass this error back to the agent and have it try again, pass `handle_parsing_errors=True` to the AgentExecutor. This is the error: {e}");
+            }
         }
         public ReActAgentExecutorChain Verbose(bool verbose)
         {
