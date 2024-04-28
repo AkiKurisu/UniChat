@@ -23,7 +23,7 @@ namespace Kurisu.UniChat
             }
             if (File.Exists(infoPath))
             {
-                LoadFile(infoPath);
+                LoadFile();
             }
         }
         public void Save(uint sourceHash, AudioClip[] audioClips, IReadOnlyList<string> segments)
@@ -35,7 +35,7 @@ namespace Kurisu.UniChat
                 WavUtil.Save(Path.Combine(folderPath, $"{fileName}.wav"), audioClips[i]);
             }
             this.segments.AddRange(segments);
-            SaveFile(infoPath);
+            SaveFile();
         }
         public void Save(uint sourceHash, AudioClip audioClip, string segment)
         {
@@ -43,9 +43,9 @@ namespace Kurisu.UniChat
             files.Add(fileName);
             WavUtil.Save(Path.Combine(folderPath, $"{fileName}.wav"), audioClip);
             segments.Add(segment);
-            SaveFile(infoPath);
+            SaveFile();
         }
-        public void SaveFile(string infoPath)
+        public void SaveFile()
         {
             using var stream = new FileStream(infoPath, FileMode.Create, FileAccess.Write);
             using var sw = new StreamWriter(stream);
@@ -60,7 +60,7 @@ namespace Kurisu.UniChat
                 sw.WriteLine(segments[i]);
             }
         }
-        public void LoadFile(string infoPath)
+        public void LoadFile()
         {
             using var stream = new FileStream(infoPath, FileMode.Open, FileAccess.Read);
             using var sr = new StreamReader(stream);
@@ -97,6 +97,12 @@ namespace Kurisu.UniChat
         {
             return files.Where(x => x.Contains(sourceHash.ToString()))
                         .Select(x => (Path.Combine(folderPath, $"{x}.wav"), segments[files.IndexOf(x)]));
+        }
+        public void CopyFrom(AudioCache audioCache)
+        {
+            audioCache.files.ForEach(f => File.Copy(Path.Combine(audioCache.folderPath, $"{f}.wav"), Path.Combine(folderPath, $"{f}.wav")));
+            files.AddRange(audioCache.files);
+            segments.AddRange(audioCache.segments);
         }
         public void Delate(uint sourceHash)
         {

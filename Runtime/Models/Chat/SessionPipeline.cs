@@ -113,7 +113,7 @@ namespace Kurisu.UniChat
                     uint outputHash = XXHash.CalculateHash(outputs[i]);
                     var inputEmb = new Embedding()
                     {
-                        values = inputTextEmbeddings[i].ToArray(i)
+                        values = inputTextEmbeddings[i].ToArray(0)
                     };
                     var outputEmb = new Embedding()
                     {

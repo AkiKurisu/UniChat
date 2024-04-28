@@ -8,7 +8,8 @@ namespace Kurisu.UniChat
             {
                 if (botMg.id == hash)
                 {
-                    message = botMg; return true;
+                    message = botMg;
+                    return true;
                 }
             }
             message = null;

@@ -339,19 +339,20 @@ namespace Kurisu.UniChat
         /// Embed from chat session, need initialize pipeline first
         /// </summary>
         /// <param name="chatSession"></param>
+        /// <param name="memory"></param>
         /// <returns></returns>
-        public async UniTask<bool> EmbedSession(ChatSession chatSession)
+        public async UniTask<bool> EmbedSession(ChatSession chatSession, ChatMemory memory = null)
         {
             if (Pipeline == null)
             {
                 Debug.LogWarning("Pipeline should be initialized before embedding session");
                 return false;
             }
-            var memory = CreateMemory(ChatFile.memory, ChatFile.memoryPattern);
+            memory ??= CreateMemory(ChatFile.memory, ChatFile.memoryPattern);
+            memory.ChatHistory = new();
             memory.Context = Context;
             memory.BotName = BotName;
             memory.UserName = UserName;
-            memory.ChatHistory = new();
             using var sessionPipeline = new SessionPipeline()
                             .SetEncoder(Encoder)
                             .SetSource(Table)
@@ -368,15 +369,16 @@ namespace Kurisu.UniChat
         /// You can directly use session file from Oobabooga to embed.
         /// </summary>
         /// <param name="filePath"></param>
+        /// <param name="memory"></param>
         /// <returns></returns>
-        public async UniTask<bool> EmbedSession(string filePath)
+        public async UniTask<bool> EmbedSession(string filePath, ChatMemory memory = null)
         {
             if (!File.Exists(filePath))
             {
                 return false;
             }
             var session = JsonConvert.DeserializeObject<ChatSession>(File.ReadAllText(filePath));
-            return await EmbedSession(session);
+            return await EmbedSession(session, memory);
         }
     }
     /// <summary>

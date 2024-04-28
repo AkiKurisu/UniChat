@@ -10,7 +10,7 @@ namespace Kurisu.UniChat
         /// <param name="inputKey"></param>
         /// <param name="outputKey"></param>
         /// <returns></returns>
-        public static ChatPipelineChain ToChain(this ChatPipelineCtrl chatPipelineCtrl, string inputKey, string outputKey = "context")
+        public static ChatPipelineChain ToChain(this ChatPipelineCtrl chatPipelineCtrl, string inputKey = "input", string outputKey = "context")
         {
             return new ChatPipelineChain(chatPipelineCtrl, inputKey, outputKey);
         }

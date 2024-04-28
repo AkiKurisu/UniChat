@@ -36,11 +36,11 @@ namespace Kurisu.UniChat.Memory
             {
                 defaultFormatter.UserPrefix = ChatHistory.UserName;
                 defaultFormatter.BotPrefix = ChatHistory.BotName;
-                return defaultFormatter.Format(GetAllMessages());
+                return defaultFormatter.Format(Messages);
             }
             else
             {
-                return Formatter.Format(GetAllMessages());
+                return Formatter.Format(Messages);
             }
         }
     }
@@ -108,7 +108,10 @@ namespace Kurisu.UniChat.Memory
                 pool.AddRange(ChatHistory.GetMessages(messageRole));
                 int numMessages = Math.Min(pool.Count, WindowSize);
                 pool.RemoveRange(0, pool.Count - numMessages);
-                return pool;
+                foreach (var message in pool)
+                {
+                    yield return message;
+                }
             }
             finally
             {
@@ -123,7 +126,10 @@ namespace Kurisu.UniChat.Memory
                 pool.AddRange(ChatHistory.history);
                 int numMessages = Math.Min(pool.Count, WindowSize * 2);
                 pool.RemoveRange(0, pool.Count - numMessages);
-                return pool;
+                foreach (var message in pool)
+                {
+                    yield return message;
+                }
             }
             finally
             {

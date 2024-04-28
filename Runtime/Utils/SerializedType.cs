@@ -109,7 +109,7 @@ namespace Kurisu.UniChat
             if (t == null)
                 return string.Empty;
 
-            data.typeName = String.Empty;
+            data.typeName = string.Empty;
             data.isGeneric = t.ContainsGenericParameters;
 
             if (data.isGeneric && t.IsGenericType)
@@ -162,19 +162,12 @@ namespace Kurisu.UniChat
             data.genericTypeName = data.typeName;
             data.isGeneric = false;
 
-            switch (data.typeName)
+            data.typeName = data.typeName switch
             {
-                case "T":
-                    data.typeName = ToShortTypeName(type);
-                    break;
-                case "T[]":
-                    data.typeName = ToShortTypeName(type.MakeArrayType());
-                    break;
-                default:
-                    data.typeName = ToShortTypeName(Type.GetType(data.typeName, true).GetGenericTypeDefinition().MakeGenericType(type));
-                    break;
-            }
-
+                "T" => ToShortTypeName(type),
+                "T[]" => ToShortTypeName(type.MakeArrayType()),
+                _ => ToShortTypeName(Type.GetType(data.typeName, true).GetGenericTypeDefinition().MakeGenericType(type)),
+            };
             return ToString(data);
         }
 

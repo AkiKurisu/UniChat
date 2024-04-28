@@ -270,7 +270,7 @@ namespace Kurisu.UniChat.Chains
         public static SplitChain Split(
             ISplitter splitter,
             string inputKey = "text",
-            string outputKey = "splitted_text")
+            string outputKey = "text")
         {
             return new SplitChain(splitter, inputKey, outputKey);
         }
@@ -284,7 +284,7 @@ namespace Kurisu.UniChat.Chains
         public static TranslateChain Translate(
             ITranslator translator,
             string inputKey = "text",
-            string outputKey = "translated_text")
+            string outputKey = "text")
         {
             return new TranslateChain(translator, inputKey, outputKey);
         }
