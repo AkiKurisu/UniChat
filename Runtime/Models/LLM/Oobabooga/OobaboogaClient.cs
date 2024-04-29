@@ -6,12 +6,8 @@ using UnityEngine;
 using UnityEngine.Networking;
 namespace Kurisu.UniChat.LLMs
 {
-    public class OobaboogaClient : ILargeLanguageModel
+    public class OobaboogaClient : IChatModel
     {
-        private struct OobaboogaResponse : ILLMResponse
-        {
-            public string Response { get; internal set; }
-        }
         public bool Verbose { get; set; }
         public MessageFormatter Formatter { get; set; } = new();
         public OobaboogaGenerateParams GenParams { get; set; } = new();
@@ -24,33 +20,34 @@ namespace Kurisu.UniChat.LLMs
         {
             Uri = $"http://{address}:{port}";
         }
-        private void SetStopCharacter(string char_name)
+        public void SetStopCharacter(string char_name)
         {
             GenParams.StopStrings = new() { char_name, $"\n{char_name} " };
         }
-        public async UniTask<ILLMResponse> GenerateAsync(ILLMRequest input, CancellationToken ct)
+        public async UniTask<ILLMResponse> GenerateAsync(IChatRequest input, CancellationToken ct)
         {
-            SetStopCharacter(input.UserName);
-            string message = Formatter.Format(input);
-            return await GenerateAsync(message, ct);
+            var sb = new StringBuilder();
+            sb.Append(Formatter.Format(input));
+            sb.Append($"{Formatter.BotPrefix}:");
+            return await InternalCall(Formatter.Format(input), ct);
         }
-        public async UniTask<ILLMResponse> GenerateAsync(string message, CancellationToken ct)
+        private async UniTask<ILLMResponse> InternalCall(string message, CancellationToken ct)
         {
             GenParams.Prompt = message;
             string input = GenParams.ToJson();
             if (Verbose) Debug.Log($"Request {input}");
-            //TODO: Add chat mode
             using UnityWebRequest request = new($"{Uri}/api/v1/generate", "POST");
             request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(input));
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
             await request.SendWebRequest().ToUniTask(cancellationToken: ct);
-            var result = JsonConvert.DeserializeObject<ModelOutput>(request.downloadHandler.text.Trim());
-            if (Verbose) Debug.Log($"Response {result.Results[0].Text}");
-            return new OobaboogaResponse()
-            {
-                Response = FormatResponse(result.Results[0].Text)
-            };
+            if (Verbose) Debug.Log($"Response {request.downloadHandler.text}");
+            var result = JsonConvert.DeserializeObject<OobaboogaCompletionResponse>(request.downloadHandler.text.Trim());
+            return new LLMResponse(FormatResponse(result.Results[0].Text));
+        }
+        public async UniTask<ILLMResponse> GenerateAsync(string input, CancellationToken ct)
+        {
+            return await InternalCall(input, ct);
         }
         private string FormatResponse(string response)
         {

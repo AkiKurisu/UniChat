@@ -24,7 +24,7 @@ namespace Kurisu.UniChat.LLMs
         /// </summary>
         /// <param name="llmInput"></param>
         /// <returns></returns>
-        public string Format(ILLMRequest llmInput)
+        public string Format(IChatRequest llmInput)
         {
             stringBuilder.Clear();
             if (!string.IsNullOrEmpty(llmInput.Context))
@@ -38,9 +38,6 @@ namespace Kurisu.UniChat.LLMs
                 else
                     stringBuilder.AppendLine($"{GetPrefix(param.Role)}: {param.Content}");
             }
-            stringBuilder.Append(llmInput.BotName);
-            stringBuilder.Append(':');
-            stringBuilder.Append('\n');
             return stringBuilder.ToString();
         }
         /// <summary>

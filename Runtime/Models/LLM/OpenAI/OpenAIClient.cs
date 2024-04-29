@@ -15,10 +15,6 @@ namespace Kurisu.UniChat.LLMs
     }
     public class OpenAIClient : IChatModel
     {
-        private struct GPTResponse : ILLMResponse
-        {
-            public string Response { get; internal set; }
-        }
         public const string DefaultAPI = "https://api.openai-proxy.com/v1/chat/completions";
         public string ChatAPI { get; set; } = DefaultAPI;
         public string GptModel { get; set; } = OpenAIModels.ChatGPT3;
@@ -27,14 +23,13 @@ namespace Kurisu.UniChat.LLMs
         public bool Verbose { get; set; } = false;
         public float Temperature { get; set; } = 0.7f;
         public float Top_p { get; set; } = 1f;
-        public string SystemPrompt { get; set; } = "You are a helpful assistant. You can help me by answering my questions. You can also ask me questions.";
         public OpenAIClient(string url, string model, string apiKey)
         {
             ApiKey = apiKey;
             GptModel = string.IsNullOrEmpty(model) ? OpenAIModels.ChatGPT3 : model;
             ChatAPI = string.IsNullOrEmpty(url) ? DefaultAPI : url;
         }
-        public async UniTask<ILLMResponse> GenerateAsync(ILLMRequest input, CancellationToken ct)
+        public async UniTask<ILLMResponse> GenerateAsync(IChatRequest input, CancellationToken ct)
         {
             var list = ListPool<SendData>.Get();
             try
@@ -69,12 +64,9 @@ namespace Kurisu.UniChat.LLMs
             string _msg = request.downloadHandler.text;
             if (Verbose) Debug.Log($"Response {_msg}");
             MessageBack messageBack = JsonConvert.DeserializeObject<MessageBack>(_msg);
-            return new GPTResponse()
-            {
-                Response = messageBack.choices[0].message.content
-            };
+            return new LLMResponse(messageBack.choices[0].message.content);
         }
-        private void Format(ILLMRequest input, List<SendData> m_DataList)
+        private void Format(IChatRequest input, List<SendData> m_DataList)
         {
             m_DataList.Clear();
             foreach (var param in input.Messages)
@@ -84,7 +76,7 @@ namespace Kurisu.UniChat.LLMs
                 var sendData = new SendData(GetOpenAIRole(param.Role), content);
                 m_DataList.Add(sendData);
             }
-            m_DataList.Insert(0, new SendData("system", string.IsNullOrEmpty(input.Context) ? SystemPrompt : input.Context));
+            m_DataList.Insert(0, new SendData("system", input.Context));
         }
         public static string GetOpenAIRole(MessageRole role)
         {
@@ -101,7 +93,6 @@ namespace Kurisu.UniChat.LLMs
             var list = ListPool<SendData>.Get();
             try
             {
-                list.Add(new SendData("system", SystemPrompt));
                 list.Add(new SendData("user", inputPrompt));
                 var response = await InternalCall(list, ct);
                 return response;

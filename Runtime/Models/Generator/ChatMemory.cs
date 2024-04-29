@@ -8,7 +8,7 @@ namespace Kurisu.UniChat.Memory
     /// <summary>
     /// Memory defines how to load message from <see cref="UniChat.ChatHistory"/>
     /// </summary>
-    public abstract class ChatMemory : IChatMemory, ILLMRequest
+    public abstract class ChatMemory : IChatMemory, IChatRequest
     {
         [JsonIgnore]
         public ChatHistory ChatHistory { get; set; }

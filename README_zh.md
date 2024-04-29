@@ -171,7 +171,7 @@ public async void Start()
     var chatModelFile = new ChatModelFile() { fileName = "NewChatFile", modelProvider = ModelProvider.AddressableProvider };
     //Create an pipeline ctrl to run it
     var pipelineCtrl = new ChatPipelineCtrl(chatModelFile, settingsAsset);
-    pipelineCtrl.SwitchGenerator(ChatGeneratorIds.ChatGPT, true);
+    pipelineCtrl.SwitchGenerator(ChatGeneratorIds.ChatGPT);
     //Init pipeline, set verbose to log status
     await pipelineCtrl.InitializePipeline(new PipelineConfig { verbose = true });
     //Add system prompt
@@ -221,7 +221,7 @@ public class LLM_TTS_Chain_Example : MonoBehaviour
         pipelineCtrl.SwitchGenerator(ChatGeneratorIds.ChatGPT, true);
         //Init pipeline, set verbose to log status
         await pipelineCtrl.InitializePipeline(new PipelineConfig { verbose = true });
-        var vitsClient = new VITSClient(lang: "ja");
+        var vits = new VITSModel(lang: "ja");
          //Add system prompt
         pipelineCtrl.Memory.Context = "You are my personal assistant, you should answer my questions.";
         //Create cache to cache audioClips and translated texts
@@ -234,7 +234,7 @@ public class LLM_TTS_Chain_Example : MonoBehaviour
                                 //Split them
                                 | Chain.Split(new RegexSplitter(@"(?<=[。！？! ?])"), inputKey: "translated_text")
                                 //Auto batched
-                                | Chain.TTS(vitsClient, inputKey: "splitted_text").UseCache(audioCache).Verbose(true);
+                                | Chain.TTS(vits, inputKey: "splitted_text").UseCache(audioCache).Verbose(true);
         //Run chain
         (IReadOnlyList<string> segments, IReadOnlyList<AudioClip> audioClips)
             = await chain.Run<IReadOnlyList<string>, IReadOnlyList<AudioClip>>("splitted_text", "audio");

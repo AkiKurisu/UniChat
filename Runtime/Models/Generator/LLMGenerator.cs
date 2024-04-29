@@ -11,14 +11,14 @@ namespace Kurisu.UniChat
     /// </summary>
     public class LLMGenerator : IGenerator
     {
-        private readonly ILargeLanguageModel llm;
+        private readonly IChatModel llm;
         private readonly ChatMemory memory;
         public async Task<ILLMResponse> InternalCall(CancellationToken ct)
         {
             var response = await llm.GenerateAsync(memory, ct);
             return response;
         }
-        public LLMGenerator(ILargeLanguageModel llm, ChatMemory memory) : base()
+        public LLMGenerator(IChatModel llm, ChatMemory memory) : base()
         {
             this.memory = memory;
             this.llm = llm;

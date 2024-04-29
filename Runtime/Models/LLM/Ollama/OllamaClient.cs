@@ -20,26 +20,22 @@ namespace Kurisu.UniChat.LLMs
         public const string Llama2_Uncensored = "llama2-uncensored";
         public const string Llama3 = "llama3";
     }
-    public abstract class OllamaClient : ILargeLanguageModel
+    public abstract class OllamaClient : IChatModel
     {
-        protected struct OllamaResponse : ILLMResponse
-        {
-            public string Response { get; internal set; }
-        }
         public string Model { get; set; } = OllamaModels.Llama3;
         public OllamaOptions Options { get; } = new();
         public bool UseJson { get; set; }
         public bool Verbose { get; set; }
-        public string Uri { get; set; }
+        protected readonly string uri;
         protected OllamaClient(string address = "127.0.0.1", string port = "11434")
         {
-            Uri = $"http://{address}:{port}/";
+            uri = $"http://{address}:{port}";
         }
 
         public async UniTask PullModel(string name)
         {
             var content = JsonConvert.SerializeObject(new Dictionary<string, object>() { { "name", name }, { "stream", false } });
-            using UnityWebRequest request = new($"{Uri}api/pull", "POST")
+            using UnityWebRequest request = new($"{uri}/api/pull", "POST")
             {
                 uploadHandler = new UploadHandlerRaw(new UTF8Encoding().GetBytes(content)),
                 downloadHandler = new DownloadHandlerBuffer()
@@ -50,7 +46,7 @@ namespace Kurisu.UniChat.LLMs
 
         public async UniTask<IEnumerable<OllamaListModelsResponse.Model>> ListLocalModels()
         {
-            using UnityWebRequest request = new($"{Uri}api/tags", "GET")
+            using UnityWebRequest request = new($"{uri}/api/tags", "GET")
             {
                 downloadHandler = new DownloadHandlerBuffer()
             };
@@ -59,7 +55,7 @@ namespace Kurisu.UniChat.LLMs
             return JsonConvert.DeserializeObject<OllamaListModelsResponse>(request.downloadHandler.text)?.Models ?? throw new InvalidOperationException("Response body was null");
         }
 
-        public abstract UniTask<ILLMResponse> GenerateAsync(ILLMRequest input, CancellationToken ct = default);
+        public abstract UniTask<ILLMResponse> GenerateAsync(IChatRequest input, CancellationToken ct = default);
         public abstract UniTask<ILLMResponse> GenerateAsync(string prompt, CancellationToken ct = default);
     }
     public class OllamaCompletion : OllamaClient
@@ -84,7 +80,7 @@ namespace Kurisu.UniChat.LLMs
             var content = JsonConvert.SerializeObject(generateRequest, serializerSettings);
 
             if (Verbose) Debug.Log($"Request {content}");
-            using UnityWebRequest request = new($"{Uri}api/generate", "POST")
+            using UnityWebRequest request = new($"{uri}/api/generate", "POST")
             {
                 uploadHandler = new UploadHandlerRaw(new UTF8Encoding().GetBytes(content)),
                 downloadHandler = new DownloadHandlerBuffer()
@@ -93,13 +89,10 @@ namespace Kurisu.UniChat.LLMs
             await request.SendWebRequest().ToUniTask(cancellationToken: ct);
             if (Verbose) Debug.Log($"Response {request.downloadHandler.text}");
             var streamedResponse = JsonConvert.DeserializeObject<OllamaCompletionResponse>(request.downloadHandler.text);
-            return new OllamaResponse()
-            {
-                Response = streamedResponse.Response
-            };
+            return new LLMResponse(streamedResponse.Response);
         }
 
-        public override async UniTask<ILLMResponse> GenerateAsync(ILLMRequest input, CancellationToken ct = default)
+        public override async UniTask<ILLMResponse> GenerateAsync(IChatRequest input, CancellationToken ct = default)
         {
             return await GenerateAsync(string.Join("\n", input.Context, ToPrompt(input.Messages)));
         }
@@ -137,18 +130,17 @@ namespace Kurisu.UniChat.LLMs
             return string.Join("\n", messages.Select(ConvertMessage).ToArray());
         }
     }
-    public class OllamaChat : OllamaClient, IChatModel
+    public class OllamaChat : OllamaClient
     {
         private readonly JsonSerializerSettings serializerSettings = new()
         {
             NullValueHandling = NullValueHandling.Ignore
         };
-        public string SystemPrompt { get; set; } = "You are a helpful assistant. You can help me by answering my questions. You can also ask me questions.";
         public OllamaChat(string address = "127.0.0.1", string port = "11434") : base(address, port)
         {
 
         }
-        public override async UniTask<ILLMResponse> GenerateAsync(ILLMRequest input, CancellationToken ct)
+        public override async UniTask<ILLMResponse> GenerateAsync(IChatRequest input, CancellationToken ct)
         {
             var list = ListPool<SendData>.Get();
             try
@@ -179,7 +171,7 @@ namespace Kurisu.UniChat.LLMs
                 stream = false
             };
             string input = JsonConvert.SerializeObject(_postData, serializerSettings);
-            using UnityWebRequest request = new($"{Uri}api/chat", "POST");
+            using UnityWebRequest request = new($"{uri}/api/chat", "POST");
             if (Verbose) Debug.Log($"Request {input}");
             byte[] data = Encoding.UTF8.GetBytes(input);
             request.uploadHandler = new UploadHandlerRaw(data);
@@ -189,12 +181,9 @@ namespace Kurisu.UniChat.LLMs
             string _msg = request.downloadHandler.text;
             if (Verbose) Debug.Log($"Response {_msg}");
             OllamaChatResponse response = JsonConvert.DeserializeObject<OllamaChatResponse>(_msg);
-            return new OllamaResponse()
-            {
-                Response = response.message.content
-            };
+            return new LLMResponse(response.message.content);
         }
-        private void Format(ILLMRequest input, List<SendData> m_DataList)
+        private void Format(IChatRequest input, List<SendData> m_DataList)
         {
             m_DataList.Clear();
             foreach (var param in input.Messages)
@@ -204,14 +193,13 @@ namespace Kurisu.UniChat.LLMs
                 var sendData = new SendData(OpenAIClient.GetOpenAIRole(param.Role), content);
                 m_DataList.Add(sendData);
             }
-            m_DataList.Insert(0, new SendData("system", string.IsNullOrEmpty(input.Context) ? SystemPrompt : input.Context));
+            m_DataList.Insert(0, new SendData("system", input.Context));
         }
         public override async UniTask<ILLMResponse> GenerateAsync(string inputPrompt, CancellationToken ct)
         {
             var list = ListPool<SendData>.Get();
             try
             {
-                list.Add(new SendData("system", SystemPrompt));
                 list.Add(new SendData("user", inputPrompt));
                 var response = await InternalCall(list, ct);
                 return response;

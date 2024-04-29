@@ -13,7 +13,7 @@ namespace Kurisu.UniChat.Chains
         private readonly string _outputKey;
         private bool useCache;
         private bool verbose;
-        public AudioCache audioFileAssist;
+        public AudioCache audioCache;
         public TTSChain(
             ITextToSpeechModel model,
             TextToSpeechSettings settings = null,
@@ -46,20 +46,19 @@ namespace Kurisu.UniChat.Chains
         {
             uint hash = XXHash.CalculateHash(segment);
             AudioClip audioClip;
-            if (useCache && audioFileAssist.Contains(hash))
+            if (useCache && audioCache.Contains(hash))
             {
                 if (verbose) Debug.Log($"Load audio from cache {hash}");
-                (AudioClip[] audioClips, _) = await audioFileAssist.Load(hash);
+                (AudioClip[] audioClips, _) = await audioCache.Load(hash);
                 audioClip = audioClips[0];
             }
             else
             {
-                //Batch
                 audioClip = await _model.GenerateSpeechAsync(segment, _settings);
                 if (useCache)
                 {
                     if (verbose) Debug.Log($"Save audio to cache {hash}");
-                    audioFileAssist.Save(hash, audioClip, segment);
+                    audioCache.Save(hash, audioClip, segment);
                 }
             }
             values.Value[_outputKey] = audioClip;
@@ -69,10 +68,10 @@ namespace Kurisu.UniChat.Chains
         {
             uint hash = XXHash.CalculateHash(segments[0]);
             AudioClip[] audioClips;
-            if (useCache && audioFileAssist.Contains(hash))
+            if (useCache && audioCache.Contains(hash))
             {
                 if (verbose) Debug.Log($"Load audio from cache {hash}");
-                (audioClips, _) = await audioFileAssist.Load(hash);
+                (audioClips, _) = await audioCache.Load(hash);
             }
             else
             {
@@ -81,16 +80,16 @@ namespace Kurisu.UniChat.Chains
                 if (useCache)
                 {
                     if (verbose) Debug.Log($"Save audio to cache {hash}");
-                    audioFileAssist.Save(hash, audioClips, segments);
+                    audioCache.Save(hash, audioClips, segments);
                 }
             }
             values.Value[_outputKey] = audioClips;
             return values;
         }
-        public TTSChain UseCache(AudioCache audioFileAssist)
+        public TTSChain UseCache(AudioCache audioCache)
         {
-            this.audioFileAssist = audioFileAssist;
-            useCache = audioFileAssist != null;
+            this.audioCache = audioCache;
+            useCache = audioCache != null;
             return this;
         }
         public TTSChain Verbose(bool verbose)

@@ -1,6 +1,5 @@
 using System;
 using Cysharp.Threading.Tasks;
-using Kurisu.UniChat.LLMs;
 using UnityEngine;
 namespace Kurisu.UniChat.Chains
 {
@@ -24,22 +23,11 @@ namespace Kurisu.UniChat.Chains
             values = values ?? throw new ArgumentNullException(nameof(values));
 
             var promptObject = values.Value[InputKeys[0]];
-
             ILLMResponse response;
             if (promptObject is string prompt)
             {
                 if (verbose) Debug.Log($"LLM request: {prompt}");
                 response = await _llm.GenerateAsync(prompt, default);
-                values.Value[OutputKeys[0]] = response.Response;
-            }
-            else if (promptObject is ILLMRequest request)
-            {
-                if (verbose)
-                {
-                    var formatePrompt = new MessageFormatter().Format(request);
-                    Debug.Log($"LLM request: {formatePrompt}");
-                }
-                response = await _llm.GenerateAsync(request, default);
                 values.Value[OutputKeys[0]] = response.Response;
             }
             else

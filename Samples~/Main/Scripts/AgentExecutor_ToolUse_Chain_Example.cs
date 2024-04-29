@@ -11,7 +11,7 @@ namespace Kurisu.UniChat.Example
         public async void Start()
         {
             var userCommand = @"I want to watch a dance video.";
-            var llm = LLMFactory.Create(LLMType.ChatGPT, settingsAsset) as OpenAIClient;
+            var llm = new LLMFactory(settingsAsset).CreateLLM(LLMType.ChatGPT) as OpenAIClient;
             //Use `Chatbot Responses` h-params https://community.openai.com/t/cheat-sheet-mastering-temperature-and-top-p-in-chatgpt-api/172683
             llm.Temperature = 0.5f;
             llm.Top_p = 0.5f;

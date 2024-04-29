@@ -7,6 +7,14 @@ namespace Kurisu.UniChat
     {
         string Response { get; }
     }
+    public readonly struct LLMResponse : ILLMResponse
+    {
+        public string Response { get; }
+        public LLMResponse(string response)
+        {
+            Response = response;
+        }
+    }
     public enum MessageRole
     {
         System,
@@ -18,18 +26,8 @@ namespace Kurisu.UniChat
         public MessageRole Role { get; }
         public string Content { get; }
     }
-    public interface ILLMRequest
+    public interface IChatRequest
     {
-        /// <summary>
-        /// The character of request
-        /// </summary>
-        /// <value></value>
-        string BotName { get; }
-        /// <summary>
-        /// The characters of request
-        /// </summary>
-        /// <value></value>
-        string UserName { get; }
         /// <summary>
         /// The system context of request
         /// </summary>
@@ -53,14 +51,7 @@ namespace Kurisu.UniChat
         /// <value></value>
         bool Verbose { get; set; }
         /// <summary>
-        /// Generate llm data from llm input
-        /// </summary>
-        /// <param name="input"></param>
-        /// <param name="ct"></param>
-        /// <returns></returns>
-        UniTask<ILLMResponse> GenerateAsync(ILLMRequest input, CancellationToken ct);
-        /// <summary>
-        /// Generate llm data from input
+        /// Generate llm data from string input
         /// </summary>
         /// <param name="input"></param>
         /// <param name="ct"></param>

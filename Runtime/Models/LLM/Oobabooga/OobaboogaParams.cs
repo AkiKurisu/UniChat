@@ -46,7 +46,7 @@ namespace Kurisu.UniChat.LLMs
         [JsonProperty("skip_special_tokens")]
         public bool SkipSpecialTokens { get; set; } = true;
         [JsonProperty("stopping_strings")]
-        public List<string> StopStrings { get; set; } = new List<string>() { "You:", "\nYou " };
+        public List<string> StopStrings { get; set; } = new List<string>() { "\nYou:", "\n\tYou:" };
         public string ToJson()
         {
             return JsonConvert.SerializeObject(this);

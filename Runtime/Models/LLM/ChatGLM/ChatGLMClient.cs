@@ -10,38 +10,30 @@ namespace Kurisu.UniChat.LLMs
     /// Use ChatGLM with Normal API to generate text
     /// See https://github.com/THUDM/ChatGLM2-6B/blob/main/api.py
     /// </summary>
-    public class ChatGLMClient : ILargeLanguageModel
+    public class ChatGLMClient : IChatModel
     {
-        private struct GLMResponse : ILLMResponse
-        {
-            public string Response { get; internal set; }
-        }
         public bool Verbose { get; set; }
-        public string Uri { get; set; }
-        public string SystemPrompt { get; set; }
+        private readonly string uri;
         public GLMGenParams GenParams { get; set; } = new();
         public MessageFormatter Formatter { get; set; } = new();
         public ChatGLMClient(string address = "127.0.0.1", string port = "8000")
         {
-            Uri = $"http://{address}:{port}/";
+            uri = $"http://{address}:{port}/";
         }
-        public async UniTask<ILLMResponse> GenerateAsync(ILLMRequest input, CancellationToken ct)
+        public async UniTask<ILLMResponse> GenerateAsync(IChatRequest input, CancellationToken ct)
         {
-            GenParams.Prompt = Formatter.Format(input);
-            return await InternalCall(JsonConvert.SerializeObject(GenParams), ct);
+            return await InternalCall(Formatter.Format(input), ct);
         }
         public async UniTask<ILLMResponse> GenerateAsync(string input, CancellationToken ct)
         {
-            var sb = new StringBuilder();
-            if (!string.IsNullOrEmpty(SystemPrompt)) sb.AppendLine(SystemPrompt);
-            sb.AppendLine(input);
-            GenParams.Prompt = sb.ToString();
-            return await InternalCall(JsonConvert.SerializeObject(GenParams), ct);
+            return await InternalCall(input, ct);
         }
-        private async UniTask<ILLMResponse> InternalCall(string input, CancellationToken ct)
+        private async UniTask<ILLMResponse> InternalCall(string message, CancellationToken ct)
         {
+            GenParams.Prompt = message;
+            var input = JsonConvert.SerializeObject(GenParams);
             if (Verbose) Debug.Log($"Request {input}");
-            using UnityWebRequest request = new(Uri, "POST")
+            using UnityWebRequest request = new(uri, "POST")
             {
                 uploadHandler = new UploadHandlerRaw(new UTF8Encoding().GetBytes(input)),
                 downloadHandler = new DownloadHandlerBuffer()
@@ -54,10 +46,7 @@ namespace Kurisu.UniChat.LLMs
             response = messageBack.Response;
             GenParams.History = messageBack.History;
             if (Verbose) Debug.Log($"Response {response}");
-            return new GLMResponse()
-            {
-                Response = response
-            };
+            return new LLMResponse(response);
         }
     }
 }
