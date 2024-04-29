@@ -26,7 +26,7 @@ namespace Kurisu.UniChat.Example
                 | Chain.LLM(llm, inputKey: "prompt", outputKey: "chatResponse")
                 | Chain.Template(translatePrompt, outputKey: "prompt")
                 | Chain.LLM(llm, inputKey: "prompt", outputKey: "ttsInput")
-                | Chain.TTS(new VITSClient(lang: "ja"), inputKey: "ttsInput", outputKey: "audioClip");
+                | Chain.TTS(new VITSModel(lang: "ja"), inputKey: "ttsInput", outputKey: "audioClip");
 
             //Run chain
             (string result, AudioClip audioClip) = await chain.Trace(true, true).Run<string, AudioClip>("chatResponse", "audioClip");

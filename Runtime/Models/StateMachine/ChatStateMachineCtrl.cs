@@ -11,11 +11,11 @@ namespace Kurisu.UniChat.StateMachine
     public class ChatStateMachineCtrl : IDisposable
     {
         public ChatStateMachine[] stateMachines;
-        private readonly TextEncoder encoder;
+        private readonly BertEncoder encoder;
         private readonly ITensorAllocator allocator;
         private readonly Ops ops;
         public UObject HostObject { get; }
-        public ChatStateMachineCtrl(TextEncoder encoder, UObject hostObject, int layer)
+        public ChatStateMachineCtrl(BertEncoder encoder, UObject hostObject, int layer)
         {
             this.encoder = encoder;
             HostObject = hostObject;

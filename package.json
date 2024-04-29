@@ -1,7 +1,7 @@
 {
   "name": "com.kurisu.unichat",
   "displayName": "UniChat",
-  "version": "0.0.6",
+  "version": "0.0.8",
   "unity": "2022.3",
   "description": "A pipeline designed to create online and offline chat-bot in Unity. Have fun!",
   "keywords": [

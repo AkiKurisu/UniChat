@@ -276,7 +276,7 @@ public void RunSTTChain(AudioClip audioClip)
 ```
 
 ### Sub-classifier
-You can reduce the dependence on LLM by training a downstream classifier on the basis of the embedded model to complete some recognition tasks in the game (such as expression classifier表情🤗).
+You can reduce the dependence on LLM by training a downstream classifier on the basis of the embedded model to complete some recognition tasks in the game (such as expression classifier🤗).
 
 **Notice**
 

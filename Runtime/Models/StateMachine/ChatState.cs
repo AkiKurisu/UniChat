@@ -157,7 +157,7 @@ namespace Kurisu.UniChat.StateMachine
             ArrayUtils.Remove(ref conditionVector, condition);
             conditions = conditionVector;
         }
-        public void EncodeConditions(Ops ops, TextEncoder encoder)
+        public void EncodeConditions(Ops ops, BertEncoder encoder)
         {
             var pool = ListPool<string>.Get();
             foreach (var condition in conditions)

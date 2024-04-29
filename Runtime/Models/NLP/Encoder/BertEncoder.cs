@@ -3,19 +3,19 @@ using System.Collections.Generic;
 using Unity.Sentis;
 namespace Kurisu.UniChat.NLP
 {
-    public class TextEncoder : IEncoder, IDisposable
+    public class BertEncoder : IEncoder, IDisposable
     {
         public enum PoolingType
         {
-            MeanPooled,
-            CLSPooled
+            MeanPooling,
+            CLSPooling
         }
         private readonly BertTokenizer tokenizer;
         private readonly IWorker worker;
-        public const string last_hidden_state = "last_hidden_state";
-        public const string attention_mask = "attention_mask";
-        public PoolingType Pooling { get; set; } = PoolingType.MeanPooled;
-        public TextEncoder(Model model, BertTokenizer tokenizer, BackendType backendType = BackendType.GPUCompute)
+        private const string last_hidden_state = "last_hidden_state";
+        private const string attention_mask = "attention_mask";
+        public PoolingType Pooling { get; set; } = PoolingType.MeanPooling;
+        public BertEncoder(Model model, BertTokenizer tokenizer, BackendType backendType = BackendType.GPUCompute)
         {
             this.tokenizer = tokenizer;
             worker = WorkerFactory.CreateWorker(backendType, model);
@@ -27,7 +27,7 @@ namespace Kurisu.UniChat.NLP
         }
         public TensorFloat Encode(Ops ops, IReadOnlyList<string> input)
         {
-            if (Pooling == PoolingType.MeanPooled)
+            if (Pooling == PoolingType.MeanPooling)
                 return Encode_Mean_Pooling(ops, input, true);
             return Encode_CLS_Pooling(ops, input, true);
         }

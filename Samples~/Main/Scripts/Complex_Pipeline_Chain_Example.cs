@@ -24,7 +24,7 @@ namespace Kurisu.UniChat.Example
 
             //Init pipeline, set verbose to log status
             await pipelineCtrl.InitializePipeline(new PipelineConfig { verbose = true });
-            var vitsClient = new VITSClient(lang: "ja");
+            var vits = new VITSModel(lang: "ja");
 
             //Add some chat messages
             pipelineCtrl.Memory.Context = "你是我的私人助理，你会解答我的各种问题";
@@ -48,7 +48,7 @@ namespace Kurisu.UniChat.Example
                         //Split them
                         | Chain.Split(new RegexSplitter(@"(?<=[。！？! ?])"), inputKey: "translated_text")
                         //Auto batched
-                        | Chain.TTS(vitsClient, inputKey: "splitted_text").UseCache(audioCache).Verbose(true);
+                        | Chain.TTS(vits, inputKey: "splitted_text").UseCache(audioCache).Verbose(true);
 
             //Run chain
             (IReadOnlyList<string> segments, IReadOnlyList<AudioClip> audioClips)

@@ -8,7 +8,7 @@ namespace Kurisu.UniChat.TTS
     /// <summary>
     /// vits-simple-api client
     /// </summary>
-    public class VITSClient : ITextToSpeechModel
+    public abstract class VITSClient : ITextToSpeechModel
     {
         public class VITSSettings : TextToSpeechSettings
         {
@@ -51,25 +51,8 @@ namespace Kurisu.UniChat.TTS
                 message = await Translator.TranslateAsync(message, ct);
             }
             using UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip(GetURL(message, characterID), AudioType.WAV);
-            try
-            {
-                await www.SendWebRequest().ToUniTask(cancellationToken: ct);
-            }
-            catch (UnityWebRequestException)
-            {
-                Debug.LogError($"[VITS] {www.error}");
-                return default;
-            }
-            AudioClip audioClip = null;
-            try
-            {
-                audioClip = DownloadHandlerAudioClip.GetContent(www);
-                return audioClip;
-            }
-            catch
-            {
-                return default;
-            }
+            await www.SendWebRequest().ToUniTask(cancellationToken: ct);
+            return DownloadHandlerAudioClip.GetContent(www);
         }
 
         public async UniTask<AudioClip> GenerateSpeechAsync(string prompt, TextToSpeechSettings settings = null, CancellationToken cancellationToken = default)

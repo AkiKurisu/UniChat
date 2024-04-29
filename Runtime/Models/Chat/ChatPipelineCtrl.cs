@@ -75,7 +75,7 @@ namespace Kurisu.UniChat
     where TPipeline : ChatPipeline, new()
     where KTable : ISerializable, IEmbeddingTable, IPersistHandlerFactory<string>, new()
     {
-        public TextEncoder Encoder { get; protected set; }
+        public BertEncoder Encoder { get; protected set; }
         public ChatDataBase DataBase { get; protected set; }
         public KTable Table { get; protected set; }
         public ChatModelFile ChatFile { get; protected set; }
@@ -177,7 +177,7 @@ namespace Kurisu.UniChat
             Encoder?.Dispose();
             Pipeline?.Dispose();
             ModelProvider provider = ModelProviderFactory.Instance.Create(ChatFile.modelProvider);
-            Encoder = new TextEncoder(
+            Encoder = new BertEncoder(
                 await provider.LoadModel(ChatFile.ModelPath),
                 new BertTokenizer(await provider.LoadTokenizer(ChatFile.TokenizerPath)),
                 config.backendType
