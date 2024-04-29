@@ -91,6 +91,7 @@ namespace Kurisu.UniChat
         public event Action<InputGenerationRequest> OnCallGeneration;
         private readonly Dictionary<int, IGenerator> generatorMap = new();
         private PipelineConfig config;
+        private readonly ChatModelFactory chatModelFactory;
         public ChatPipelineCtrl(ChatModelFile chatFile, ILLMSettings llmSettings)
         {
             ChatFile = chatFile;
@@ -110,6 +111,7 @@ namespace Kurisu.UniChat
                 Table.Load(tablePath);
             }
             LLMSettings = llmSettings;
+            chatModelFactory = new ChatModelFactory(llmSettings);
             Splitter = CreateSplitter(chatFile.splitter, chatFile.splitterPattern);
             Generator = generatorMap[-1] = new InputGenerator(OnInputGeneration);
             Assert.IsNotNull(Splitter);
@@ -256,7 +258,7 @@ namespace Kurisu.UniChat
         {
             if (generatorId == ChatGeneratorIds.Input)
             {
-                SwitchInputGenerator();
+                Generator = generatorMap[-1];
             }
             else
             {
@@ -267,21 +269,13 @@ namespace Kurisu.UniChat
                     ChatGeneratorIds.Ollama => LLMType.Ollama_Chat,
                     _ => throw new ArgumentOutOfRangeException()
                 };
-                SwitchLLMGenerator(llmType, forceNewGenerator);
+                int id = (int)llmType;
+                if (forceNewGenerator || !generatorMap.TryGetValue(id, out var generator))
+                {
+                    generator = generatorMap[id] = new LLMGenerator(chatModelFactory.CreateChatModel(llmType), Memory);
+                }
+                Generator = generator;
             }
-        }
-        private IGenerator SwitchLLMGenerator(LLMType llmType, bool forceNewGenerator)
-        {
-            int id = (int)llmType;
-            if (forceNewGenerator || !generatorMap.TryGetValue(id, out var generator))
-            {
-                generator = generatorMap[id] = new LLMGenerator(LLMFactory.Create(llmType, LLMSettings), Memory);
-            }
-            return Generator = generator;
-        }
-        private IGenerator SwitchInputGenerator()
-        {
-            return Generator = generatorMap[-1];
         }
         private UniTaskCompletionSource<bool> OnInputGeneration(GenerateContext generateContext)
         {

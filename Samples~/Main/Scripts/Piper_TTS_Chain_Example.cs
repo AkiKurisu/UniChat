@@ -17,7 +17,7 @@ namespace Kurisu.UniChat.Example
                 你是我的私人助理.
                 User: 你好啊!
                 Assistant:";
-            var llm = LLMFactory.Create(LLMType.ChatGPT, settingsAsset);
+            var llm = new LLMFactory(settingsAsset).CreateLLM(LLMType.ChatGPT);
 
             var provider = ModelProviderFactory.Instance.Create(ModelProvider.AddressableProvider);
 
