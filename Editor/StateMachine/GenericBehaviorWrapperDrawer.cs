@@ -13,29 +13,26 @@ namespace Kurisu.UniChat.StateMachine.Editor
         }
         public static float CalculatePropertyHeight(SerializedProperty property)
         {
-            float totalHeight = EditorGUIUtility.singleLineHeight;
             if (property.objectReferenceValue == null || !AreAnySubPropertiesVisible(property))
             {
-                return totalHeight;
+                return EditorGUIUtility.singleLineHeight;
             }
             var data = property.objectReferenceValue as ScriptableObject;
             if (data == null) return EditorGUIUtility.singleLineHeight;
             SerializedObject serializedObject = new(data);
             try
             {
-                SerializedProperty prop = serializedObject.GetIterator();
+                SerializedProperty prop = serializedObject.FindProperty("m_Value");
                 if (prop == null)
                 {
                     return EditorGUIUtility.singleLineHeight;
                 }
+                float totalHeight = 0;
                 if (prop.NextVisible(true))
                 {
                     do
                     {
-                        if (prop.name == "m_Script") continue;
-                        if (prop.name == "m_Value") continue;
-                        var subProp = serializedObject.FindProperty(prop.name);
-                        float height = EditorGUI.GetPropertyHeight(subProp, null, true) + EditorGUIUtility.standardVerticalSpacing;
+                        float height = EditorGUI.GetPropertyHeight(prop, null, true) + EditorGUIUtility.standardVerticalSpacing;
                         totalHeight += height;
                     }
                     while (prop.NextVisible(false));
@@ -60,8 +57,8 @@ namespace Kurisu.UniChat.StateMachine.Editor
                 {
                     do
                     {
-                        if (prop.name == "m_Script") continue;
-                        if (prop.name == "m_Value") continue;
+                        float height = EditorGUI.GetPropertyHeight(prop, new GUIContent(prop.displayName), true);
+                        position.height = height;
                         EditorGUI.PropertyField(position, prop, true);
                         position.y += position.height + EditorGUIUtility.standardVerticalSpacing;
                     }
@@ -82,7 +79,6 @@ namespace Kurisu.UniChat.StateMachine.Editor
             while (prop.NextVisible(true))
             {
                 if (prop.name == "m_Script") continue;
-                if (prop.name == "m_Value") continue;
                 return true;
             }
             serializedObject.Dispose();
