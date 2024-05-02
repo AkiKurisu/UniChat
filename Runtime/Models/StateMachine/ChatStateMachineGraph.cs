@@ -26,8 +26,10 @@ namespace Kurisu.UniChat.StateMachine
             public string serializedType;
             [HideInInspector]
             public string jsonData;
-            [JsonIgnore]
-            public SerializedBehaviorWrapper container;
+#if UNITY_EDITOR
+            [SerializeField]
+            internal SerializedBehaviorWrapper container;
+#endif
             public ChatStateMachineBehavior Deserialize()
             {
                 var behaviorType = SerializedType.FromString(serializedType);
