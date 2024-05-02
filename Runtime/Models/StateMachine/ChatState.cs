@@ -178,8 +178,6 @@ namespace Kurisu.UniChat.StateMachine
     }
     public enum ChatConditionMode : byte
     {
-        //skip evaluation as direct transition
-        None = 0,
         Greater = 1,
         GreaterOrEqual = 2,
         Less = 3,

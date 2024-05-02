@@ -79,13 +79,10 @@ namespace Kurisu.UniChat.StateMachine
             id = 0;
             foreach (var transition in CurrentState.transitions)
             {
-                foreach (var condition in transition.conditions)
+                if (transition.conditions.Length == 0)
                 {
-                    if (condition.mode == ChatConditionMode.None)
-                    {
-                        id = transition.destination.uniqueId;
-                        return true;
-                    }
+                    id = transition.destination.uniqueId;
+                    return true;
                 }
             }
             return false;
@@ -94,7 +91,6 @@ namespace Kurisu.UniChat.StateMachine
         {
             return mode switch
             {
-                ChatConditionMode.None => true,
                 ChatConditionMode.Greater => input > threshold,
                 ChatConditionMode.GreaterOrEqual => input >= threshold,
                 ChatConditionMode.Less => input < threshold,
