@@ -67,9 +67,10 @@ namespace Kurisu.UniChat
     public static class ChatGeneratorIds
     {
         public const int Input = 0;
-        public const int ChatGPT = 1;
-        public const int Oobabooga = 2;
+        public const int OpenAI = 1;
+        public const int TextGenWebUI = 2;
         public const int Ollama = 3;
+        public const int KoboldCpp = 4;
     }
     public class ChatPipelineCtrl<TPipeline, KTable> : IDisposable
     where TPipeline : ChatPipeline, new()
@@ -264,9 +265,10 @@ namespace Kurisu.UniChat
             {
                 var llmType = generatorId switch
                 {
-                    ChatGeneratorIds.ChatGPT => LLMType.ChatGPT,
-                    ChatGeneratorIds.Oobabooga => LLMType.Oobabooga,
+                    ChatGeneratorIds.OpenAI => LLMType.OpenAI,
+                    ChatGeneratorIds.TextGenWebUI => LLMType.TextGenWebUI,
                     ChatGeneratorIds.Ollama => LLMType.Ollama_Chat,
+                    ChatGeneratorIds.KoboldCpp => LLMType.KoboldCpp,
                     _ => throw new ArgumentOutOfRangeException()
                 };
                 int id = (int)llmType;

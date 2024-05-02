@@ -2,8 +2,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 namespace Kurisu.UniChat.LLMs
 {
-    //Modify from https://github.com/pboardman/KoboldSharp
-    public class OobaboogaCompletionResponse
+    public class KoboldResponse
     {
         [JsonProperty("results")]
         public List<Result> Results { get; set; }

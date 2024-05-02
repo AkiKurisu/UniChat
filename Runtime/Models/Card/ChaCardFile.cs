@@ -5,11 +5,8 @@ namespace Kurisu.UniChat
     public class ChaCardFile
     {
         public byte[] pngData;
-        public TavernAICard tavernAIData;
-        public ChaCardFile()
-        {
-            tavernAIData = new();
-        }
+        public TavernAICard tavernAIData = new();
+        private const string HEADER = "【UniChat_TavernAI】";
         public bool LoadThumb(string path)
         {
             using FileStream st = new(path, FileMode.Open, FileAccess.Read);
@@ -64,7 +61,7 @@ namespace Kurisu.UniChat
                     return false;
                 }
             }
-            if (br.ReadString() != "【UniChat_TavernAI】")
+            if (br.ReadString() != HEADER)
             {
                 return false;
             }
@@ -88,7 +85,7 @@ namespace Kurisu.UniChat
             {
                 bw.Write(pngData);
             }
-            bw.Write("【UniChat_TavernAI】");
+            bw.Write(HEADER);
             bw.Write(JsonConvert.SerializeObject(tavernAIData));
             return true;
         }

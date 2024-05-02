@@ -135,13 +135,13 @@ namespace Kurisu.UniChat
                         else
                         {
                             context.flag |= 0 << 1;
-                            Debug.LogError("Generation failed!");
+                            if (Verbose) Debug.LogError("Generation failed!");
                         }
                     }
                     else
                     {
                         context.flag |= 0 << 1;
-                        Debug.LogWarning("Generator is null!");
+                        if (Verbose) Debug.LogWarning("Generator is null!");
                     }
                 }
             }

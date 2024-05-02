@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 namespace Kurisu.UniChat.LLMs
 {
     //See https://github.com/oobabooga/text-generation-webui/blob/main/api-examples/api-example.py
-    public class OobaboogaGenerateParams
+    public class TextGenWebUIGenerateParams
     {
         [JsonProperty("n")]
         public int N { get; set; } = 1;
@@ -46,7 +46,9 @@ namespace Kurisu.UniChat.LLMs
         [JsonProperty("skip_special_tokens")]
         public bool SkipSpecialTokens { get; set; } = true;
         [JsonProperty("stopping_strings")]
-        public List<string> StopStrings { get; set; } = new List<string>() { "\nYou:", "\n\tYou:" };
+        public List<string> StopStrings { get; set; } = new List<string>() { "You:", "\nYou " };
+        [JsonIgnore]
+        public List<string> ReplaceKey { get; set; } = new List<string>() { "Bot:" };
         public string ToJson()
         {
             return JsonConvert.SerializeObject(this);

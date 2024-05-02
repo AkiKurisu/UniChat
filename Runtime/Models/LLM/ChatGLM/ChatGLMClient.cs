@@ -15,14 +15,13 @@ namespace Kurisu.UniChat.LLMs
         public bool Verbose { get; set; }
         private readonly string uri;
         public GLMGenParams GenParams { get; set; } = new();
-        public MessageFormatter Formatter { get; set; } = new();
         public ChatGLMClient(string address = "127.0.0.1", string port = "8000")
         {
             uri = $"http://{address}:{port}/";
         }
         public async UniTask<ILLMResponse> GenerateAsync(IChatRequest input, CancellationToken ct)
         {
-            return await InternalCall(Formatter.Format(input), ct);
+            return await InternalCall(input.Formatter.Format(input), ct);
         }
         public async UniTask<ILLMResponse> GenerateAsync(string input, CancellationToken ct)
         {
