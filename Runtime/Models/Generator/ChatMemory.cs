@@ -18,11 +18,12 @@ namespace Kurisu.UniChat.Memory
         public string UserName { get => ChatHistory.UserName; set => ChatHistory.UserName = value; }
         [JsonIgnore]
         public string Context { get => ChatHistory.Context; set => ChatHistory.Context = value; }
+        protected readonly MessageFormatter defaultFormatter = new();
+        protected MessageFormatter _formatter;
         [JsonIgnore]
         public IEnumerable<IMessage> Messages => GetAllMessages();
-        protected readonly MessageFormatter defaultFormatter = new();
         [JsonIgnore]
-        public MessageFormatter Formatter { get; set; }
+        public MessageFormatter Formatter { get => _formatter ?? GetDefaultFormatter(); set => _formatter = value; }
         public ChatMemory() { }
         public ChatMemory(ChatHistory chatHistory)
         {
@@ -32,22 +33,19 @@ namespace Kurisu.UniChat.Memory
         public abstract IEnumerable<ChatMessage> GetMessages(MessageRole messageRole);
         public virtual string GetMemoryContext()
         {
-            if (Formatter == null)
-            {
-                defaultFormatter.UserPrefix = ChatHistory.UserName;
-                defaultFormatter.BotPrefix = ChatHistory.BotName;
-                return defaultFormatter.Format(Messages);
-            }
-            else
-            {
-                return Formatter.Format(Messages);
-            }
+            return Formatter.Format(GetAllMessages());
+        }
+        protected virtual MessageFormatter GetDefaultFormatter()
+        {
+            defaultFormatter.UserPrefix = ChatHistory.UserName;
+            defaultFormatter.BotPrefix = ChatHistory.BotName;
+            return defaultFormatter;
         }
     }
     /// <summary>
     /// Buffered chat memory
     /// </summary>
-    public class ChatBufferMemory : ChatMemory
+    public sealed class ChatBufferMemory : ChatMemory
     {
         public ChatBufferMemory() : base() { }
         public ChatBufferMemory(ChatHistory chatHistory) : base(chatHistory)
@@ -67,7 +65,7 @@ namespace Kurisu.UniChat.Memory
     /// <summary>
     /// Chat memory exclude user messages
     /// </summary>
-    public class ToolUseMemory : ChatMemory
+    public sealed class ToolUseMemory : ChatMemory
     {
         public ToolUseMemory() : base() { }
         public ToolUseMemory(ChatHistory chatHistory) : base(chatHistory)
@@ -85,11 +83,18 @@ namespace Kurisu.UniChat.Memory
                 if (message.Role != MessageRole.User) yield return message;
             }
         }
+        protected override MessageFormatter GetDefaultFormatter()
+        {
+            defaultFormatter.UserPrefix = "";
+            defaultFormatter.BotPrefix = "";
+            defaultFormatter.SystemPrefix = "";
+            return defaultFormatter;
+        }
     }
     /// <summary>
     /// Buffered chat memory with window
     /// </summary>
-    public class ChatWindowBufferMemory : ChatMemory
+    public sealed class ChatWindowBufferMemory : ChatMemory
     {
         /// <summary>
         /// Window size per role

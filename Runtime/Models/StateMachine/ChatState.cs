@@ -159,6 +159,7 @@ namespace Kurisu.UniChat.StateMachine
         }
         public void EncodeConditions(Ops ops, BertEncoder encoder)
         {
+            if (conditions.Length == 0) return;
             var pool = ListPool<string>.Get();
             foreach (var condition in conditions)
             {

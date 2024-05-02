@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Kurisu.UniChat.LLMs;
 namespace Kurisu.UniChat
 {
     public interface ILLMResponse
@@ -38,6 +39,11 @@ namespace Kurisu.UniChat
         /// </summary>
         /// <value></value>
         IEnumerable<IMessage> Messages { get; }
+        /// <summary>
+        /// The formatter of request
+        /// </summary>
+        /// <value></value>
+        MessageFormatter Formatter { get; }
     }
     public interface ITranslator
     {

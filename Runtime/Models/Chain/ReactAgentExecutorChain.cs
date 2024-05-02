@@ -4,7 +4,6 @@ using Cysharp.Threading.Tasks;
 using System.Linq;
 using Kurisu.UniChat.Tools;
 using static Kurisu.UniChat.Chains.Chain;
-using Kurisu.UniChat.LLMs;
 using Kurisu.UniChat.Memory;
 namespace Kurisu.UniChat.Chains
 {
@@ -40,7 +39,6 @@ Thought:{history}";
         private readonly ILargeLanguageModel _model;
         private readonly string _reactPrompt;
         private readonly int _maxActions;
-        private readonly MessageFormatter _messageFormatter;
         private readonly ChatHistory chatHistory;
         private readonly ChatMemory chatMemory;
         private bool verbose;
@@ -60,19 +58,9 @@ Thought:{history}";
             InputKeys = new[] { inputKey };
             OutputKeys = new[] { outputKey };
 
-            _messageFormatter = new MessageFormatter
-            {
-                BotPrefix = "",
-                UserPrefix = "",
-                SystemPrefix = ""
-            };
-
             chatHistory = new ChatHistory();
 
-            chatMemory = new ToolUseMemory(chatHistory)
-            {
-                Formatter = _messageFormatter
-            };
+            chatMemory = new ToolUseMemory(chatHistory);
         }
 
         private string _userInput = string.Empty;
