@@ -65,6 +65,10 @@ namespace Kurisu.UniChat.LLMs
             {
                 response = response.Replace(keyword, string.Empty);
             }
+            foreach (var keyword in GenParams.StopSequence)
+            {
+                response = response.Replace(keyword, string.Empty);
+            }
             return response.Trim();
         }
     }
