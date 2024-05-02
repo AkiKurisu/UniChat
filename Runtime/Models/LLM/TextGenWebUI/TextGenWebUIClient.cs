@@ -28,7 +28,7 @@ namespace Kurisu.UniChat.LLMs
             if (SetParamsFromFormatter)
             {
                 GenParams.StopStrings.Clear();
-                GenParams.StopStrings.Add($"\n{request.Formatter.UserPrefix} ");
+                GenParams.StopStrings.Add("\n");
                 GenParams.StopStrings.Add($"{request.Formatter.UserPrefix}:");
                 GenParams.StopStrings.Add($"{request.Formatter.UserPrefix}：");
                 GenParams.ReplaceKey.Clear();

@@ -48,6 +48,7 @@ namespace Kurisu.UniChat.LLMs
         public bool Frmttriminc { get; set; }
         [JsonProperty("stop_sequence")]
         public List<string> StopSequence { get; set; } = new List<string>() { "You:", "\nYou " };
+        public static string[] AlwaysReplaceKey = new string[] { "<|endoftext|>" };
         [JsonIgnore]
         public List<string> ReplaceKey { get; set; } = new List<string>() { "Bot:" };
         public string ToJson()

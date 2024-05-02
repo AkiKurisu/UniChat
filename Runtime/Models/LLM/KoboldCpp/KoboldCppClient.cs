@@ -26,9 +26,9 @@ namespace Kurisu.UniChat.LLMs
             if (SetParamsFromFormatter)
             {
                 GenParams.StopSequence.Clear();
+                GenParams.StopSequence.Add("\n");
                 GenParams.StopSequence.Add($"{request.Formatter.UserPrefix}:");
                 GenParams.StopSequence.Add($"{request.Formatter.UserPrefix}：");
-                GenParams.StopSequence.Add($"\n{request.Formatter.UserPrefix} ");
                 GenParams.ReplaceKey.Clear();
                 GenParams.ReplaceKey.Add($"{request.Formatter.BotPrefix}:");
                 GenParams.ReplaceKey.Add($"{request.Formatter.BotPrefix}：");
@@ -66,6 +66,10 @@ namespace Kurisu.UniChat.LLMs
                 response = response.Replace(keyword, string.Empty);
             }
             foreach (var keyword in GenParams.StopSequence)
+            {
+                response = response.Replace(keyword, string.Empty);
+            }
+            foreach (var keyword in KoboldGenParams.AlwaysReplaceKey)
             {
                 response = response.Replace(keyword, string.Empty);
             }
