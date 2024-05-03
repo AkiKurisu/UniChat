@@ -110,7 +110,7 @@ namespace Kurisu.UniChat.Chains
         public static DoChain SaveSession(
             ChatPipelineCtrl chatPipelineCtrl, string savePath = null)
         {
-            return new DoChain((e) => chatPipelineCtrl.SaveSession(string.IsNullOrEmpty(savePath) ? Path.Combine(PathUtil.SessionPath, $"Session_{chatPipelineCtrl.Memory.BotName}_{DateTime.Now:yyyyMMddHHmmssfff}.json") : savePath));
+            return new DoChain((e) => chatPipelineCtrl.SaveSession(string.IsNullOrEmpty(savePath) ? Path.Combine(PathUtil.SessionPath, $"Session_{chatPipelineCtrl.BotName}_{DateTime.Now:yyyyMMddHHmmssfff}.json") : savePath));
         }
     }
 

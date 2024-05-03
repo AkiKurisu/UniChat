@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using Kurisu.UniChat.LLMs;
 using Kurisu.UniChat.Memory;
@@ -72,27 +73,66 @@ namespace Kurisu.UniChat
         public const int Ollama = 3;
         public const int KoboldCpp = 4;
     }
-    public class ChatPipelineCtrl<TPipeline, KTable> : IDisposable
+    public static class SplitterFactory
+    {
+        public static ISplitter CreateSplitter(string splitter, string pattern)
+        {
+            Type splitterType = splitter switch
+            {
+                nameof(SlidingWindowSplitter) => typeof(SlidingWindowSplitter),
+                nameof(RegexSplitter) => typeof(RegexSplitter),
+                nameof(RecursiveCharacterTextSplitter) => typeof(RecursiveCharacterTextSplitter),
+                _ => throw new ArgumentOutOfRangeException(nameof(splitterType)),
+            };
+            if (!string.IsNullOrEmpty(pattern))
+                return JsonConvert.DeserializeObject(pattern, splitterType) as ISplitter;
+            else
+                return Activator.CreateInstance(splitterType) as ISplitter;
+        }
+    }
+    public static class MemoryFactory
+    {
+        public static ChatMemory CreateMemory(string memory, string pattern)
+        {
+            Type memoryType = memory switch
+            {
+                nameof(ChatBufferMemory) => typeof(ChatBufferMemory),
+                nameof(ChatWindowBufferMemory) => typeof(ChatWindowBufferMemory),
+                _ => throw new ArgumentOutOfRangeException(nameof(memoryType)),
+            };
+            if (!string.IsNullOrEmpty(pattern))
+                return JsonConvert.DeserializeObject(pattern, memoryType) as ChatMemory;
+            else
+                return Activator.CreateInstance(memoryType) as ChatMemory;
+        }
+    }
+    public class ChatPipelineCtrl<TPipeline, KTable> : IDisposable, IGenerator
     where TPipeline : ChatPipeline, new()
     where KTable : ISerializable, IEmbeddingTable, IPersistHandlerFactory<string>, new()
     {
-        public BertEncoder Encoder { get; protected set; }
+        #region Public Properties
         public ChatDataBase DataBase { get; protected set; }
         public KTable Table { get; protected set; }
         public ChatModelFile ChatFile { get; protected set; }
-        public ISplitter Splitter { get; protected set; }
-        public IGenerator Generator { get; protected set; }
-        public TPipeline Pipeline { get; protected set; }
         public ChatHistory History { get; } = new();
-        public ChatMemory Memory { get; protected set; }
-        public ILLMSettings LLMSettings { get; protected set; }
+        #endregion
+        //Properties that may change in pipeline ctrl lifetime scope
+        #region Protected Properties
+        protected BertEncoder Encoder { get; set; }
+        protected ISplitter Splitter { get; set; }
+        protected TPipeline Pipeline { get; set; }
+        protected ChatMemory Memory { get; set; }
+        protected ILLMSettings LLMSettings { get; set; }
+        #endregion
         public string Context { get => Memory.Context; set => Memory.Context = value; }
         public string UserName { get => Memory.UserName; set => Memory.UserName = value; }
         public string BotName { get => Memory.BotName; set => Memory.BotName = value; }
-        public event Action<InputGenerationRequest> OnCallGeneration;
-        private readonly Dictionary<int, IGenerator> generatorMap = new();
+        public Action<InputGenerationRequest> OnCallGeneration;
+        private readonly Dictionary<int, IChatModel> chatModelCache = new();
         private PipelineConfig config;
         private readonly ChatModelFactory chatModelFactory;
+        private bool isDirty;
+        private int generatorId = ChatGeneratorIds.Input;
         public ChatPipelineCtrl(ChatModelFile chatFile, ILLMSettings llmSettings)
         {
             ChatFile = chatFile;
@@ -113,39 +153,11 @@ namespace Kurisu.UniChat
             }
             LLMSettings = llmSettings;
             chatModelFactory = new ChatModelFactory(llmSettings);
-            Splitter = CreateSplitter(chatFile.splitter, chatFile.splitterPattern);
-            Generator = generatorMap[-1] = new InputGenerator(OnInputGeneration);
+            Splitter = SplitterFactory.CreateSplitter(chatFile.splitter, chatFile.splitterPattern);
             Assert.IsNotNull(Splitter);
-            Memory = CreateMemory(chatFile.memory, chatFile.memoryPattern);
+            Memory = MemoryFactory.CreateMemory(chatFile.memory, chatFile.memoryPattern);
             Assert.IsNotNull(Memory);
             Memory.ChatHistory = History;
-        }
-        public static ISplitter CreateSplitter(string splitter, string pattern)
-        {
-            Type splitterType = splitter switch
-            {
-                nameof(SlidingWindowSplitter) => typeof(SlidingWindowSplitter),
-                nameof(RegexSplitter) => typeof(RegexSplitter),
-                nameof(RecursiveCharacterTextSplitter) => typeof(RecursiveCharacterTextSplitter),
-                _ => throw new ArgumentOutOfRangeException(nameof(splitterType)),
-            };
-            if (!string.IsNullOrEmpty(pattern))
-                return JsonConvert.DeserializeObject(pattern, splitterType) as ISplitter;
-            else
-                return Activator.CreateInstance(splitterType) as ISplitter;
-        }
-        public static ChatMemory CreateMemory(string memory, string pattern)
-        {
-            Type memoryType = memory switch
-            {
-                nameof(ChatBufferMemory) => typeof(ChatBufferMemory),
-                nameof(ChatWindowBufferMemory) => typeof(ChatWindowBufferMemory),
-                _ => throw new ArgumentOutOfRangeException(nameof(memoryType)),
-            };
-            if (!string.IsNullOrEmpty(pattern))
-                return JsonConvert.DeserializeObject(pattern, memoryType) as ChatMemory;
-            else
-                return Activator.CreateInstance(memoryType) as ChatMemory;
         }
         /// <summary>
         /// Set and save splitter
@@ -156,6 +168,7 @@ namespace Kurisu.UniChat
             Splitter = splitter;
             ChatFile.splitter = splitter.GetType().Name;
             ChatFile.splitterPattern = JsonConvert.SerializeObject(splitter);
+            SetDirty(true);
         }
         /// <summary>
         /// Save and set memory
@@ -167,9 +180,10 @@ namespace Kurisu.UniChat
             Memory.ChatHistory = History;
             ChatFile.memory = memory.GetType().Name;
             ChatFile.memoryPattern = JsonConvert.SerializeObject(memory);
+            SetDirty(true);
         }
         /// <summary>
-        /// Initialize pipeline if change properties
+        /// Initialize pipeline
         /// </summary>
         /// <param name="config"></param>
         /// <returns></returns>
@@ -188,7 +202,7 @@ namespace Kurisu.UniChat
             Pipeline = new TPipeline()
                             .SetBackend(config.backendType)
                             .SetEncoder(Encoder)
-                            .SetGenerator(Generator)
+                            .SetGenerator(this)
                             .SetMemory(Memory)
                             .SetSource(Table)
                             .SetEmbedding(DataBase)
@@ -196,15 +210,28 @@ namespace Kurisu.UniChat
                             .SetTemperature(config.outputThreshold)
                             .SetVerbose(config.verbose)
                             .SetFilter(new TopSimilarityFilter(config.inputThreshold)) as TPipeline;
+            SetDirty(false);
         }
-        public void ReleasePipeline()
+        /// <summary>
+        /// Reinitialize pipeline if property changed
+        /// </summary>
+        /// <param name="config"></param>
+        public async UniTask ReinitializeIfNeed()
         {
-            Pipeline?.Dispose();
-            Pipeline = null;
+            if (!isDirty) return;
+            await InitializePipeline(config);
+        }
+        /// <summary>
+        /// Set dirty flag to notify pipeline need reinitialize
+        /// </summary>
+        /// <param name="isDirty"></param>
+        public void SetDirty(bool isDirty)
+        {
+            this.isDirty = isDirty;
         }
         public void Dispose()
         {
-            ReleasePipeline();
+            Pipeline?.Dispose();
             Encoder?.Dispose();
             DataBase?.Dispose();
         }
@@ -214,6 +241,7 @@ namespace Kurisu.UniChat
         /// <returns></returns>
         public async UniTask<GenerateContext> RunPipeline()
         {
+            await ReinitializeIfNeed();
             var pool = ListPool<string>.Get();
             Splitter.Split(Memory.GetMemoryContext(), pool);
             var context = new GenerateContext(pool);
@@ -234,6 +262,7 @@ namespace Kurisu.UniChat
         /// <returns></returns>
         public async UniTask<GenerateContext> RunPipeline(string input)
         {
+            await ReinitializeIfNeed();
             var pool = ListPool<string>.Get();
             History.AppendUserMessage(input);
             Splitter.Split(Memory.GetMemoryContext(), pool);
@@ -251,17 +280,14 @@ namespace Kurisu.UniChat
             }
         }
         /// <summary>
-        /// Change pipeline generator
+        /// Change generator mode
         /// </summary>
         /// <param name="generatorId"></param>
-        /// <param name="forceNewGenerator"></param>
-        public void SwitchGenerator(int generatorId, bool forceNewGenerator)
+        /// <param name="forceNewChatModel"></param>
+        public void SwitchGenerator(int generatorId, bool forceNewChatModel)
         {
-            if (generatorId == ChatGeneratorIds.Input)
-            {
-                Generator = generatorMap[-1];
-            }
-            else
+            this.generatorId = generatorId;
+            if (generatorId >= 0)
             {
                 var llmType = generatorId switch
                 {
@@ -272,11 +298,10 @@ namespace Kurisu.UniChat
                     _ => throw new ArgumentOutOfRangeException()
                 };
                 int id = (int)llmType;
-                if (forceNewGenerator || !generatorMap.TryGetValue(id, out var generator))
+                if (forceNewChatModel || !chatModelCache.ContainsKey(id))
                 {
-                    generator = generatorMap[id] = new LLMGenerator(chatModelFactory.CreateChatModel(llmType), Memory);
+                    chatModelCache[id] = chatModelFactory.CreateChatModel(llmType);
                 }
-                Generator = generator;
             }
         }
         private UniTaskCompletionSource<bool> OnInputGeneration(GenerateContext generateContext)
@@ -284,6 +309,27 @@ namespace Kurisu.UniChat
             var request = new InputGenerationRequest(generateContext);
             OnCallGeneration?.Invoke(request);
             return request.waitSource;
+        }
+        /// <summary>
+        /// Generate content directly
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public async UniTask<bool> Generate(GenerateContext context, CancellationToken ct)
+        {
+            try
+            {
+                if (generatorId == ChatGeneratorIds.Input) return await OnInputGeneration(context).Task;
+                var llmData = await chatModelCache[generatorId].GenerateAsync(Memory, ct);
+                context.generatedContent = llmData.Response;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError(ex.Message);
+                return false;
+            }
         }
         /// <summary>
         /// Save chat model
@@ -344,7 +390,8 @@ namespace Kurisu.UniChat
                 Debug.LogWarning("Pipeline should be initialized before embedding session");
                 return false;
             }
-            memory ??= CreateMemory(ChatFile.memory, ChatFile.memoryPattern);
+            await ReinitializeIfNeed();
+            memory ??= MemoryFactory.CreateMemory(ChatFile.memory, ChatFile.memoryPattern);
             memory.ChatHistory = new();
             memory.Context = Context;
             memory.BotName = BotName;
