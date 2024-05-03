@@ -67,11 +67,11 @@ namespace Kurisu.UniChat
     }
     public static class ChatGeneratorIds
     {
-        public const int Input = 0;
-        public const int OpenAI = 1;
-        public const int TextGenWebUI = 2;
-        public const int Ollama = 3;
-        public const int KoboldCpp = 4;
+        public const uint Input = 0;
+        public const uint OpenAI = 1;
+        public const uint TextGenWebUI = 2;
+        public const uint Ollama = 3;
+        public const uint KoboldCpp = 4;
     }
     public static class SplitterFactory
     {
@@ -128,11 +128,11 @@ namespace Kurisu.UniChat
         public string UserName { get => Memory.UserName; set => Memory.UserName = value; }
         public string BotName { get => Memory.BotName; set => Memory.BotName = value; }
         public Action<InputGenerationRequest> OnCallGeneration;
-        private readonly Dictionary<int, IChatModel> chatModelCache = new();
+        private readonly Dictionary<uint, IChatModel> chatModelCache = new();
         private PipelineConfig config;
         private readonly ChatModelFactory chatModelFactory;
         private bool isDirty;
-        private int generatorId = ChatGeneratorIds.Input;
+        private uint generatorId = ChatGeneratorIds.Input;
         public ChatPipelineCtrl(ChatModelFile chatFile, ILLMSettings llmSettings)
         {
             ChatFile = chatFile;
@@ -284,7 +284,7 @@ namespace Kurisu.UniChat
         /// </summary>
         /// <param name="generatorId"></param>
         /// <param name="forceNewChatModel"></param>
-        public void SwitchGenerator(int generatorId, bool forceNewChatModel)
+        public void SwitchGenerator(uint generatorId, bool forceNewChatModel)
         {
             this.generatorId = generatorId;
             if (generatorId > ChatGeneratorIds.Input)
@@ -297,7 +297,7 @@ namespace Kurisu.UniChat
                     ChatGeneratorIds.KoboldCpp => LLMType.KoboldCpp,
                     _ => throw new ArgumentOutOfRangeException(nameof(generatorId))
                 };
-                int id = (int)llmType;
+                uint id = (uint)llmType;
                 if (forceNewChatModel || !chatModelCache.ContainsKey(id))
                 {
                     chatModelCache[id] = chatModelFactory.CreateChatModel(llmType);
