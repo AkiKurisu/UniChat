@@ -287,7 +287,7 @@ namespace Kurisu.UniChat
         public void SwitchGenerator(int generatorId, bool forceNewChatModel)
         {
             this.generatorId = generatorId;
-            if (generatorId >= 0)
+            if (generatorId > ChatGeneratorIds.Input)
             {
                 var llmType = generatorId switch
                 {
@@ -295,7 +295,7 @@ namespace Kurisu.UniChat
                     ChatGeneratorIds.TextGenWebUI => LLMType.TextGenWebUI,
                     ChatGeneratorIds.Ollama => LLMType.Ollama_Chat,
                     ChatGeneratorIds.KoboldCpp => LLMType.KoboldCpp,
-                    _ => throw new ArgumentOutOfRangeException()
+                    _ => throw new ArgumentOutOfRangeException(nameof(generatorId))
                 };
                 int id = (int)llmType;
                 if (forceNewChatModel || !chatModelCache.ContainsKey(id))
