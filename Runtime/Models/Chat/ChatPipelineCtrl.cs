@@ -122,7 +122,6 @@ namespace Kurisu.UniChat
         protected ISplitter Splitter { get; set; }
         protected TPipeline Pipeline { get; set; }
         protected ChatMemory Memory { get; set; }
-        protected ILLMSettings LLMSettings { get; set; }
         #endregion
         public string Context { get => Memory.Context; set => Memory.Context = value; }
         public string UserName { get => Memory.UserName; set => Memory.UserName = value; }
@@ -151,7 +150,6 @@ namespace Kurisu.UniChat
             {
                 Table.Load(tablePath);
             }
-            LLMSettings = llmSettings;
             chatModelFactory = new ChatModelFactory(llmSettings);
             Splitter = SplitterFactory.CreateSplitter(chatFile.splitter, chatFile.splitterPattern);
             Assert.IsNotNull(Splitter);
@@ -297,10 +295,9 @@ namespace Kurisu.UniChat
                     ChatGeneratorIds.KoboldCpp => LLMType.KoboldCpp,
                     _ => throw new ArgumentOutOfRangeException(nameof(generatorId))
                 };
-                uint id = (uint)llmType;
-                if (forceNewChatModel || !chatModelCache.ContainsKey(id))
+                if (forceNewChatModel || !chatModelCache.ContainsKey(generatorId))
                 {
-                    chatModelCache[id] = chatModelFactory.CreateChatModel(llmType);
+                    chatModelCache[generatorId] = chatModelFactory.CreateChatModel(llmType);
                 }
             }
         }
