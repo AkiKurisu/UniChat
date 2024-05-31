@@ -42,17 +42,24 @@ namespace Kurisu.UniChat.StateMachine.Editor
             fileName = EditorGUILayout.TextField(new GUIContent("File Name"), fileName);
             m_ScrollPosition = BeginVerticalScrollView(m_ScrollPosition, false, GUI.skin.verticalScrollbar, "OL Box");
             DrawModel();
+            if (graphCtrl.Update())
+            {
+                targetObject.Update();
+            }
             EditorGUILayout.EndScrollView();
             GUILayout.FlexibleSpace();
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Load"))
             {
-                path = EditorUtility.OpenFilePanel("Select fsm bytes file", Application.dataPath, "bytes");
-                if (string.IsNullOrEmpty(path)) return;
-                fileName = Path.GetFileNameWithoutExtension(path);
-                graphCtrl.Load(path);
-                targetObject.Update();
-                Debug.Log($"Load fsm from {path}");
+                var newPath = EditorUtility.OpenFilePanel("Select fsm bytes file", Application.dataPath, "bytes");
+                if (!string.IsNullOrEmpty(newPath))
+                {
+                    path = newPath;
+                    fileName = Path.GetFileNameWithoutExtension(path);
+                    graphCtrl.Load(path);
+                    targetObject.Update();
+                    Debug.Log($"Load fsm from {path}");
+                }
             }
             if (GUILayout.Button("New"))
             {

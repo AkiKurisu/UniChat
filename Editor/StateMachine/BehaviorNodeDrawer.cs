@@ -38,8 +38,7 @@ namespace Kurisu.UniChat.StateMachine.Editor
                     reference.stringValue = selectType != null ? SerializedType.ToString(selectType) : NullType;
                     if (selectType != null)
                     {
-                        var wrapper = SerializedBehaviorUtils.Wrap(Activator.CreateInstance(selectType));
-                        container.objectReferenceValue = wrapper;
+                        container.objectReferenceValue = SerializedBehaviorUtils.Wrap(Activator.CreateInstance(selectType));
                     }
                     else
                     {

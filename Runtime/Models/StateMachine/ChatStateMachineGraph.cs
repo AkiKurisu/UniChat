@@ -1,9 +1,37 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Newtonsoft.Json;
 using UnityEngine;
 namespace Kurisu.UniChat.StateMachine
 {
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
+    public class FormerlySerializedTypeAttribute : Attribute
+    {
+        private readonly string m_oldSerializedType;
+
+        public string OldSerializedType => m_oldSerializedType;
+        public FormerlySerializedTypeAttribute(string oldSerializedType)
+        {
+            m_oldSerializedType = oldSerializedType;
+        }
+    }
+    public static class BehaviorUpdater
+    {
+        private static Dictionary<string, Type> updatableType;
+        private static void Initialize()
+        {
+            updatableType = AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
+                                    .Where(x => x.IsSubclassOf(typeof(ChatStateMachineBehavior)) && x.GetCustomAttribute<FormerlySerializedTypeAttribute>() != null)
+                                    .ToDictionary(x => x.GetCustomAttribute<FormerlySerializedTypeAttribute>().OldSerializedType, x => x);
+        }
+        public static bool TryGetUpdateType(string stringType, out Type type)
+        {
+            if (updatableType == null) Initialize();
+            return updatableType.TryGetValue(stringType, out type);
+        }
+    }
     [Serializable]
     public class ChatStateMachineGraph
     {
@@ -35,11 +63,16 @@ namespace Kurisu.UniChat.StateMachine
                 var behaviorType = SerializedType.FromString(serializedType);
                 if (behaviorType == null)
                 {
-                    behaviorType = typeof(InvalidStateMachineBehavior);
-                    string missingType = serializedType;
-                    serializedType = SerializedType.ToString(behaviorType);
-                    Debug.LogWarning($"Missing type {missingType} when deserialize {nameof(ChatStateMachineBehavior)}");
-                    return new InvalidStateMachineBehavior() { missingType = missingType, serializedData = jsonData };
+                    if (!BehaviorUpdater.TryGetUpdateType(serializedType, out Type updateType))
+                    {
+                        behaviorType = typeof(InvalidStateMachineBehavior);
+                        string missingType = serializedType;
+                        serializedType = SerializedType.ToString(behaviorType);
+                        Debug.LogWarning($"Missing type {missingType} when deserialize {nameof(ChatStateMachineBehavior)}");
+                        return new InvalidStateMachineBehavior() { missingType = missingType, serializedData = jsonData };
+                    }
+                    serializedType = SerializedType.ToString(updateType);
+                    behaviorType = updateType;
                 }
                 return JsonConvert.DeserializeObject(jsonData, behaviorType) as ChatStateMachineBehavior;
             }
