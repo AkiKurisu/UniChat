@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-namespace Kurisu.UniChat
+namespace UniChat
 {
     public interface ISplitter
     {

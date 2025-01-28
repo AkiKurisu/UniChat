@@ -1,6 +1,6 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
-namespace Kurisu.UniChat
+namespace UniChat
 {
     public interface IGenerator
     {

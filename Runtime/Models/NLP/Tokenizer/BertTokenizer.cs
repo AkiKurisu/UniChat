@@ -8,7 +8,7 @@ using HuggingFace.SharpTransformers.PreTokenizers;
 using HuggingFace.SharpTransformers.Tokenizers;
 using HuggingFace.SharpTransformers.PostProcessors;
 using Newtonsoft.Json;
-namespace Kurisu.UniChat.NLP
+namespace UniChat.NLP
 {
     //Modified from https://thomassimonini.substack.com/p/create-an-ai-robot-npc-using-hugging?r=dq5fg&utm_campaign=post&utm_medium=web
     public class BertTokenizer

@@ -1,27 +1,31 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Kurisu.UniChat.Memory;
+using UniChat.Memory;
 using UnityEngine;
-namespace Kurisu.UniChat
+
+namespace UniChat
 {
     /// <summary>
     /// Use llm to generate contents
     /// </summary>
     public class LLMGenerator : IGenerator
     {
-        private readonly IChatModel llm;
-        private readonly ChatMemory memory;
-        public LLMGenerator(IChatModel llm, ChatMemory memory) : base()
+        private readonly IChatModel _llm;
+        
+        private readonly ChatMemory _memory;
+        
+        public LLMGenerator(IChatModel llm, ChatMemory memory)
         {
-            this.memory = memory;
-            this.llm = llm;
+            _memory = memory;
+            _llm = llm;
         }
+        
         public async UniTask<bool> Generate(GenerateContext context, CancellationToken ct)
         {
             try
             {
-                var llmData = await llm.GenerateAsync(memory, ct);
+                var llmData = await _llm.GenerateAsync(_memory, ct);
                 context.generatedContent = llmData.Response;
                 return true;
             }

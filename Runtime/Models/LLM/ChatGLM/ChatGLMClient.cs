@@ -4,7 +4,7 @@ using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Networking;
-namespace Kurisu.UniChat.LLMs
+namespace UniChat.LLMs
 {
     /// <summary>
     /// Use ChatGLM with Normal API to generate text

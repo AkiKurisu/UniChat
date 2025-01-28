@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
-namespace Kurisu.UniChat.LLMs
+namespace UniChat.LLMs
 {
     public class TextGenWebUICompletionResponse
     {

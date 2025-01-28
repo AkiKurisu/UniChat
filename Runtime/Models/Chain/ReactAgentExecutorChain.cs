@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using System.Linq;
-using Kurisu.UniChat.Tools;
-using static Kurisu.UniChat.Chains.Chain;
-using Kurisu.UniChat.Memory;
-namespace Kurisu.UniChat.Chains
+using static UniChat.Chains.Chain;
+using UniChat.Memory;
+using UniChat.Tools;
+
+namespace UniChat.Chains
 {
     //See https://github.com/langchain-ai/langchain/blob/master/libs/langchain/langchain/agents/agent.py
     public class ReActAgentExecutorChain : StackableChain

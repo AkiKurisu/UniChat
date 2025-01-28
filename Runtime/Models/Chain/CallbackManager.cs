@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-namespace Kurisu.UniChat.Chains
+namespace UniChat.Chains
 {
     public class CallbackManagerForChainRun : ParentRunManager, IChainRunner<CallbackManagerForChainRun>
     {

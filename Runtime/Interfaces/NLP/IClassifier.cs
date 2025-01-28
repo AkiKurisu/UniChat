@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using Unity.Sentis;
-namespace Kurisu.UniChat
+namespace UniChat
 {
     /// <summary>
     /// Classifier returns label from input, and can act as encoder

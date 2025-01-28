@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 using UnityEngine;
-namespace Kurisu.UniChat
+namespace UniChat
 {
     //	Copyright (c) 2012 Calvin Rien
     //        http://the.darktable.com

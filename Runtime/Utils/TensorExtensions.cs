@@ -3,7 +3,7 @@ using UnityEngine;
 using Unity.Sentis;
 using UnityEngine.Pool;
 using Cysharp.Threading.Tasks;
-namespace Kurisu.UniChat
+namespace UniChat
 {
     public static class TensorExtensions
     {

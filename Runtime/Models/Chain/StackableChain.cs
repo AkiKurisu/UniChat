@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine.Assertions;
-namespace Kurisu.UniChat.Chains
+namespace UniChat.Chains
 {
     public abstract class StackableChain : IChain
     {

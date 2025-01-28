@@ -1,7 +1,8 @@
 using System;
 using Cysharp.Threading.Tasks;
-using Kurisu.UniChat.Chains;
-namespace Kurisu.UniChat.Tools
+using UniChat.Chains;
+
+namespace UniChat.Tools
 {
     public class AgentExecutorChain : StackableChain
     {

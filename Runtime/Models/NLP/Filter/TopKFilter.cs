@@ -1,7 +1,7 @@
 using Unity.Collections;
 using Unity.Sentis;
 using UnityEngine;
-namespace Kurisu.UniChat.NLP
+namespace UniChat.NLP
 {
     public class TopKFilter : IFilter
     {

@@ -6,7 +6,7 @@ using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
-namespace Kurisu.UniChat.Editor.ChatModel
+namespace UniChat.Editor.ChatModel
 {
     public class ChatModelEditorWindow : EditorWindow
     {

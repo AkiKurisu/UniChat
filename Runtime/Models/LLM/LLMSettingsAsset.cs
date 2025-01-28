@@ -1,6 +1,6 @@
 using System;
 using UnityEngine;
-namespace Kurisu.UniChat.LLMs
+namespace UniChat.LLMs
 {
         public interface ILLMSettings
         {

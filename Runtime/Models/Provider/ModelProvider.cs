@@ -8,47 +8,59 @@ using System.Collections.Generic;
 #if ADDRESSABLES_INSTALL
 using UnityEngine.AddressableAssets;
 #endif
-namespace Kurisu.UniChat
+namespace UniChat
 {
     public abstract class ModelProvider
     {
         public abstract UniTask<Model> LoadModel(string path);
+        
         public abstract UniTask<string> LoadTokenizer(string path);
+        
         public const string UserDataProvider = "UserDataProvider";
+        
         public const string StreamingAssetsProvider = "StreamingAssetsProvider";
+        
         public const string ResourcesProvider = "ResourcesProvider";
+        
         public const string AddressableProvider = "AddressableProvider";
     }
+    
     public class ModelProviderFactory
     {
-        public readonly Dictionary<string, Func<ModelProvider>> providerMap = new();
-        private static ModelProviderFactory instance;
-        public static ModelProviderFactory Instance => instance ??= new();
-        public ModelProviderFactory()
+        public readonly Dictionary<string, Func<ModelProvider>> ProviderMap = new();
+        
+        private static ModelProviderFactory _instance;
+        
+        public static ModelProviderFactory Instance => _instance ??= new ModelProviderFactory();
+
+        private ModelProviderFactory()
         {
-            providerMap.Add(ModelProvider.UserDataProvider, () => new FileModelProvider());
-            providerMap.Add(ModelProvider.StreamingAssetsProvider, () => new FileModelProvider() { FromStreamingAssets = true });
-            providerMap.Add(ModelProvider.ResourcesProvider, () => new ResourcesModelProvider());
+            ProviderMap.Add(ModelProvider.UserDataProvider, () => new FileModelProvider());
+            ProviderMap.Add(ModelProvider.StreamingAssetsProvider, () => new FileModelProvider() { FromStreamingAssets = true });
+            ProviderMap.Add(ModelProvider.ResourcesProvider, () => new ResourcesModelProvider());
 #if ADDRESSABLES_INSTALL
-            providerMap.Add(ModelProvider.AddressableProvider, () => new AddressableModelProvider());
+            ProviderMap.Add(ModelProvider.AddressableProvider, () => new AddressableModelProvider());
 #endif
         }
+        
         public ModelProvider Create(string providerType)
         {
-            if (!providerMap.TryGetValue(providerType, out var provider))
+            if (!ProviderMap.TryGetValue(providerType, out var provider))
             {
                 throw new InvalidOperationException("Invalid provider type: " + providerType);
             }
             return provider();
         }
     }
+    
     public class FileModelProvider : ModelProvider
     {
         /// <summary>
         /// Loading mode will be different in android platform when using stream assets path
         /// </summary>
         /// <value></value>
-        public bool FromStreamingAssets { get; set; } = false;
+        public bool FromStreamingAssets { get; set; }
+        
         public override async UniTask<Model> LoadModel(string path)
         {
             path = Path.Combine(PathUtil.ModelPath, path);
@@ -65,6 +77,7 @@ namespace Kurisu.UniChat
                 return ModelLoader.Load(path);
             }
         }
+        
         public override async UniTask<string> LoadTokenizer(string path)
         {
             path = Path.Combine(PathUtil.ModelPath, path);
@@ -74,12 +87,11 @@ namespace Kurisu.UniChat
                 await www.SendWebRequest().ToUniTask();
                 return www.downloadHandler.text;
             }
-            else
-            {
-                return await File.ReadAllTextAsync(path).AsUniTask();
-            }
+
+            return await File.ReadAllTextAsync(path).AsUniTask();
         }
     }
+    
     public class ResourcesModelProvider : ModelProvider
     {
         public override async UniTask<Model> LoadModel(string path)
@@ -89,9 +101,10 @@ namespace Kurisu.UniChat
 
         public override async UniTask<string> LoadTokenizer(string path)
         {
-            return (await Resources.LoadAsync<TextAsset>(path).ToUniTask() as TextAsset).text;
+            return ((TextAsset)await Resources.LoadAsync<TextAsset>(path).ToUniTask()).text;
         }
     }
+    
 #if ADDRESSABLES_INSTALL
     public class AddressableModelProvider : ModelProvider
     {

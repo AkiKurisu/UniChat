@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-namespace Kurisu.UniChat.NLP
+namespace UniChat.NLP
 {
     public class RegexSplitter : ISplitter
     {

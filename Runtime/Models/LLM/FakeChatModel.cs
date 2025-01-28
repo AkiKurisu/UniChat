@@ -1,6 +1,6 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
-namespace Kurisu.UniChat.LLMs
+namespace UniChat.LLMs
 {
     /// <summary>
     /// A fake chat model for debug purpose

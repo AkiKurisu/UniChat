@@ -1,5 +1,5 @@
 using Newtonsoft.Json;
-namespace Kurisu.UniChat.LLMs
+namespace UniChat.LLMs
 {
     public class OllamaCompletionResponse
     {

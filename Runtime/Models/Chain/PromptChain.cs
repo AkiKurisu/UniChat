@@ -1,8 +1,9 @@
 using System;
 using System.Linq;
 using Cysharp.Threading.Tasks;
-using Kurisu.UniChat.LLMs;
-namespace Kurisu.UniChat.Chains
+using UniChat.LLMs;
+
+namespace UniChat.Chains
 {
     public class PromptChain : StackableChain
     {

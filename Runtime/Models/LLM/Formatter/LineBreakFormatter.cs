@@ -1,4 +1,4 @@
-namespace Kurisu.UniChat.LLMs
+namespace UniChat.LLMs
 {
     public class LineBreakFormatter
     {

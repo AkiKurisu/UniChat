@@ -3,17 +3,24 @@ using UnityEditor;
 using System;
 using Unity.Sentis;
 using System.Collections.Generic;
-namespace Kurisu.UniChat.Editor.ChatModel
+namespace UniChat.Editor.ChatModel
 {
     public class ChatGraphViewer : EditorWindow
     {
         private Texture2D image;
+        
         private ChatGraph.Edge[] edges;
-        private Vector2[] data = new Vector2[0];
+        
+        private Vector2[] data = Array.Empty<Vector2>();
+        
         public Action<ChatGraph.Edge?> OnSelectEdge;
+        
         private string graphPath;
+        
         private int? selectId;
+        
         private static readonly Dictionary<string, ChatGraphViewer> map = new();
+        
         public static ChatGraphViewer CreateWindow(string graphPath)
         {
             if (!map.TryGetValue(graphPath, out ChatGraphViewer window))
@@ -24,20 +31,24 @@ namespace Kurisu.UniChat.Editor.ChatModel
             window.LoadGraph(graphPath);
             return window;
         }
+        
         private void OnEnable()
         {
             image = Resources.Load<Texture2D>("graph-point");
         }
+        
         private void OnDisable()
         {
             OnSelectEdge = null;
             if (map.TryGetValue(graphPath, out var viewer) && viewer == this)
                 map.Remove(graphPath);
         }
+        
         private void OnGUI()
         {
             DrawGraph();
         }
+        
         public void LoadGraph(string graphPath)
         {
             this.graphPath = graphPath;

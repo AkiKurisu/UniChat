@@ -1,6 +1,6 @@
 using System;
 using Cysharp.Threading.Tasks;
-namespace Kurisu.UniChat.Chains
+namespace UniChat.Chains
 {
     public class SetChain : StackableChain
     {

@@ -8,7 +8,7 @@ using UnityEngine;
 using System.Linq;
 using UnityEngine.Networking;
 using UnityEngine.Pool;
-namespace Kurisu.UniChat.LLMs
+namespace UniChat.LLMs
 {
     /// <summary>
     /// Model list see https://ollama.com/library

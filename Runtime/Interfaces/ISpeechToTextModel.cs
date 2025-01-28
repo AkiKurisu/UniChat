@@ -1,10 +1,8 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-#if WHISPER_INSTALL
 using Whisper.Utils;
-#endif
-namespace Kurisu.UniChat
+namespace UniChat
 {
     public interface ISpeechToTextModel
     {
@@ -25,7 +23,6 @@ namespace Kurisu.UniChat
         public float[] samples;
         public int frequency;
         public int channels;
-#if WHISPER_INSTALL
 
         public static implicit operator SpeechToTextRequest(AudioChunk audioChunk)
         {
@@ -36,7 +33,6 @@ namespace Kurisu.UniChat
                 channels = audioChunk.Channels,
             };
         }
-#endif
         public static implicit operator SpeechToTextRequest(AudioClip audioClip)
         {
             var samples = new float[audioClip.samples * audioClip.channels];

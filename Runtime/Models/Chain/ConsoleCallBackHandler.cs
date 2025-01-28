@@ -4,7 +4,7 @@ using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Linq;
 using UnityEngine;
-namespace Kurisu.UniChat.Chains
+namespace UniChat.Chains
 {
     public class ConsoleCallbackHandler : Tracer
     {

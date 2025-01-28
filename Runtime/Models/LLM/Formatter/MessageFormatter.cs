@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-namespace Kurisu.UniChat.LLMs
+namespace UniChat.LLMs
 {
     public class MessageFormatter
     {

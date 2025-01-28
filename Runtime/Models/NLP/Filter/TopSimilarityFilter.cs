@@ -1,6 +1,6 @@
 using Unity.Collections;
 using Unity.Sentis;
-namespace Kurisu.UniChat.NLP
+namespace UniChat.NLP
 {
     /// <summary>
     /// Filter id with top sentence similarity

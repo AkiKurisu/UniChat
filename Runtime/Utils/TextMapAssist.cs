@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using Cysharp.Threading.Tasks;
 using System.Linq;
-namespace Kurisu.UniChat
+namespace UniChat
 {
     public abstract class TextCache
     {

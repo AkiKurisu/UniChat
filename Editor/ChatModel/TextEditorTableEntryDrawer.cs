@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEditor;
-namespace Kurisu.UniChat.Editor.ChatModel
+namespace UniChat.Editor.ChatModel
 {
     [CustomPropertyDrawer(typeof(TextEditorTable.AudioInfo))]
     public class TextEditorTableAudioInfoDrawer : PropertyDrawer

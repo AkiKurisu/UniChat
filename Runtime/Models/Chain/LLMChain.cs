@@ -1,12 +1,14 @@
 using System;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-namespace Kurisu.UniChat.Chains
+namespace UniChat.Chains
 {
     public class LLMChain : StackableChain
     {
         private readonly ILargeLanguageModel _llm;
-        private bool verbose;
+        
+        private bool _verbose;
+        
         public LLMChain(
             ILargeLanguageModel llm,
             string inputKey = "prompt",
@@ -26,7 +28,7 @@ namespace Kurisu.UniChat.Chains
             ILLMResponse response;
             if (promptObject is string prompt)
             {
-                if (verbose) Debug.Log($"LLM request: {prompt}");
+                if (_verbose) Debug.Log($"LLM request: {prompt}");
                 response = await _llm.GenerateAsync(prompt, default);
                 values.Value[OutputKeys[0]] = response.Response;
             }
@@ -35,12 +37,13 @@ namespace Kurisu.UniChat.Chains
                 throw new ArgumentException(nameof(promptObject));
             }
 
-            if (verbose) Debug.Log($"LLM response: {response.Response}");
+            if (_verbose) Debug.Log($"LLM response: {response.Response}");
             return values;
         }
+        
         public LLMChain Verbose(bool verbose)
         {
-            this.verbose = verbose;
+            _verbose = verbose;
             return this;
         }
     }

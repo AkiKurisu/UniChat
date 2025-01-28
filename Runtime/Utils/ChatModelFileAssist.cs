@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
-namespace Kurisu.UniChat
+namespace UniChat
 {
     public class ChatModelFileAssist
     {

@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.Pool;
-namespace Kurisu.UniChat.LLMs
+namespace UniChat.LLMs
 {
     public class OpenAIModels
     {

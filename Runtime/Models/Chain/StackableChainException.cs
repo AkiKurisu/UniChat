@@ -1,5 +1,5 @@
 using System;
-namespace Kurisu.UniChat.Chains
+namespace UniChat.Chains
 {
     public class StackableChainException : Exception
     {

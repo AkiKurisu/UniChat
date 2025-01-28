@@ -5,7 +5,7 @@ using Cysharp.Threading.Tasks;
 using Piper;
 using Unity.Sentis;
 using UnityEngine;
-namespace Kurisu.UniChat.TTS
+namespace UniChat.TTS
 {
     /// <summary>
     /// Modified from https://github.com/Macoron/piper.unity under GPL-3.0 license

@@ -2,8 +2,6 @@
 
 # UniChat
 
-[中文](README_zh.md) | [English](README.md)
-
 A pipeline for creating online and offline chat-bot in Unity.
 
 <img src="./Docs/Images/Icon.png" width="256"/>
@@ -44,24 +42,18 @@ Although chatting with AI is nothing new, in games, how to design a conversation
 
 Of course, if you use the online mode, `UniChat` also includes a chain toolkit based on [LangChain](https://github.com/langchain-ai/langchain) to quickly embed LLM and Agent in the game.
 
-The following is the flow chart of UniChat. In the `Local Inference` box are the functions that can be used offline:
-
-![Flow](./Docs/Images/UniChat.png)
-
 ## Install
 
 1. Add the following dependencies in `manifest.json`:
 ```json
 {
   "dependencies": {
-    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
-    "com.huggingface.sharp-transformers": "https://github.com/huggingface/sharp-transformers.git",
     "com.unity.addressables": "1.21.20",
     "com.unity.burst": "1.8.13",
     "com.unity.collections": "2.2.1",
     "com.unity.nuget.newtonsoft-json": "3.2.1",
     "com.unity.sentis": "1.3.0-pre.3",
-    "com.whisper.unity": "https://github.com/Macoron/whisper.unity.git?path=Packages/com.whisper.unity"
+    "com.cysharp.unitask": "2.5.3"
     }
 }
 ```
@@ -311,87 +303,6 @@ class SubClassifier(nn.Module):
 
 Game components are various tools that are combined with the dialogue function according to the specific game mechanism.
 
-### Chat StateMachine
-
-A stateMachine that switches States according to the chat content. StateMachine nesting (SubStateMachine) is not currently supported. Depending on the conversation, you can jump to different States and execute the corresponding set of behaviors, similar to Unity's animated state machine.
-
-1. Configure in code
-
-```C#
- public void BuildStateMachine()
-{
-    chatStateMachine = new ChatStateMachine(dim: 512);
-    chatStateMachineCtrl = new ChatStateMachineCtrl(
-        TextEncoder: encoder, 
-        //Input a host Unity.Object
-        hostObject: gameObject, 
-        layer: 1
-    );
-    chatStateMachine.AddState("Stand");
-    chatStateMachine.AddState("Sit");
-    chatStateMachine.states[0].AddBehavior<StandBehavior>();
-    chatStateMachine.states[0].AddTransition(new LazyStateReference("Sit"));
-    // Add a conversion directive and set scoring thresholds and conditions
-    chatStateMachine.states[0].transitions[0].AddCondition(ChatConditionMode.Greater, 0.6f, "I sit down");
-    chatStateMachine.states[0].transitions[0].AddCondition(ChatConditionMode.Greater, 0.6f, "I want to have a rest on chair");
-    chatStateMachine.states[1].AddBehavior<SitBehavior>();
-    chatStateMachine.states[1].AddTransition(new LazyStateReference("Stand"));
-    chatStateMachine.states[1].transitions[0].AddCondition(ChatConditionMode.Greater, 0.6f, "I'm well rested");
-    chatStateMachineCtrl.SetStateMachine(0, chatStateMachine);
-}
-```
-
-2. Configured in Editor Window and saved as a text file.
-
-![Configure in editor](./Docs/Images/edit-fsm.png)
-
-
-```C#
-public void LoadFromBytes(string bytesFilePath)
-{
-    chatStateMachineCtrl.Load(bytesFilePath);
-}
-```
-
-3. Customize ChatStateMachineBehavior.
-
-
-```C#
-public class CustomChatBehavior : ChatStateMachineBehavior
-{
-    private GameObject hostGameObject;
-    public override void OnStateMachineEnter(UnityEngine.Object hostObject)
-    {
-        //Get host Unity.Object
-        hostGameObject = hostObject as GameObject;
-    }
-    public override void OnStateEnter()
-    {
-       //Do something 
-    }
-    public override void OnStateUpdate()
-    {
-       //Do something 
-    }
-    public override void OnStateExit()
-    {
-       //Do something 
-    }
-}
-```
-
-4. Running the state machine after the core pipeline is run
-
-
-```C#
-private void RunStateMachineAfterPipeline()
-{
-    var chain = PipelineCtrl.ToChain().Input("Your question.").CastStringValue("stringValue") 
-                | new StateMachineChain(chatStateMachineCtrl, "stringValue");
-    await chain.Run();   
-}
-```
-
 ### Tool Use
 
 Invoke tools based on ReActAgent workflow.
@@ -439,18 +350,11 @@ See [Release](https://github.com/AkiKurisu/UniChat/releases) page
 Based on UniChat to make a similar application in Unity
 > The synchronized repository version is `V0.0.1-alpha`, the Demo is waiting to be updated.
 
-### Minimalist Demo Download
+### Demo Download
 
 ![Chat-View](./Docs/Images/chat-view.png)
 
 See [Release](https://github.com/AkiKurisu/UniChat/releases) page
-
-
-### Advanced Demo download
-
-![Demo Pro](./Docs/Images/demo-pro.png)
-
-It contains behavioral and voice components and is not yet available.
 
 ### Demo function description
 

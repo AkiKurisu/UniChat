@@ -6,8 +6,8 @@ using System.Reflection;
 using Cysharp.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
-using static Kurisu.UniChat.TextEmbeddingTable;
-namespace Kurisu.UniChat.Editor.ChatModel
+
+namespace UniChat.Editor.ChatModel
 {
     public class TextEditorTable : ScriptableObject
     {
@@ -15,62 +15,78 @@ namespace Kurisu.UniChat.Editor.ChatModel
         public class AudioInfo
         {
             public string infoText;
+            
             public string filePath;
+            
             public string fileName;
         }
+        
         [Serializable]
         public class Entry
         {
             public uint uniqueId;
+            
             [TextArea]
             public string stringValue;
+            
             public bool isEdit;
-            public readonly TextEmbeddingEntry internalEntry;
+            
+            public readonly TextEmbeddingTable.TextEmbeddingEntry InternalEntry;
+            
             public AudioInfo[] audioInfos;
-            public Entry(TextEmbeddingEntry internalEntry)
+            
+            public Entry(TextEmbeddingTable.TextEmbeddingEntry internalEntry)
             {
-                this.internalEntry = internalEntry;
+                InternalEntry = internalEntry;
                 uniqueId = internalEntry.uniqueId;
                 stringValue = internalEntry.stringValue;
             }
+            
             public void Update()
             {
-                internalEntry.stringValue = stringValue;
+                InternalEntry.stringValue = stringValue;
             }
         }
-        private readonly List<Entry> lastEntries = new();
+        
+        private readonly List<Entry> _lastEntries = new();
+        
         public List<Entry> tableEntries = new();
-        private TextEmbeddingTable internalTable;
-        private string path;
-        private AudioCache audioFileAssist;
+        
+        private TextEmbeddingTable _internalTable;
+        
+        private string _path;
+        
+        private AudioCache _audioFileAssist;
+        
         public void Initialize(TextEmbeddingTable internalTable, string path)
         {
-            this.path = path;
-            this.internalTable = internalTable;
-            audioFileAssist = AudioCache.CreateCache(Path.GetDirectoryName(path));
+            _path = path;
+            _internalTable = internalTable;
+            _audioFileAssist = AudioCache.CreateCache(Path.GetDirectoryName(path));
             tableEntries.Clear();
             tableEntries.AddRange(internalTable.tableEntries.Select(x => new Entry(x)
             {
-                audioInfos = audioFileAssist.GetPathAndSegments(x.uniqueId)
-                                            .Select(x => new AudioInfo()
+                audioInfos = _audioFileAssist.GetPathAndSegments(x.uniqueId)
+                                            .Select(x => new AudioInfo
                                             {
                                                 infoText = x.segment,
                                                 filePath = x.filePath,
                                                 fileName = Path.GetFileNameWithoutExtension(x.filePath)
                                             }).ToArray()
             }));
-            lastEntries.Clear();
-            lastEntries.AddRange(tableEntries);
+            _lastEntries.Clear();
+            _lastEntries.AddRange(tableEntries);
         }
+        
         public void Update()
         {
             tableEntries.ForEach(x => x.Update());
-            internalTable.tableEntries = tableEntries.Select(x => x.internalEntry).ToList();
-            File.Move(path, Path.Combine(Path.GetDirectoryName(path), $"backup_{Path.GetFileName(path)}"));
-            internalTable.Save(path);
-            lastEntries.ForEach(x => { if (!tableEntries.Contains(x)) audioFileAssist.Delate(x.uniqueId); });
-            lastEntries.Clear();
-            lastEntries.AddRange(tableEntries);
+            _internalTable.tableEntries = tableEntries.Select(x => x.InternalEntry).ToList();
+            File.Move(_path, Path.Combine(Path.GetDirectoryName(_path)!, $"backup_{Path.GetFileName(_path)}"));
+            _internalTable.Save(_path);
+            _lastEntries.ForEach(x => { if (!tableEntries.Contains(x)) _audioFileAssist.Delete(x.uniqueId); });
+            _lastEntries.Clear();
+            _lastEntries.AddRange(tableEntries);
         }
 
         public void Remove(uint uintValue)
@@ -80,18 +96,18 @@ namespace Kurisu.UniChat.Editor.ChatModel
 
         public async UniTask PlayAudio(uint id, int index)
         {
-            (AudioClip[] clips, string[] _) = await audioFileAssist.Load(id);
+            (AudioClip[] clips, string[] _) = await _audioFileAssist.Load(id);
             AudioUtil.PlayClip(clips[index]);
         }
     }
+    
     public static class AudioUtil
     {
-        public static readonly string PrefKey = Application.productName + "_NGD_AudioSavePath";
-        static readonly Dictionary<string, MethodInfo> methods = new();
+        private static readonly Dictionary<string, MethodInfo> Methods = new();
 
         static MethodInfo GetMethod(string methodName, Type[] argTypes)
         {
-            if (methods.TryGetValue(methodName, out MethodInfo method)) return method;
+            if (Methods.TryGetValue(methodName, out MethodInfo method)) return method;
 
             var asm = typeof(AudioImporter).Assembly;
             var audioUtil = asm.GetType("UnityEditor.AudioUtil");
@@ -104,7 +120,7 @@ namespace Kurisu.UniChat.Editor.ChatModel
 
             if (method != null)
             {
-                methods.Add(methodName, method);
+                Methods.Add(methodName, method);
             }
 
             return method;
@@ -115,7 +131,7 @@ namespace Kurisu.UniChat.Editor.ChatModel
         {
             if (!clip) return;
 #if UNITY_2020_1_OR_NEWER
-            var method = GetMethod("PlayPreviewClip", new Type[] { typeof(AudioClip), typeof(int), typeof(bool) });
+            var method = GetMethod("PlayPreviewClip", new[] { typeof(AudioClip), typeof(int), typeof(bool) });
             method.Invoke(null, new object[] { clip, 0, false });
 #else
             var method = GetMethod("PlayClip", new Type[] { typeof(AudioClip) });
