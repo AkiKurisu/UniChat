@@ -1,4 +1,3 @@
-#if WHISPER_INSTALL
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -6,7 +5,7 @@ using UnityEngine;
 using Whisper;
 using Whisper.Native;
 using Whisper.Utils;
-namespace Kurisu.UniChat.STT
+namespace UniChat.STT
 {
     public class WhisperModel : ISpeechToTextModel
     {
@@ -80,4 +79,3 @@ namespace Kurisu.UniChat.STT
         }
     }
 }
-#endif

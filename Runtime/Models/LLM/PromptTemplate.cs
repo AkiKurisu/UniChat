@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
-using Cysharp.Threading.Tasks;
 using System.IO;
 using Newtonsoft.Json;
-namespace Kurisu.UniChat.LLMs
+namespace UniChat.LLMs
 {
     public class PromptTemplate
     {

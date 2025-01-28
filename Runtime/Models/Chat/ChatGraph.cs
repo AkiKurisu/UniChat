@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-namespace Kurisu.UniChat
+namespace UniChat
 {
     /// <summary>
     /// Graph only stores text embeddings, which is enough for chat, question-answer tasks.

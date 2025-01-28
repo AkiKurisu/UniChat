@@ -1,4 +1,4 @@
-namespace Kurisu.UniChat
+namespace UniChat
 {
     public static class ChatMessageExtensions
     {

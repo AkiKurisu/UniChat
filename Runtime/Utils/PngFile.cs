@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-namespace Kurisu.UniChat
+namespace UniChat
 {
     public static class PngFile
     {

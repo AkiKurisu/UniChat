@@ -2,7 +2,7 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Sentis;
-namespace Kurisu.UniChat
+namespace UniChat
 {
     public static class XXHash
     {

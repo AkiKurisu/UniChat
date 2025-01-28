@@ -1,5 +1,5 @@
 using Unity.Collections;
-namespace Kurisu.UniChat
+namespace UniChat
 {
     public static class NativeExtensions
     {

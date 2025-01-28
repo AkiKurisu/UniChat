@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using Unity.Sentis;
-namespace Kurisu.UniChat
+namespace UniChat
 {
     /// <summary>
     /// Encoder returns embedding vector from inputs

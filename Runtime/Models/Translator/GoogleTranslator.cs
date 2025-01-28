@@ -3,7 +3,7 @@ using Newtonsoft.Json.Linq;
 using UnityEngine.Networking;
 using System.Text;
 using Cysharp.Threading.Tasks;
-namespace Kurisu.UniChat.Translators
+namespace UniChat.Translators
 {
     public class GoogleTranslator : ITranslator
     {

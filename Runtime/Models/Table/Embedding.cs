@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
-namespace Kurisu.UniChat
+namespace UniChat
 {
     [Serializable]
     public class Embedding

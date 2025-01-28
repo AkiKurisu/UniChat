@@ -1,7 +1,28 @@
 using System.IO;
 using UnityEngine;
-namespace Kurisu.UniChat
+namespace UniChat
 {
+    internal class LazyDirectory
+    {
+        private readonly string path;
+        private bool initialized;
+        public LazyDirectory(string path)
+        {
+            this.path = path;
+        }
+        public string GetPath()
+        {
+            if (initialized)
+            {
+                if (!Directory.Exists(path))
+                {
+                    Directory.CreateDirectory(path);
+                }
+                initialized = true;
+            }
+            return path;
+        }
+    }
     public class PathUtil
     {
 #if UNITY_EDITOR||!UNITY_ANDROID
@@ -9,27 +30,21 @@ namespace Kurisu.UniChat
 #else
         public static readonly string UserDataPath = Path.Combine(Application.persistentDataPath, "UserData");
 #endif
-        public static readonly string SessionPath = Path.Combine(UserDataPath, "sessions");
-        public static readonly string ModelPath = Path.Combine(UserDataPath, "models");
-        public static readonly string CharacterPath = Path.Combine(UserDataPath, "characters");
+        private static readonly LazyDirectory sessionPath = new(Path.Combine(UserDataPath, "sessions"));
+        public static string SessionPath => sessionPath.GetPath();
+
+        private static readonly LazyDirectory modelPath = new(Path.Combine(UserDataPath, "models"));
+        public static string ModelPath => modelPath.GetPath();
+
+        private static readonly LazyDirectory characterPath = new(Path.Combine(UserDataPath, "characters"));
+        public static string CharacterPath => characterPath.GetPath();
+
         [RuntimeInitializeOnLoadMethod]
         public static void Initialize()
         {
             if (!Directory.Exists(UserDataPath))
             {
                 Directory.CreateDirectory(UserDataPath);
-            }
-            if (!Directory.Exists(SessionPath))
-            {
-                Directory.CreateDirectory(SessionPath);
-            }
-            if (!Directory.Exists(ModelPath))
-            {
-                Directory.CreateDirectory(ModelPath);
-            }
-            if (!Directory.Exists(CharacterPath))
-            {
-                Directory.CreateDirectory(CharacterPath);
             }
         }
     }

@@ -4,7 +4,7 @@ using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Networking;
-namespace Kurisu.UniChat.LLMs
+namespace UniChat.LLMs
 {
     /// <summary>
     /// TODO: It seems that text-generation-webui completely using openAI api now

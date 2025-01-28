@@ -1,5 +1,5 @@
 using System;
-namespace Kurisu.UniChat.LLMs
+namespace UniChat.LLMs
 {
     public enum LLMType
     {

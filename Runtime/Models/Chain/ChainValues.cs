@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-namespace Kurisu.UniChat.Chains
+namespace UniChat.Chains
 {
     public class ChainValues : IChainValues
     {

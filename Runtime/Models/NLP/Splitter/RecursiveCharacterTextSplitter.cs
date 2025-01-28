@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-namespace Kurisu.UniChat.NLP
+namespace UniChat.NLP
 {
     /// <summary>
     /// Common recursive text splitter for natural language processing

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
-namespace Kurisu.UniChat
+namespace UniChat
 {
     public interface ICallbackHandler
     {

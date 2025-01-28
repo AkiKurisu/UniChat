@@ -5,7 +5,7 @@ using UnityEngine;
 using Cysharp.Threading.Tasks;
 using UnityEngine.Networking;
 using Newtonsoft.Json;
-namespace Kurisu.UniChat.LLMs
+namespace UniChat.LLMs
 {
     public class KoboldCppClient : IChatModel
     {

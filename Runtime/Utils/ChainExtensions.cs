@@ -1,5 +1,6 @@
-using Kurisu.UniChat.Chains;
-namespace Kurisu.UniChat
+using UniChat.Chains;
+
+namespace UniChat
 {
     public static class ChainExtensions
     {

@@ -3,7 +3,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
-namespace Kurisu.UniChat.TTS
+namespace UniChat.TTS
 {
     /// <summary>
     /// vits-simple-api client

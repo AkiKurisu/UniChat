@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
-using Kurisu.UniChat.Memory;
-namespace Kurisu.UniChat.Chains
+using UniChat.Memory;
+
+namespace UniChat.Chains
 {
     public abstract class Chain : IChain
     {

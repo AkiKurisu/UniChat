@@ -1,5 +1,5 @@
 using Unity.Sentis;
-namespace Kurisu.UniChat
+namespace UniChat
 {
     public interface IEmbeddingDataBase
     {

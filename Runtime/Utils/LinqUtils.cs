@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-namespace Kurisu.UniChat
+namespace UniChat
 {
     public static class LinqUtils
     {

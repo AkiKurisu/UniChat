@@ -5,67 +5,77 @@ using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
-namespace Kurisu.UniChat
+namespace UniChat
 {
     public class AudioCache
     {
-        private readonly string folderPath;
-        private readonly List<string> files = new();
-        private readonly List<string> segments = new();
-        private readonly string infoPath;
+        private readonly string _folderPath;
+        
+        private readonly List<string> _files = new();
+        
+        private readonly List<string> _segments = new();
+        
+        private readonly string _infoPath;
+        
         public AudioCache(string folderPath)
         {
-            this.folderPath = folderPath;
-            infoPath = Path.Combine(folderPath, "info.txt");
+            _folderPath = folderPath;
+            _infoPath = Path.Combine(folderPath, "info.txt");
             if (!Directory.Exists(folderPath))
             {
                 Directory.CreateDirectory(folderPath);
             }
-            if (File.Exists(infoPath))
+            if (File.Exists(_infoPath))
             {
                 LoadFile();
             }
         }
+        
         public void Save(uint sourceHash, AudioClip[] audioClips, IReadOnlyList<string> segments)
         {
             for (int i = 0; i < audioClips.Length; ++i)
             {
                 string fileName = $"{sourceHash}-{i:D2}";
-                files.Add(fileName);
-                WavUtil.Save(Path.Combine(folderPath, $"{fileName}.wav"), audioClips[i]);
+                _files.Add(fileName);
+                WavUtil.Save(Path.Combine(_folderPath, $"{fileName}.wav"), audioClips[i]);
             }
-            this.segments.AddRange(segments);
+            this._segments.AddRange(segments);
             SaveFile();
         }
+        
         public void Save(uint sourceHash, AudioClip audioClip, string segment)
         {
             string fileName = sourceHash.ToString();
-            files.Add(fileName);
-            WavUtil.Save(Path.Combine(folderPath, $"{fileName}.wav"), audioClip);
-            segments.Add(segment);
+            _files.Add(fileName);
+            WavUtil.Save(Path.Combine(_folderPath, $"{fileName}.wav"), audioClip);
+            _segments.Add(segment);
             SaveFile();
         }
+        
         public void SaveFile()
         {
-            using var stream = new FileStream(infoPath, FileMode.Create, FileAccess.Write);
+            using var stream = new FileStream(_infoPath, FileMode.Create, FileAccess.Write);
             using var sw = new StreamWriter(stream);
             SaveFile(sw);
         }
+        
         public void SaveFile(StreamWriter sw)
         {
-            for (int i = 0; i < files.Count; ++i)
+            for (int i = 0; i < _files.Count; ++i)
             {
-                sw.Write(files[i]);
+                sw.Write(_files[i]);
                 sw.Write('|');
-                sw.WriteLine(segments[i]);
+                sw.WriteLine(_segments[i]);
             }
         }
+        
         public void LoadFile()
         {
-            using var stream = new FileStream(infoPath, FileMode.Open, FileAccess.Read);
+            using var stream = new FileStream(_infoPath, FileMode.Open, FileAccess.Read);
             using var sr = new StreamReader(stream);
             LoadFile(sr);
         }
+        
         public void LoadFile(StreamReader sr)
         {
             string line;
@@ -76,44 +86,50 @@ namespace Kurisu.UniChat
                 {
                     string file = parts[0];
                     string segment = parts[1];
-                    files.Add(file);
-                    segments.Add(segment);
+                    _files.Add(file);
+                    _segments.Add(segment);
                 }
             }
         }
+        
         public bool Contains(uint sourceHash)
         {
-            foreach (var file in files)
+            foreach (var file in _files)
             {
                 if (file.Contains(sourceHash.ToString())) return true;
             }
             return false;
         }
+        
         public string[] GetSegments(uint sourceHash)
         {
-            return files.Where(x => x.Contains(sourceHash.ToString())).Select(x => segments[files.IndexOf(x)]).ToArray();
+            return _files.Where(x => x.Contains(sourceHash.ToString())).Select(x => _segments[_files.IndexOf(x)]).ToArray();
         }
+        
         public IEnumerable<(string filePath, string segment)> GetPathAndSegments(uint sourceHash)
         {
-            return files.Where(x => x.Contains(sourceHash.ToString()))
-                        .Select(x => (Path.Combine(folderPath, $"{x}.wav"), segments[files.IndexOf(x)]));
+            return _files.Where(x => x.Contains(sourceHash.ToString()))
+                        .Select(x => (Path.Combine(_folderPath, $"{x}.wav"), _segments[_files.IndexOf(x)]));
         }
+        
         public void CopyFrom(AudioCache audioCache)
         {
-            audioCache.files.ForEach(f => File.Copy(Path.Combine(audioCache.folderPath, $"{f}.wav"), Path.Combine(folderPath, $"{f}.wav")));
-            files.AddRange(audioCache.files);
-            segments.AddRange(audioCache.segments);
+            audioCache._files.ForEach(f => File.Copy(Path.Combine(audioCache._folderPath, $"{f}.wav"), Path.Combine(_folderPath, $"{f}.wav")));
+            _files.AddRange(audioCache._files);
+            _segments.AddRange(audioCache._segments);
         }
-        public void Delate(uint sourceHash)
+        
+        public void Delete(uint sourceHash)
         {
-            for (int i = segments.Count - 1; i >= 0; i--)
+            for (int i = _segments.Count - 1; i >= 0; i--)
             {
-                if (!files[i].Contains(sourceHash.ToString())) continue;
-                if (File.Exists(files[i])) File.Delete(files[i]);
-                segments.RemoveAt(i);
-                files.RemoveAt(i);
+                if (!_files[i].Contains(sourceHash.ToString())) continue;
+                if (File.Exists(_files[i])) File.Delete(_files[i]);
+                _segments.RemoveAt(i);
+                _files.RemoveAt(i);
             }
         }
+        
         public async UniTask<(AudioClip[] clips, string[] segments)> Load(uint sourceHash)
         {
             var pairs = GetPathAndSegments(sourceHash);
@@ -141,6 +157,7 @@ namespace Kurisu.UniChat
                 }
             }
         }
+        
         public static AudioCache CreateCache(string modelFolder)
         {
             if (!Directory.Exists(modelFolder))

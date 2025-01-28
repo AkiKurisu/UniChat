@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
-namespace Kurisu.UniChat.LLMs
+namespace UniChat.LLMs
 {
     //See https://github.com/oobabooga/text-generation-webui/blob/main/api-examples/api-example.py
     public class TextGenWebUIGenerateParams

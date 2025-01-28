@@ -1,0 +1,21 @@
+{
+    "name": "UniChat.Example",
+    "rootNamespace": "UniChat.Example",
+    "references": [
+        "GUID:b2879b934d4e9c94bab967ace5085611",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:07dcbb6497358493fa23aaaad4b6b054",
+        "GUID:c98377141161c7746a178fb5cb1af075"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-namespace Kurisu.UniChat
+namespace UniChat
 {
     public class TextEmbeddingTable : IEmbeddingTable, ISerializable, IPersistHandlerFactory<string>
     {

@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-namespace Kurisu.UniChat.LLMs
+namespace UniChat.LLMs
 {
     public class OllamaChatRequest
     {

@@ -1,7 +1,7 @@
 using System;
 using System.Text.RegularExpressions;
 using Cysharp.Threading.Tasks;
-namespace Kurisu.UniChat.Chains
+namespace UniChat.Chains
 {
     /// <summary>
     /// Reference https://api.python.langchain.com/en/latest/_modules/langchain/agents/output_parsers/react_single_input.html#ReActSingleInputOutputParser

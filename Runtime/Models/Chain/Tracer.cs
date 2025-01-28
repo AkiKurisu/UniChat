@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-namespace Kurisu.UniChat.Chains
+namespace UniChat.Chains
 {
     /// <summary>
     /// Run schema in the Tracer

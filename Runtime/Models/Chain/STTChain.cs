@@ -1,7 +1,7 @@
 using System;
 using Cysharp.Threading.Tasks;
 using UnityEngine.Assertions;
-namespace Kurisu.UniChat.Chains
+namespace UniChat.Chains
 {
     /// <summary>
     /// Speech to text chain

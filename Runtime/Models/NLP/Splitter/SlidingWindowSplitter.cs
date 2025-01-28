@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-namespace Kurisu.UniChat.NLP
+namespace UniChat.NLP
 {
     /// <summary>
     /// Represents a sliding window algorithm

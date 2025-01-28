@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 using System;
-namespace Kurisu.UniChat.LLMs
+namespace UniChat.LLMs
 {
     //Modify from https://github.com/THUDM/ChatGLM2-6B/blob/main/api.py
     public class GLMGenParams

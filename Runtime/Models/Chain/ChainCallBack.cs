@@ -4,7 +4,7 @@ using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Pool;
-namespace Kurisu.UniChat.Chains
+namespace UniChat.Chains
 {
     /// <summary>
     /// A replacement of run_tree_context (https://github.com/langchain-ai/langsmith-sdk/blob/main/python/langsmith/run_helpers.py).

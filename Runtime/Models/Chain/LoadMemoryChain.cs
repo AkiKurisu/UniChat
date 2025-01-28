@@ -1,20 +1,23 @@
 using System;
 using Cysharp.Threading.Tasks;
-using Kurisu.UniChat.Memory;
-namespace Kurisu.UniChat.Chains
+using UniChat.Memory;
+
+namespace UniChat.Chains
 {
     public class LoadMemoryChain : StackableChain
     {
-        private readonly ChatMemory chatMemory;
+        private readonly ChatMemory _chatMemory;
+        
         public LoadMemoryChain(ChatMemory chatMemory, string outputKey)
         {
-            this.chatMemory = chatMemory;
+            _chatMemory = chatMemory;
             OutputKeys = new[] { outputKey };
         }
+        
         protected override UniTask<IChainValues> InternalCall(IChainValues values)
         {
             values = values ?? throw new ArgumentNullException(nameof(values));
-            values.Value[OutputKeys[0]] = chatMemory.GetMemoryContext();
+            values.Value[OutputKeys[0]] = _chatMemory.GetMemoryContext();
             return UniTask.FromResult(values);
         }
     }

@@ -1,7 +1,8 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Kurisu.UniChat.Chains;
-namespace Kurisu.UniChat.Translators
+using UniChat.Chains;
+
+namespace UniChat.Translators
 {
     public class LLMTranslator : ITranslator
     {

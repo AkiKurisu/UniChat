@@ -1,8 +1,9 @@
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Kurisu.UniChat.LLMs;
-namespace Kurisu.UniChat
+using UniChat.LLMs;
+
+namespace UniChat
 {
     public interface ILLMResponse
     {

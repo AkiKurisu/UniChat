@@ -1,7 +1,7 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-namespace Kurisu.UniChat
+namespace UniChat
 {
     public interface ITextToSpeechModel
     {
