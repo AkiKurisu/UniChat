@@ -20,8 +20,6 @@ A pipeline for creating online and offline chat-bot in Unity.
     - [Text to Speech](#text-to-speech)
     - [Speech to Text](#speech-to-text)
     - [Sub-classifier](#sub-classifier)
-  - [Game Components](#game-components)
-    - [Chat StateMachine](#chat-statemachine)
     - [Tool Use](#tool-use)
   - [Demo](#demo)
     - [Minimalist Demo Download](#minimalist-demo-download)
@@ -298,10 +296,6 @@ class SubClassifier(nn.Module):
         x = self.fc2(x)
         return x
 ```
-
-## Game Components
-
-Game components are various tools that are combined with the dialogue function according to the specific game mechanism.
 
 ### Tool Use
 
