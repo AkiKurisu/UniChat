@@ -22,11 +22,15 @@ A pipeline for creating online and offline chat-bot in Unity.
     - [Sub-classifier](#sub-classifier)
     - [Tool Use](#tool-use)
   - [Demo](#demo)
-    - [Minimalist Demo Download](#minimalist-demo-download)
-    - [Advanced Demo download](#advanced-demo-download)
-    - [Demo function description](#demo-function-description)
+    - [Download](#download)
+    - [Features](#features)
       - [Personalization: Character Cards](#personalization-character-cards)
+  - [More Showcase](#more-showcase)
   - [Quote](#quote)
+    - [Blogs](#blogs)
+    - [Repo](#repo)
+    - [Paper](#paper)
+
 
 
 
@@ -344,13 +348,13 @@ See [Release](https://github.com/AkiKurisu/UniChat/releases) page
 Based on UniChat to make a similar application in Unity
 > The synchronized repository version is `V0.0.1-alpha`, the Demo is waiting to be updated.
 
-### Demo Download
+### Download
 
 ![Chat-View](./Docs/Images/chat-view.png)
 
 See [Release](https://github.com/AkiKurisu/UniChat/releases) page
 
-### Demo function description
+### Features
 
 #### Personalization: Character Cards
 
@@ -360,12 +364,24 @@ Demo uses `TavernAI` the character data structure, and we can write the characte
 
 If you use `TavernAI` a character card, the cue word above is overwritten.
 
+## More Showcase
+
+Using UniChat to build a galgame with ai character.
+
+![Showcase](./Docs/Images/aichat-example.png)
+> Character model from @Illusion.
+
 ## Quote
 
+### Blogs
 - Make a ChatBox in Unity
     >https://www.akikurisu.com/blog/posts/create-chatbox-in-unity-2024-03-19/
 - Using NLP Natural Language Processing Technology in Unity
     >https://www.akikurisu.com/blog/posts/use-nlp-in-unity-2024-04-03/
+
+### Repo
 - https://github.com/langchain-ai/langchain
 - https://github.com/tryAGI/LangChain
+
+### Paper
 - Yao S, Zhao J, Yu D, et al. React: Synergizing reasoning and acting in language models[J]. arXiv preprint arXiv:2210.03629, 2022.
