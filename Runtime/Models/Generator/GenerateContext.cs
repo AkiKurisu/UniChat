@@ -39,7 +39,7 @@ namespace UniChat
         /// <returns></returns>
         public string CastStringValue()
         {
-            if (outputEntry != null && outputEntry is IEmbeddingEntry<string> stringEntry) return stringEntry.TValue;
+            if (outputEntry is IEmbeddingEntry<string> stringEntry) return stringEntry.TValue;
             return generatedContent;
         }
     }

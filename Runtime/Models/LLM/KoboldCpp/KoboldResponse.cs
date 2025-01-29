@@ -6,6 +6,7 @@ namespace UniChat.LLMs
     {
         [JsonProperty("results")]
         public List<Result> Results { get; set; }
+        
         public class Result
         {
             [JsonProperty("text")]

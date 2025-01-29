@@ -231,7 +231,7 @@ namespace UniChat
             _config = config;
             Encoder?.Dispose();
             Pipeline?.Dispose();
-            ModelProvider provider = ModelProviderFactory.Instance.Create(ChatFile.modelProvider);
+            var provider = ModelProviderFactory.Instance.Create(ChatFile.modelProvider);
             Encoder = new BertEncoder(
                 await provider.LoadModel(ChatFile.ModelPath),
                 new BertTokenizer(await provider.LoadTokenizer(ChatFile.TokenizerPath)),
@@ -244,7 +244,7 @@ namespace UniChat
                             .SetMemory(Memory)
                             .SetSource(Table)
                             .SetEmbedding(DataBase)
-                            .SetPersister(config.canWrite ? Table.CreatePersistHandler() : null)
+                            .SetPersistHandler(config.canWrite ? Table.CreatePersistHandler() : null)
                             .SetTemperature(config.outputThreshold)
                             .SetVerbose(config.verbose)
                             .SetFilter(new TopSimilarityFilter(config.inputThreshold)) as TPipeline;
@@ -329,21 +329,20 @@ namespace UniChat
         /// <param name="forceNewChatModel"></param>
         public void SwitchGenerator(uint generatorId, bool forceNewChatModel)
         {
-            this._generatorId = generatorId;
-            if (generatorId > ChatGeneratorIds.Input)
+            _generatorId = generatorId;
+            if (generatorId <= ChatGeneratorIds.Input) return;
+            
+            var llmType = generatorId switch
             {
-                var llmType = generatorId switch
-                {
-                    ChatGeneratorIds.OpenAI => LLMType.OpenAI,
-                    ChatGeneratorIds.TextGenWebUI => LLMType.TextGenWebUI,
-                    ChatGeneratorIds.Ollama => LLMType.Ollama_Chat,
-                    ChatGeneratorIds.KoboldCpp => LLMType.KoboldCpp,
-                    _ => throw new ArgumentOutOfRangeException(nameof(generatorId))
-                };
-                if (forceNewChatModel || !_chatModelCache.ContainsKey(generatorId))
-                {
-                    _chatModelCache[generatorId] = _chatModelFactory.CreateChatModel(llmType);
-                }
+                ChatGeneratorIds.OpenAI => LLMType.OpenAI,
+                ChatGeneratorIds.TextGenWebUI => LLMType.TextGenWebUI,
+                ChatGeneratorIds.Ollama => LLMType.Ollama_Chat,
+                ChatGeneratorIds.KoboldCpp => LLMType.KoboldCpp,
+                _ => throw new ArgumentOutOfRangeException(nameof(generatorId))
+            };
+            if (forceNewChatModel || !_chatModelCache.ContainsKey(generatorId))
+            {
+                _chatModelCache[generatorId] = _chatModelFactory.CreateChatModel(llmType);
             }
         }
         
@@ -364,9 +363,15 @@ namespace UniChat
         {
             try
             {
-                if (_generatorId == ChatGeneratorIds.Input) return await OnInputGeneration(context).Task;
-                var llmData = await _chatModelCache[_generatorId].GenerateAsync(Memory, ct);
-                context.generatedContent = llmData.Response;
+                if (_generatorId == ChatGeneratorIds.Input)
+                {
+                    return await OnInputGeneration(context).Task;
+                }
+                
+                var model = _chatModelCache[_generatorId];
+                model.Verbose = _config.verbose;
+                var chatModelResponse = await model.GenerateAsync(Memory, ct);
+                context.generatedContent = chatModelResponse.Response;
                 return true;
             }
             catch (Exception ex)

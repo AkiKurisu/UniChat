@@ -17,20 +17,21 @@ namespace UniChat.TTS
             public string Voice { get; set; } = "en_us";
             public int SampleRate { get; set; } = 22050;
         }
-        private static readonly PiperSettings defaultSettings = new();
-        private readonly Model _runtimeModel;
+        
+        private static readonly PiperSettings DefaultSettings = new();
+
         private readonly IWorker _worker;
+        
         public PiperModel(Model model, string espeakPath, BackendType backendType)
         {
             PiperWrapper.InitPiper(espeakPath);
-            _runtimeModel = model;
-            _worker = WorkerFactory.CreateWorker(backendType, _runtimeModel);
+            _worker = WorkerFactory.CreateWorker(backendType, model);
         }
 
         public async UniTask<AudioClip> GenerateSpeechAsync(string prompt, TextToSpeechSettings settings = null, CancellationToken cancellationToken = default)
         {
             var setting = settings as PiperSettings;
-            setting ??= defaultSettings;
+            setting ??= DefaultSettings;
             var phonemes = PiperWrapper.ProcessText(prompt, setting.Voice);
             var inputLengthsShape = new TensorShape(1);
             var scalesShape = new TensorShape(3);

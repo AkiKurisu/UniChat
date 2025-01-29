@@ -8,11 +8,13 @@ namespace UniChat
             if (array.IsCreated)
                 array.Dispose();
         }
+        
         public static void DisposeSafe<T>(ref this NativeList<T> array) where T : unmanaged
         {
             if (array.IsCreated)
                 array.Dispose();
         }
+        
         public static void Resize<T>(ref this NativeArray<T> array, int size, Allocator allocator = Allocator.Persistent, NativeArrayOptions options = NativeArrayOptions.ClearMemory) where T : unmanaged
         {
             if (array.IsCreated == false || array.Length < size)

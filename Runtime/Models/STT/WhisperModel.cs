@@ -74,7 +74,7 @@ namespace UniChat.STT
                 Params.InitialPrompt = whisperSettings.initialPrompt;
                 LogUtils.Level = whisperSettings.logLevel;
             }
-            var result = await whisper.GetTextAsync(request.samples, request.frequency, request.channels, Params);
+            var result = await whisper.GetTextAsync(request.Samples, request.Frequency, request.Channels, Params);
             return result.Result;
         }
     }

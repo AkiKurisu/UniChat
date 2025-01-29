@@ -10,5 +10,6 @@ namespace UniChat
             TextToSpeechSettings settings = null,
             CancellationToken cancellationToken = default);
     }
+    
     public class TextToSpeechSettings { }
 }

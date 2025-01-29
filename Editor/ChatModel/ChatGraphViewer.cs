@@ -53,14 +53,14 @@ namespace UniChat.Editor.ChatModel
         {
             this.graphPath = graphPath;
             using var dataBase = new ChatDataBase(graphPath);
-            int count = dataBase.edges.Count;
-            edges = dataBase.edges.ToArray();
+            int count = dataBase.Edges.Count;
+            edges = dataBase.Edges.ToArray();
             Array.Resize(ref data, count);
             using var tensor = dataBase.AllocateTensors()[0];
             using var allocator = new TensorCachingAllocator();
             using var ops = WorkerFactory.CreateOps(BackendType.GPUCompute, allocator);
             //Using a simplest dimensionality reduction method
-            using var projection = ops.RandomNormal(new TensorShape(dataBase.dim, 2), 0, 1, 0);
+            using var projection = ops.RandomNormal(new TensorShape(dataBase.Dim, 2), 0, 1, 0);
             using var transformed_vectors = ops.MatMul2D(tensor, projection, false, false);
             using var normalized_vectors = ops.L2Norm(transformed_vectors);
             normalized_vectors.MakeReadable();

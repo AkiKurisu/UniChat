@@ -1,6 +1,6 @@
 namespace UniChat.LLMs
 {
-    public class LineBreakFormatter
+    public static class LineBreakFormatter
     {
         public static string Format(string input)
         {

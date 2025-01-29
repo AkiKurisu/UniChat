@@ -12,17 +12,22 @@ namespace UniChat.LLMs
     public class TextGenWebUIClient : IChatModel
     {
         public bool Verbose { get; set; }
+        
         public TextGenWebUIGenerateParams GenParams { get; set; } = new();
+        
         public string Uri { get; set; }
+        
         /// <summary>
         /// Set to automatically set stop sequence and replace keys using formatter's role prefix
         /// </summary>
         /// <value></value>
         public bool SetParamsFromFormatter { get; set; } = true;
+        
         public TextGenWebUIClient(string address = "127.0.0.1", string port = "5000")
         {
             Uri = $"http://{address}:{port}";
         }
+        
         public async UniTask<ILLMResponse> GenerateAsync(IChatRequest request, CancellationToken ct)
         {
             if (SetParamsFromFormatter)
@@ -40,6 +45,7 @@ namespace UniChat.LLMs
             sb.Append($"{request.Formatter.BotPrefix}:");
             return await InternalCall(sb.ToString(), ct);
         }
+        
         private async UniTask<ILLMResponse> InternalCall(string message, CancellationToken ct)
         {
             GenParams.Prompt = message;
@@ -50,14 +56,17 @@ namespace UniChat.LLMs
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
             await request.SendWebRequest().ToUniTask(cancellationToken: ct);
+            
             if (Verbose) Debug.Log($"Response {request.downloadHandler.text}");
             var result = JsonConvert.DeserializeObject<TextGenWebUICompletionResponse>(request.downloadHandler.text.Trim());
             return new LLMResponse(FormatResponse(result.Results[0].Text));
         }
+        
         public async UniTask<ILLMResponse> GenerateAsync(string input, CancellationToken ct)
         {
             return await InternalCall(input, ct);
         }
+        
         private string FormatResponse(string response)
         {
             if (string.IsNullOrEmpty(response)) return string.Empty;

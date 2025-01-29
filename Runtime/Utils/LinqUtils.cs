@@ -12,6 +12,7 @@ namespace UniChat
             }
             return source;
         }
+        
         public static void AddRange<T>(this IList<T> list, IEnumerable<T> collection)
         {
             if (list is List<T> list1)
@@ -25,6 +26,7 @@ namespace UniChat
                 list.Add(item);
             }
         }
+        
         /// <summary>
         /// Adds key values of additional to target dictionary if key is not yet present in target
         /// </summary>
