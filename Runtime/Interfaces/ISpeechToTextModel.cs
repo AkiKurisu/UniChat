@@ -18,21 +18,25 @@ namespace UniChat
             SpeechToTextSettings settings = default,
             CancellationToken cancellationToken = default);
     }
+    
     public class SpeechToTextRequest
     {
-        public float[] samples;
-        public int frequency;
-        public int channels;
+        public float[] Samples;
+        
+        public int Frequency;
+        
+        public int Channels;
 
         public static implicit operator SpeechToTextRequest(AudioChunk audioChunk)
         {
             return new SpeechToTextRequest()
             {
-                samples = audioChunk.Data,
-                frequency = audioChunk.Frequency,
-                channels = audioChunk.Channels,
+                Samples = audioChunk.Data,
+                Frequency = audioChunk.Frequency,
+                Channels = audioChunk.Channels,
             };
         }
+        
         public static implicit operator SpeechToTextRequest(AudioClip audioClip)
         {
             var samples = new float[audioClip.samples * audioClip.channels];
@@ -43,11 +47,12 @@ namespace UniChat
             }
             return new SpeechToTextRequest()
             {
-                samples = samples,
-                frequency = audioClip.frequency,
-                channels = audioClip.channels,
+                Samples = samples,
+                Frequency = audioClip.frequency,
+                Channels = audioClip.channels,
             };
         }
     }
+    
     public class SpeechToTextSettings { }
 }

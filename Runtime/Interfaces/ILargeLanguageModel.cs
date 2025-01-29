@@ -9,25 +9,31 @@ namespace UniChat
     {
         string Response { get; }
     }
+    
     public readonly struct LLMResponse : ILLMResponse
     {
         public string Response { get; }
+        
         public LLMResponse(string response)
         {
             Response = response;
         }
     }
+    
     public enum MessageRole
     {
         System,
         Bot,
         User
     }
+    
     public interface IMessage
     {
         public MessageRole Role { get; }
+        
         public string Content { get; }
     }
+    
     public interface IChatRequest
     {
         /// <summary>
@@ -35,21 +41,25 @@ namespace UniChat
         /// </summary>
         /// <value></value>
         string Context { get; }
+        
         /// <summary>
         /// The messages of request
         /// </summary>
         /// <value></value>
         IEnumerable<IMessage> Messages { get; }
+        
         /// <summary>
         /// The formatter of request
         /// </summary>
         /// <value></value>
         MessageFormatter Formatter { get; }
     }
+    
     public interface ITranslator
     {
         UniTask<string> TranslateAsync(string input, CancellationToken ct);
     }
+    
     public interface ILargeLanguageModel
     {
         /// <summary>
@@ -57,6 +67,7 @@ namespace UniChat
         /// </summary>
         /// <value></value>
         bool Verbose { get; set; }
+        
         /// <summary>
         /// Generate llm data from string input
         /// </summary>

@@ -7,36 +7,38 @@ namespace UniChat.LLMs
 {
     public class PromptTemplate
     {
-        public readonly string templateText;
+        private readonly string _templateText;
+        
         public PromptTemplate(string text)
         {
-            templateText = text;
+            _templateText = text;
         }
+        
         public static PromptTemplate FromFilePath(string path)
         {
             if (File.Exists(path))
             {
-                return new(File.ReadAllText(path));
+                return new PromptTemplate(File.ReadAllText(path));
             }
-            else
-            {
-                throw new Exception($"File not exist in {path}");
-            }
+
+            throw new Exception($"File not exist in {path}");
         }
+        
         public List<string> GetVariables()
         {
             string pattern = @"\{([^\{\}]+)\}";
             var variables = new List<string>();
-            var matches = Regex.Matches(templateText, pattern);
+            var matches = Regex.Matches(_templateText, pattern);
             foreach (Match match in matches)
             {
                 variables.Add(match.Groups[1].Value);
             }
             return variables;
         }
+        
         public string Format(Dictionary<string, object> inputs)
         {
-            string output = templateText;
+            string output = _templateText;
             foreach (var pair in inputs)
             {
                 var key = "{" + pair.Key + "}";

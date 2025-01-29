@@ -5,9 +5,13 @@ namespace UniChat.LLMs
     public class OllamaListModelsResponse
     {
         [JsonProperty("models")]
-        public Model[] Models { get; set; } = new Model[0];
+        public Model[] Models { get; set; } = Array.Empty<Model>();
+        
         public class Model
         {
+            /// <summary>
+            /// Model fullname
+            /// </summary>
             [JsonProperty("name")]
             public string Name { get; set; } = string.Empty;
 
@@ -22,6 +26,12 @@ namespace UniChat.LLMs
 
             [JsonProperty("digest")]
             public string Digest { get; set; } = string.Empty;
+
+            public string GetModelName()
+            {
+                if (Name.Contains(':')) return Name.Split(':')[0];
+                return Name;
+            }
         }
     }
 }

@@ -10,6 +10,7 @@ namespace UniChat
         /// <param name="entry"></param>
         /// <returns></returns>
         bool TryGetEntry(uint hash, out IEmbeddingEntry entry);
+        
         /// <summary>
         /// Add new entry to table
         /// </summary>
@@ -17,6 +18,7 @@ namespace UniChat
         /// <returns></returns>
         bool AddEntry(IEmbeddingEntry entry);
     }
+    
     public interface IPersistHandlerFactory<T>
     {
         /// <summary>
@@ -25,6 +27,7 @@ namespace UniChat
         /// <returns></returns>
         IPersistEmbeddingValue<T> CreatePersistHandler();
     }
+    
     public interface IPersistEmbeddingValue<T>
     {
         /// <summary>
@@ -37,6 +40,7 @@ namespace UniChat
         /// <returns></returns>
         bool Persist(uint hash, T value, Embedding embedding, out IEmbeddingEntry entry);
     }
+    
     public interface IPersistEmbeddingValue<T, K>
     {
         /// <summary>
@@ -49,17 +53,23 @@ namespace UniChat
         /// <returns></returns>
         bool Persist(uint hash, T value, Embedding embedding, out IEmbeddingEntry<K> entry);
     }
+    
     public interface ISerializable
     {
         void Save(string filePath);
+        
         void Load(string filePath);
     }
+    
     public interface IEmbeddingEntry
     {
         uint Hash { get; }
+        
         Embedding Embedding { get; }
+        
         object Value { get; }
     }
+    
     public interface IEmbeddingEntry<T> : IEmbeddingEntry
     {
         T TValue { get; }

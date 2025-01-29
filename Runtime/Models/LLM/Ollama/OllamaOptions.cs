@@ -67,9 +67,9 @@ namespace UniChat.LLMs
         [JsonProperty("penalize_newline")]
         public bool? PenalizeNewline { get; set; }
 
-        //See https://ollama.com/library/llama3:latest/blobs/577073ffcc6c
+        // See https://ollama.com/library/llama3:latest/blobs/577073ffcc6c
         [JsonProperty("stop")]
-        public string[] Stop { get; set; } = new string[] {
+        public string[] Stop { get; set; } = {
             "<|start_header_id|>",
             "<|end_header_id|>",
             "<|eot_id|>"

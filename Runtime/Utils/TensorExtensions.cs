@@ -11,29 +11,27 @@ namespace UniChat
         /// Perform Mean Pooling
         /// </summary>
         /// <param name="ops">Ops on tensor</param>
-        /// <param name="AttentionMaskTensor">Attention Mask Tensor</param>
+        /// <param name="attentionMaskTensor">Attention Mask Tensor</param>
         /// <param name="outputTensor">Output Tensor</param>
         /// <returns></returns>
-        public static TensorFloat MeanPooling(this Ops ops, Tensor AttentionMaskTensor, TensorFloat outputTensor)
+        public static TensorFloat MeanPooling(this Ops ops, Tensor attentionMaskTensor, TensorFloat outputTensor)
         {
-            if (AttentionMaskTensor == null || outputTensor == null)
+            if (attentionMaskTensor == null || outputTensor == null)
             {
                 Debug.LogError("AttentionMaskTensor or outputTensor is null.");
             }
             // Create an attention mask and 
             // add a new dimension (to make the mask compatible for element wise multiplication with token embeddings)
-            TensorFloat AttentionMaskTensorFloat = ops.Cast(AttentionMaskTensor, DataType.Float) as TensorFloat;
-            Tensor InputMaskExpanded = AttentionMaskTensorFloat.ShallowReshape(AttentionMaskTensorFloat.shape.Unsqueeze(-1));
-            TensorFloat InputMaskExpandedFloat = ops.Cast(InputMaskExpanded, DataType.Float) as TensorFloat;
-
-            TensorShape outputShape = outputTensor.shape;
+            var attentionMaskTensorFloat = ops.Cast(attentionMaskTensor, DataType.Float) as TensorFloat;
+            var inputMaskExpanded = attentionMaskTensorFloat.ShallowReshape(attentionMaskTensorFloat.shape.Unsqueeze(-1));
+            var inputMaskExpandedFloat = ops.Cast(inputMaskExpanded, DataType.Float) as TensorFloat;
 
             // Expand to 384 => [2, 6, 384]
-            InputMaskExpandedFloat = ops.Expand(InputMaskExpandedFloat, outputShape);
+            inputMaskExpandedFloat = ops.Expand(inputMaskExpandedFloat, outputTensor.shape);
 
             // torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
-            TensorFloat temp_ = ops.Mul(outputTensor, InputMaskExpandedFloat);
-            TensorFloat MeanPooledTensor = ops.ReduceMean(temp_, new int[] { 1 }, false);
+            var mulResult = ops.Mul(outputTensor, inputMaskExpandedFloat);
+            var MeanPooledTensor = ops.ReduceMean(mulResult, new[] { 1 }, false);
 
             return MeanPooledTensor;
         }
@@ -42,23 +40,24 @@ namespace UniChat
         /// <summary>
         /// L2 Normalization
         /// </summary>
-        /// <param name="MeanPooledTensor"></param>
+        /// <param name="meanPooledTensor"></param>
         /// <param name="ops">Ops on tensor</param>
         /// <returns></returns>
-        public static TensorFloat L2Norm(this Ops ops, TensorFloat MeanPooledTensor)
+        public static TensorFloat L2Norm(this Ops ops, TensorFloat meanPooledTensor)
         {
             // L2 NORMALIZATION
             // Compute L2 norm along axis 1 (dim=1)
-            TensorFloat l2Norms = ops.ReduceL2(MeanPooledTensor, new int[] { 1 }, true);
+            TensorFloat l2Norms = ops.ReduceL2(meanPooledTensor, new int[] { 1 }, true);
 
             // Broadcast the L2 norms to the original shape
-            TensorFloat l2NormsBroadcasted = ops.Expand(l2Norms, MeanPooledTensor.shape);
+            TensorFloat l2NormsBroadcasted = ops.Expand(l2Norms, meanPooledTensor.shape);
 
             // Divide sentence_embeddings by their L2 norms to achieve normalization
-            TensorFloat NormalizedEmbeddings = ops.Div(MeanPooledTensor, l2NormsBroadcasted);
+            TensorFloat normalizedEmbeddings = ops.Div(meanPooledTensor, l2NormsBroadcasted);
 
-            return NormalizedEmbeddings;
+            return normalizedEmbeddings;
         }
+        
         public static void MakeReadable(this TensorFloat[] tensorFloats)
         {
             for (int i = 0; i < tensorFloats.Length; ++i)
@@ -66,6 +65,7 @@ namespace UniChat
                 tensorFloats[i].MakeReadable();
             }
         }
+        
         public static async UniTask MakeReadableAsync(this TensorFloat[] tensorFloats)
         {
             var pool = ListPool<UniTask>.Get();
@@ -82,6 +82,7 @@ namespace UniChat
                 ListPool<UniTask>.Release(pool);
             }
         }
+        
         public static void Dispose(this TensorFloat[] tensorFloats)
         {
             for (int i = 0; i < tensorFloats.Length; ++i)
@@ -89,6 +90,7 @@ namespace UniChat
                 tensorFloats[i].Dispose();
             }
         }
+        
         /// <summary>
         /// Return tensor[d1,0..shape[1]] as string
         /// </summary>
@@ -109,6 +111,7 @@ namespace UniChat
             sb.Append(')');
             return sb.ToString();
         }
+        
         public static string ToString(this TensorInt tensor, int d1)
         {
             tensor.MakeReadable();
@@ -123,6 +126,7 @@ namespace UniChat
             sb.Append(')');
             return sb.ToString();
         }
+        
         /// <summary>
         /// Return tensor[d1,0..shape[1]] as array
         /// </summary>
@@ -139,6 +143,7 @@ namespace UniChat
             }
             return array;
         }
+        
         /// <summary>
         /// Return tensor[d2,d1,0..shape[1]] as string
         /// </summary>
@@ -159,18 +164,20 @@ namespace UniChat
             sb.Append(')');
             return sb.ToString();
         }
+        
         /// <summary>
         /// Calculate cosine similarity
         /// (A dot B) / ||A|| * ||B||
         /// </summary>
         /// <param name="ops"></param>
-        /// <param name="InputSequence"></param>
-        /// <param name="ComparisonSequences"></param>
+        /// <param name="inputSequence"></param>
+        /// <param name="comparisonSequences"></param>
         /// <returns></returns>
-        public static TensorFloat CosineSimilarity(this Ops ops, TensorFloat InputSequence, TensorFloat ComparisonSequences)
+        public static TensorFloat CosineSimilarity(this Ops ops, TensorFloat inputSequence, TensorFloat comparisonSequences)
         {
-            return ops.MatMul2D(InputSequence, ComparisonSequences, false, true);
+            return ops.MatMul2D(inputSequence, comparisonSequences, false, true);
         }
+        
         public static TensorFloat Encode(this IEncoder encoder, Ops ops, string input)
         {
             var pool = ListPool<string>.Get();

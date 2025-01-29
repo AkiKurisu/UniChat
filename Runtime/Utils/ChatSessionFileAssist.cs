@@ -7,29 +7,34 @@ namespace UniChat
     {
         public class ChatSessionFileInfo
         {
-            public ChatSession session;
-            public string fileName;
-            public string filePath;
+            public ChatSession Session;
+            
+            public string FileName;
+            
+            public string FilePath;
         }
-        public readonly List<ChatSessionFileInfo> files = new();
+        
+        public readonly List<ChatSessionFileInfo> Files = new();
+        
         public ChatSessionFileAssist()
         {
             LoadFiles();
         }
+        
         public void LoadFiles()
         {
-            files.Clear();
+            Files.Clear();
             string[] paths = Directory.GetFiles(PathUtil.SessionPath, "*.json", SearchOption.AllDirectories);
             foreach (string path in paths)
             {
                 try
                 {
                     ChatSession sessionFile = JsonConvert.DeserializeObject<ChatSession>(File.ReadAllText(path));
-                    files.Add(new ChatSessionFileInfo()
+                    Files.Add(new ChatSessionFileInfo()
                     {
-                        session = sessionFile,
-                        filePath = path,
-                        fileName = Path.GetFileNameWithoutExtension(path)
+                        Session = sessionFile,
+                        FilePath = path,
+                        FileName = Path.GetFileNameWithoutExtension(path)
                     });
                 }
                 catch
@@ -38,11 +43,12 @@ namespace UniChat
                 }
             }
         }
-        public void Delate(int index)
+        
+        public void Delete(int index)
         {
-            if (File.Exists(files[index].filePath))
-                File.Delete(files[index].filePath);
-            files.RemoveAt(index);
+            if (File.Exists(Files[index].FilePath))
+                File.Delete(Files[index].FilePath);
+            Files.RemoveAt(index);
         }
     }
 }

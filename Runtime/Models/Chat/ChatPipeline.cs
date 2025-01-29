@@ -174,7 +174,7 @@ namespace UniChat
             finally
             {
                 stopWatch.Stop();
-                if (Verbose) Debug.Log($"Pipeline end, time used: {stopWatch.ElapsedMilliseconds}.");
+                if (Verbose) Debug.Log($"Pipeline end, time used: {stopWatch.ElapsedMilliseconds}ms.");
                 _semaphore.Release();
                 ids.DisposeSafe();
                 scores.DisposeSafe();
@@ -232,9 +232,9 @@ namespace UniChat
             return this;
         }
         
-        public ChatPipeline SetPersister(IPersistEmbeddingValue<string> stringPersister)
+        public ChatPipeline SetPersistHandler(IPersistEmbeddingValue<string> stringPersistHandler)
         {
-            StringPersist = stringPersister;
+            StringPersist = stringPersistHandler;
             return this;
         }
         

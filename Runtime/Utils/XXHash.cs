@@ -7,10 +7,15 @@ namespace UniChat
     public static class XXHash
     {
         private const uint PRIME32_1 = 2654435761U;
+        
         private const uint PRIME32_2 = 2246822519U;
+        
         private const uint PRIME32_3 = 3266489917U;
+        
         private const uint PRIME32_4 = 668265263U;
+        
         private const uint PRIME32_5 = 374761393U;
+        
         public static uint CalculateHash(TensorFloat tensorFloat, int d1 = 0)
         {
             tensorFloat.MakeReadable();
@@ -24,10 +29,12 @@ namespace UniChat
             buffer.Dispose();
             return hash;
         }
+        
         public static uint CalculateHash<T>(NativeArray<T> data) where T : struct
         {
             return CalculateHash(data.Reinterpret<byte>(UnsafeUtility.SizeOf<T>()));
         }
+        
         public static uint CalculateHash(string input)
         {
             var bytes = new FixedString4096Bytes(input).AsFixedList().ToNativeArray(Allocator.Temp);
@@ -51,6 +58,7 @@ namespace UniChat
                 bytes.Dispose();
             }
         }
+        
         [BurstCompile]
         public static uint CalculateHash(NativeArray<byte> data)
         {
