@@ -87,9 +87,9 @@ public bool RunPipeline()
     var context = await PipelineCtrl.RunPipeline("Hello!");
     if ((context.flag & (1 << 1)) != 0)
     {
-        //Get pipeline output
+        // Get pipeline output
         string output = context.CastStringValue();
-        //Update history
+        // Update history
         PipelineCtrl.History.AppendUserMessage(input);
         PipelineCtrl.History.AppendBotMessage(output);
         return true;
@@ -102,8 +102,8 @@ public bool RunPipeline()
 ```C#
 pubic void Save()
 {
-    //PC save to {ApplicationPath}//UserData//{ModelName}
-    //Android save to {Application.persistentDataPath}//UserData//{ModelName}
+    // PC save to {ApplicationPath}//UserData//{ModelName}
+    // Android save to {Application.persistentDataPath}//UserData//{ModelName}
     PipelineCtrl.SaveModel();
 }
 ```
@@ -145,12 +145,12 @@ public class LLM_Chain_Example : MonoBehaviour
             You are an AI assistant that greets the world.
             User: Hello!
             Assistant:";
-        var llm = LLMFactory.Create(LLMType.ChatGPT, settingsAsset);
-        //Create chain
+        var llm = LLMFactory.Create(LLMType.OpenAI, settingsAsset);
+        // Create chain
         var chain =
             Chain.Set(chatPrompt, outputKey: "prompt")
             | Chain.LLM(llm, inputKey: "prompt", outputKey: "chatResponse");
-        //Run chain
+        // Run chain
         string result = await chain.Run<string>("chatResponse");
         Debug.Log(result);
     }
@@ -167,20 +167,20 @@ If you run the following example, the first time you call LLM and the second tim
 ```C#
 public async void Start()
 {
-    //Create new chat model file with empty memory and embedding db
+    // Create new chat model file with empty memory and embedding db
     var chatModelFile = new ChatModelFile() { fileName = "NewChatFile", modelProvider = ModelProvider.AddressableProvider };
-    //Create an pipeline ctrl to run it
+    // Create an pipeline ctrl to run it
     var pipelineCtrl = new ChatPipelineCtrl(chatModelFile, settingsAsset);
     pipelineCtrl.SwitchGenerator(ChatGeneratorIds.ChatGPT);
-    //Init pipeline, set verbose to log status
+    // Init pipeline, set verbose to log status
     await pipelineCtrl.InitializePipeline(new PipelineConfig { verbose = true });
-    //Add system prompt
+    // Add system prompt
     pipelineCtrl.Memory.Context = "You are my personal assistant, you should answer my questions.";
-    //Create chain
+    // Create chain
     var chain = pipelineCtrl.ToChain().Input("Hello assistant!").CastStringValue(outputKey: "text");
-    //Run chain
+    // Run chain
     string result = await chain.Run<string>("text");
-    //Save chat model
+    // Save chat model
     pipelineCtrl.SaveModel();
 }
 ```
@@ -216,20 +216,20 @@ public class LLM_TTS_Chain_Example : MonoBehaviour
     public AudioSource audioSource;
     public async void Start()
     {
-        //Create new chat model file with empty memory and embedding db
+        // Create new chat model file with empty memory and embedding db
         var chatModelFile = new ChatModelFile() { fileName = "NewChatFile", modelProvider = ModelProvider.AddressableProvider };
-        //Create an pipeline ctrl to run it
+        // Create an pipeline ctrl to run it
         var pipelineCtrl = new ChatPipelineCtrl(chatModelFile, settingsAsset);
-        pipelineCtrl.SwitchGenerator(ChatGeneratorIds.ChatGPT, true);
-        //Init pipeline, set verbose to log status
+        pipelineCtrl.SwitchGenerator(ChatGeneratorIds.OpenAI, true);
+        // Init pipeline, set verbose to log status
         await pipelineCtrl.InitializePipeline(new PipelineConfig { verbose = true });
         var vits = new VITSModel(lang: "ja");
-        //Add system prompt
+        // Add system prompt
         pipelineCtrl.Memory.Context = "You are my personal assistant, you should answer my questions.";
-        //Create cache to cache audioClips and translated texts
+        // Create cache to cache audioClips and translated texts
         var audioCache = AudioCache.CreateCache(chatModelFile.DirectoryPath);
         var textCache = TextMemoryCache.CreateCache(chatModelFile.DirectoryPath);
-        //Create chain
+        // Create chain
         var chain = pipelineCtrl.ToChain().Input("Hello assistant!").CastStringValue(outputKey: "text")
                                 //Translate to japanese
                                 | Chain.Translate(new GoogleTranslator("en", "ja")).UseCache(textCache)
@@ -237,10 +237,10 @@ public class LLM_TTS_Chain_Example : MonoBehaviour
                                 | Chain.Split(new RegexSplitter(@"(?<=[。！？! ?])"), inputKey: "translated_text")
                                 //Auto batched
                                 | Chain.TTS(vits, inputKey: "splitted_text").UseCache(audioCache).Verbose(true);
-        //Run chain
+        // Run chain
         (IReadOnlyList<string> segments, IReadOnlyList<AudioClip> audioClips)
             = await chain.Run<IReadOnlyList<string>, IReadOnlyList<AudioClip>>("splitted_text", "audio");
-        //Play audios
+        // Play audios
         for (int i = 0; i < audioClips.Count; ++i)
         {
             Debug.Log(segments[i]);
@@ -312,7 +312,7 @@ var userCommand = @"I want to watch a dance video.";
 var llm = LLMFactory.Create(LLMType.ChatGPT, settingsAsset) as OpenAIClient;
 llm.StopWords = new() { "\nObservation:", "\n\tObservation:" };
 
-//Create agent with muti-tools
+// Create agent with muti-tools
 var chain =
     Chain.Set(userCommand)
     | Chain.ReActAgentExecutor(llm)
@@ -334,7 +334,7 @@ var chain =
             }))
         .Verbose(true);
 
-//Run chain
+// Run chain
 Debug.Log(await chain.Run("text"));
 ```
 
