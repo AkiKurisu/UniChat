@@ -4,7 +4,7 @@
 
 A pipeline for creating online and offline chat-bot in Unity.
 
-<img src="./Docs/Images/Icon.png" width="256"/>
+<img src="./Documentation~/Images/Icon.png" width="256"/>
 
 </div>
 
@@ -116,7 +116,7 @@ The loading mode is optional `UserDataProvider`, `StreamingAssetsProvider` and `
 
 The `UserDataProvider` file path is as follows:
 
-![UserData](./Docs/Images/userdata_provider.png)
+![UserData](./Documentation~/Images/userdata_provider.png)
 
  `ResourcesProvider` Place the files in the models folder in the Resources folder.
 
@@ -124,7 +124,7 @@ The `UserDataProvider` file path is as follows:
 
 Address `AddressablesProvider` of is as follows:
 
-![Addressables](./Docs/Images/addressable-provider.png)
+![Addressables](./Documentation~/Images/addressable-provider.png)
 
 ## Chain
 
@@ -196,7 +196,7 @@ You can trace the chain using the `Trace()` method, or add `UNICHAT_ALWAYS_TRACE
 `stackTrace: bool`|| Enables stack tracing
 `applyToContext: bool` ||Applies to all subchains
 
-![StackTrace](./Docs/Images/stack-trace.png)
+![StackTrace](./Documentation~/Images/stack-trace.png)
 
 
 
@@ -350,7 +350,7 @@ Based on UniChat to make a similar application in Unity
 
 ### Download
 
-![Chat-View](./Docs/Images/chat-view.png)
+![Chat-View](./Documentation~/Images/chat-view.png)
 
 See [Release](https://github.com/AkiKurisu/UniChat/releases) page
 
@@ -360,7 +360,7 @@ See [Release](https://github.com/AkiKurisu/UniChat/releases) page
 
 Demo uses `TavernAI` the character data structure, and we can write the character's personality, sample conversations, and chat scenarios into pictures.
 
-![Setting View](./Docs/Images/setting-view.png)
+![Setting View](./Documentation~/Images/setting-view.png)
 
 If you use `TavernAI` a character card, the cue word above is overwritten.
 
@@ -368,7 +368,7 @@ If you use `TavernAI` a character card, the cue word above is overwritten.
 
 Using UniChat to build a galgame with ai character.
 
-![Showcase](./Docs/Images/aichat-example.png)
+![Showcase](./Documentation~/Images/aichat-example.png)
 > Character model from @Illusion.
 
 ## Quote

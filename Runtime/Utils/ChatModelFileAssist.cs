@@ -15,7 +15,7 @@ namespace UniChat
         public void LoadFiles()
         {
             Files.Clear();
-            string[] paths = Directory.GetFiles(PathUtil.UserDataPath, "*.cfg", SearchOption.AllDirectories);
+            string[] paths = Directory.GetFiles(PathUtil.SavedPath, "*.cfg", SearchOption.AllDirectories);
             foreach (string path in paths)
             {
                 try

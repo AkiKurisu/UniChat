@@ -63,7 +63,7 @@ namespace UniChat
         
         public override async UniTask<Model> LoadModel(string path)
         {
-            path = Path.Combine(PathUtil.ModelPath, path);
+            path = Path.Combine(PathUtil.ModelsPath, path);
             if (FromStreamingAssets && Application.isMobilePlatform && !Application.isEditor)
             {
                 using UnityWebRequest www = UnityWebRequest.Get(new Uri(path));
@@ -80,7 +80,7 @@ namespace UniChat
         
         public override async UniTask<string> LoadTokenizer(string path)
         {
-            path = Path.Combine(PathUtil.ModelPath, path);
+            path = Path.Combine(PathUtil.ModelsPath, path);
             if (FromStreamingAssets && Application.isMobilePlatform && !Application.isEditor)
             {
                 using UnityWebRequest www = UnityWebRequest.Get(new Uri(path));

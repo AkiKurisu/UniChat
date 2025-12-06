@@ -47,7 +47,7 @@ namespace UniChat
         public const string configFileName = "model.cfg";
         
         [JsonIgnore]
-        public string DirectoryPath => directoryOverridePath ?? Path.Combine(PathUtil.UserDataPath, fileName);
+        public string DirectoryPath => directoryOverridePath ?? Path.Combine(PathUtil.SavedPath, fileName);
         
         [JsonIgnore]
         public string GraphPath => Path.Combine(DirectoryPath, graphFileName);

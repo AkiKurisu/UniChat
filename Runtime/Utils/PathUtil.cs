@@ -28,34 +28,34 @@ namespace UniChat
         }
     }
     
-    public class PathUtil
+    public static class PathUtil
     {
 #if UNITY_EDITOR||!UNITY_ANDROID
-        public static readonly string UserDataPath = Path.Combine(Path.GetDirectoryName(Application.dataPath), "UserData");
+        public static readonly string SavedPath = Path.Combine(Path.GetDirectoryName(Application.dataPath)!, "Saved");
 #else
-        public static readonly string UserDataPath = Path.Combine(Application.persistentDataPath, "UserData");
+        public static readonly string SavedPath = Path.Combine(Application.persistentDataPath, "Saved");
 #endif
-        private static readonly LazyDirectory sessionPath = new(Path.Combine(UserDataPath, "sessions"));
+        private static readonly LazyDirectory SessionPathLazy = new(Path.Combine(SavedPath, "sessions"));
         
-        public static string SessionPath => sessionPath.GetPath();
-        
-
-        private static readonly LazyDirectory modelPath = new(Path.Combine(UserDataPath, "models"));
-        
-        public static string ModelPath => modelPath.GetPath();
+        public static string SessionPath => SessionPathLazy.GetPath();
         
 
-        private static readonly LazyDirectory characterPath = new(Path.Combine(UserDataPath, "characters"));
+        private static readonly LazyDirectory ModelsPathLazy = new(Path.Combine(SavedPath, "models"));
         
-        public static string CharacterPath => characterPath.GetPath();
+        public static string ModelsPath => ModelsPathLazy.GetPath();
+        
+
+        private static readonly LazyDirectory CharacterPathLazy = new(Path.Combine(SavedPath, "characters"));
+        
+        public static string CharacterPath => CharacterPathLazy.GetPath();
         
 
         [RuntimeInitializeOnLoadMethod]
         public static void Initialize()
         {
-            if (!Directory.Exists(UserDataPath))
+            if (!Directory.Exists(SavedPath))
             {
-                Directory.CreateDirectory(UserDataPath);
+                Directory.CreateDirectory(SavedPath);
             }
         }
     }

@@ -115,7 +115,7 @@ namespace UniChat.Editor.ChatModel
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Select Chat Model"))
             {
-                string path = EditorUtility.OpenFilePanel("Choose chat model", PathUtil.UserDataPath, "cfg");
+                string path = EditorUtility.OpenFilePanel("Choose chat model", PathUtil.SavedPath, "cfg");
                 if (string.IsNullOrEmpty(path)) return;
                 ChatModelFile file = JsonConvert.DeserializeObject<ChatModelFile>(File.ReadAllText(path));
                 sourceTable = new(file.TablePath);
